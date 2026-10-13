@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           # open-brain is public; the default GITHUB_TOKEN suffices. The
-          # ``openbrain-memory`` editable path dep (added in #66) resolves via
+          # ``openbrain-memory`` editable path dep resolves via
           # ``../open-brain/python/openbrain-memory`` from the repo subdir.
           repository: rodaddy/open-brain
           path: open-brain

@@ -1,6 +1,6 @@
 """Consume typed fleet-side completion signals for bridged participants.
 
-Bridged participants (PR #73 redesign; docs/bridged-participant-lifecycle.md)
+Bridged participants (docs/bridged-participant-lifecycle.md)
 are existing Hermes gateway agents fronted on the rtech bus by a dumb-edge
 bridge. Their completion signal — the typed ``fleet_core.spec.Done`` — arrives
 on the FLEET namespace (``{env}.agent.status.<task_id>``), and the orchestrator

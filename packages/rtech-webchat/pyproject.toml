@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-# The edge-integration suite (tests/test_edge_integration.py, issue #143)
+# The edge-integration suite (tests/test_edge_integration.py)
 # drives the real SSE route over HTTP, so it needs an async HTTP client and an
 # SSE reader. These are test-only tools — declared here at the owning package
 # boundary rather than leaked into the production `dependencies` above, and

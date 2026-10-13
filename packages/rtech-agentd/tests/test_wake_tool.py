@@ -1,4 +1,4 @@
-"""Wake MCP tool: schema shape, outcome rendering, and engine exposure gating (#93).
+"""Wake MCP tool: schema shape, outcome rendering, and engine exposure gating.
 
 The ``wake_agent`` tool mirrors the ``stance`` tool: an in-process SDK MCP server
 registered on the Claude engine. These tests pin the tool identity/schema, the
@@ -106,7 +106,7 @@ def test_set_wake_service_rejected_after_start_guard() -> None:
 
 def test_resume_re_registers_wake_and_stance_tools() -> None:
     # A resumed session must keep the in-process tools — otherwise a resumed
-    # triage agent silently loses wake (and stance) on restart/recovery (#93).
+    # triage agent silently loses wake (and stance) on restart/recovery.
     engine = _engine(wake=True)
     mcp_servers, allowed_tools, _directive = engine._tool_registration()
     assert WAKE_SERVER_NAME in mcp_servers

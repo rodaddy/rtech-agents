@@ -1,4 +1,4 @@
-"""Pin the __main__ exit-code mapping for a circuit-open death (#84 slice A).
+"""Pin the __main__ exit-code mapping for a circuit-open death.
 
 When the supervisor's restart budget is spent, ``Supervisor.run`` raises
 ``CircuitOpenError``; the entrypoint must map that fatal marker to a NON-ZERO
@@ -43,7 +43,7 @@ class _FakeRunner:
         return None
 
     def current_origin(self) -> None:
-        # The wake wiring (#93) reads the runner's active origin; this stub agent
+        # The wake wiring reads the runner's active origin; this stub agent
         # is not a waker, so it always reports "no origin".
         return None
 

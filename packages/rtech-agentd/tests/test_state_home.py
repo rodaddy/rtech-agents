@@ -1,6 +1,6 @@
 """Cover agentd state-home resolution: env override + CWD-relative default.
 
-The rootless deploy (issue #55) must never write session state to a root-only
+The rootless deploy must never write session state to a root-only
 ``/opt`` path. The default resolves under the unit's ``WorkingDirectory``
 (``%h/rtech-agents``), and an explicit ``RTECH_STATE_HOME`` overrides it.
 """

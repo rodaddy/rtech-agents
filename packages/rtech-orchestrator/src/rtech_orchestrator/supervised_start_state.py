@@ -7,8 +7,8 @@ aliases, the immutable :class:`KnownAgent`, the request-id-independent internal
 principal-bound request-key and bounded completed-receipt-cache helpers.
 
 Splitting these out keeps :mod:`supervised_start` below the file cap while it
-gains the principal-bound in-flight keying and detached-task caching redesign
-(issue #146). Public imports from ``rtech_orchestrator.supervised_start`` stay
+gains the principal-bound in-flight keying and detached-task caching redesign.
+Public imports from ``rtech_orchestrator.supervised_start`` stay
 compatible: that module re-exports every name defined here.
 """
 

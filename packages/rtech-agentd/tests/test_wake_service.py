@@ -1,8 +1,8 @@
-"""WakeService: allow-list enforcement, minted-frame correctness, containment (#93).
+"""WakeService: allow-list enforcement, minted-frame correctness, containment.
 
 The triage agent (Nagatha) can WAKE an allow-listed teammate: mint + publish a
 fresh TaskFrame carrying the triggering task's ChannelOrigin, and get back the
-minted task_id. These tests pin the locked design (issue #93):
+minted task_id. These tests pin the locked design:
 
 * allow-list: allowed publishes; disallowed / self / blank -> typed error, NO publish;
 * minted-frame correctness: fresh id + created_at, origin carried verbatim, subject,
@@ -84,7 +84,7 @@ async def test_minted_frame_correctness() -> None:
 
     _subject, frame = bus.by_type(TaskFrame)[0]
     assert isinstance(frame, TaskFrame)
-    # Fresh identity + stamp (passes the #83 fail-closed horizon).
+    # Fresh identity + stamp (passes the fail-closed horizon).
     assert frame.id == "wake-task-1"
     assert frame.created_at == _FIXED_NOW
     # Provenance + routing fields.
@@ -144,7 +144,7 @@ async def test_blank_agent_refused_no_publish() -> None:
 
 
 async def test_publish_failure_contained_as_typed_error() -> None:
-    # The wake tool publishes via the PROPAGATING publish_frame_checked (issue #93),
+    # The wake tool publishes via the PROPAGATING publish_frame_checked,
     # so a raising checked publish is the transport-failure path under test.
     class _RaisingBus(FakeFrameBus):
         async def publish_frame_checked(self, subject: str, frame: object) -> None:  # type: ignore[override]
@@ -163,7 +163,7 @@ async def test_publish_failure_contained_as_typed_error() -> None:
 
 
 async def test_swallowing_publish_would_not_mask_a_raise() -> None:
-    """Regression pin (#93): wake uses publish_frame_checked, not publish_frame.
+    """Regression pin: wake uses publish_frame_checked, not publish_frame.
 
     A bus whose publish_frame SWALLOWS (returns normally) but whose
     publish_frame_checked RAISES proves the wake tool takes the checked path — the

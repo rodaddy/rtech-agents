@@ -1,4 +1,4 @@
-"""Render operator presence notifications from typed transition frames (issue #147).
+"""Render operator presence notifications from typed transition frames.
 
 chatd is a DUMB EDGE: it ONLY formats the typed
 :class:`~rtech_frames.frames.PresenceTransitionFrame` the web-chat deriver publishes
@@ -47,7 +47,7 @@ from loguru import logger
 from rtech_frames.codec import FrameDecodeError, decode_frame
 from rtech_frames.frames import PresenceTransitionFrame
 
-# Only a subject-safe persona slug may enter the Dash URL path (issue #147). The
+# Only a subject-safe persona slug may enter the Dash URL path. The
 # frame validator (Finding 1) already constrains ``agent_id`` to this exact
 # ``[A-Za-z0-9_-]+`` shape — the ``EvidenceSource.locator`` precedent for a safe
 # path segment — but this is the belt-and-suspenders guard AT the URL boundary: a
@@ -56,7 +56,7 @@ from rtech_frames.frames import PresenceTransitionFrame
 # rather than rendering a broken/unsafe URL.
 _SAFE_URL_SLUG = re.compile(r"^[A-Za-z0-9_-]+$")
 
-# The ONLY schemes a Dash live-page base URL may use (issue #147 Finding 4). A
+# The ONLY schemes a Dash live-page base URL may use (Finding 4). A
 # rendered Dash link rides into a possibly-leaked operator surface, so the wire
 # admits only absolute http/https — never ``javascript:``, ``file:``, ``data:``,
 # or a scheme-relative/relative base that could resolve unexpectedly.
@@ -67,7 +67,7 @@ def validate_dash_base_url(dash_base_url: str) -> str:
     """Validate/sanitize a configured Dash base URL, or return ``""`` (fail closed).
 
     Called at the CONSTRUCTION boundary (:class:`PresenceNotifyConsumer`) so a
-    malformed base can NEVER reach link rendering (issue #147 Finding 4). Admits ONLY
+    malformed base can NEVER reach link rendering (Finding 4). Admits ONLY
     an absolute ``http``/``https`` URL with a host and NO userinfo (``user:pass@`` —
     a credential-exposure/mention-injection vector), NO control or newline characters,
     NO query, and NO fragment. The safe trailing-slash form is normalized (a single
@@ -155,7 +155,7 @@ def _observed_line(observed_at: datetime) -> str:
 def dash_link_url(dash_base_url: str, agent_id: str) -> str | None:
     """Compose the Dash live-page URL from a VALIDATED base, or None when unavailable.
 
-    DESIGN (issue #147): the Dash link is a FIXED validated base plus a safe-slug
+    DESIGN: the Dash link is a FIXED validated base plus a safe-slug
     path — ``f"{validated_base}/agents/<agent_id>"``. The base is run through
     :func:`validate_dash_base_url` so ONLY an absolute http/https URL with no
     userinfo/query/fragment/control chars can render a link — anything else fails
@@ -181,7 +181,7 @@ def dash_link_url(dash_base_url: str, agent_id: str) -> str | None:
 
 
 # Discord mention triggers a connector must neutralize even if a producer weakened
-# the frame validator (issue #147 renderer defense). ``@`` is broken with a
+# the frame validator (renderer defense). ``@`` is broken with a
 # zero-width space so ``@everyone``/``@here``/``<@id>`` can never ping; Markdown
 # control chars are backslash-escaped so a crafted name cannot inject formatting or
 # a ``[label](url)`` link. Belt-and-suspenders atop the frame validator, which
@@ -253,7 +253,7 @@ def render_notification(
     return "\n".join(lines)
 
 
-# Bounded seen-transition-id cache size (issue #147 delivery idempotency). A small
+# Bounded seen-transition-id cache size (delivery idempotency). A small
 # deterministic FIFO ring is enough: the at-least-once bus redelivers the SAME edge
 # only in a tight retry window, so a modest number of remembered ids covers every
 # realistic in-flight duplicate while keeping the cache memory hard-bounded. It is
@@ -264,7 +264,7 @@ MAX_SEEN_TRANSITION_IDS = 512
 class _SeenTransitionCache:
     """Bounded deterministic FIFO cache of already-dispatched ``transition_id`` values.
 
-    Delivery-idempotency only (issue #147): an ambiguous at-least-once redelivery of
+    Delivery-idempotency only: an ambiguous at-least-once redelivery of
     the SAME edge carries the SAME typed ``transition_id`` (minted once by the deriver,
     retained on retry). :meth:`is_seen` PEEKS (no commit) and :meth:`commit` records the
     id only AFTER a successful connector delivery, so a failed send never suppresses a
@@ -290,7 +290,7 @@ class _SeenTransitionCache:
 
         A pure PEEK — it does NOT commit. Committing is deferred to :meth:`commit`
         AFTER a successful connector delivery, so a failed send never suppresses a
-        valid redelivery (issue #147 Finding 3). A seen id is an ambiguous-ack
+        valid redelivery (Finding 3). A seen id is an ambiguous-ack
         redelivery of an edge already dispatched successfully; the caller drops it.
         """
 
@@ -328,7 +328,7 @@ class PresenceNotifyConsumer:
     its own safe HTML/formatting. Either send may be None on a single-surface deploy;
     a None surface is skipped, never a crash.
 
-    DELIVERY IDEMPOTENCY (issue #147): the deriver's at-least-once retry can
+    DELIVERY IDEMPOTENCY: the deriver's at-least-once retry can
     re-publish the SAME edge under an ambiguous transport ack. Each edge carries a
     stable typed ``transition_id``; this consumer keys a bounded deterministic
     :class:`_SeenTransitionCache` on it so the SAME edge renders/sends exactly once

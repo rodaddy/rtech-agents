@@ -36,8 +36,8 @@ from .supervised_start_state import (
 )
 
 # Re-export the domain surface so existing importers of
-# ``rtech_orchestrator.supervised_start`` keep working after the split (issue
-# #146). The owning definitions now live in :mod:`supervised_start_state`.
+# ``rtech_orchestrator.supervised_start`` keep working after the split.
+# The owning definitions now live in :mod:`supervised_start_state`.
 __all__ = [
     "COMPLETED_RECEIPT_CACHE_CAP",
     "ExternalStartSupervisor",
@@ -85,7 +85,7 @@ class ExternalStartSupervisor:
     actual process action to an external starter. Agentd receives neither a
     restart command nor a mutable configuration path.
 
-    Trust boundary (issue #146, finding P1 trust): the :class:`StartAuthorizer`
+    Trust boundary (finding P1 trust): the :class:`StartAuthorizer`
     is handed ONLY a server-resolved trusted ``principal`` and the
     :class:`PrincipalResolver` is handed NO request frame, so neither trust seam
     can read the frame's forgeable ``requester_id``. Every principal resolves and
@@ -97,7 +97,7 @@ class ExternalStartSupervisor:
     resolver FAILURE can never replay a resolved-``None`` receipt, while the
     per-agent process start stays shared only across authorized requests.
 
-    Liveness boundary (issue #146, finding P1 liveness):
+    Liveness boundary (finding P1 liveness):
     :meth:`ExternalStarter.start` RETURNING is only an action receipt, never proof
     of Online. A successful start action is followed by exactly one authoritative
     post-start :class:`LivenessProbe` confirmation; ``Online`` publishes only when
@@ -105,7 +105,7 @@ class ExternalStartSupervisor:
     the typed ``liveness_unconfirmed`` terminal failure — never a false ``Online``.
     One bounded confirmation, no unbounded polling.
 
-    Correlation contract (issue #146, finding P2): start work is reserved per
+    Correlation contract (finding P2): start work is reserved per
     **agent id**, not per (request_id, agent_id), so two distinct requests for the
     same agent — including a bulk request racing a single one — share the one
     in-flight start machine and never start the agent twice. The machine yields a
@@ -658,7 +658,7 @@ class ExternalStartSupervisor:
     ) -> SupervisedAgentStateFrame:
         """Publish a typed failure on a bounded path that never raises a receipt.
 
-        A waiter MUST always return a terminal tracked outcome (issue #146, finding
+        A waiter MUST always return a terminal tracked outcome (finding
         6) rather than raise it out through the shielded waiter. Every terminal
         failure path — authorization, unknown-agent, guard, start, and liveness —
         publishes through here, so a broken bus degrades to a truthful typed

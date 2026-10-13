@@ -6,7 +6,7 @@ import pytest
 from rtech_frames.done import TerminalEvidence, is_done
 from rtech_frames.frames import Stance, StatusFrame, TaskFrame, TurnFrame
 
-# Default participant identities per scope; done is participant-scoped (#75).
+# Default participant identities per scope; done is participant-scoped.
 _SCOPE_PARTICIPANTS: dict[str, list[str]] = {
     "single": ["codex-a"],
     "duo": ["codex-a", "codex-b"],
@@ -209,7 +209,7 @@ def test_other_task_frames_are_ignored() -> None:
     assert is_done(task, graph) is True
 
 
-# --- participant scoping (issue #75, defect B) --------------------------------
+# --- participant scoping (defect B) --------------------------------
 
 
 def test_foreign_terminal_turn_never_counts() -> None:
@@ -333,7 +333,7 @@ def test_single_retraction_then_completion() -> None:
     assert is_done(task, graph) is True
 
 
-# --- bridged participants (PR #73 redesign) -----------------------------------
+# --- bridged participants -----------------------------------
 
 
 def _evidence(agent_id: str, task_id: str = "task-1") -> TerminalEvidence:
@@ -425,7 +425,7 @@ def test_working_status_before_evidence_is_superseded() -> None:
 
 
 def test_working_status_after_evidence_completion_does_not_block() -> None:
-    # PR #73 round 3: the bridge pairs each content turn with a working status
+    # the bridge pairs each content turn with a working status
     # on the rtech connection, while evidence rides the orchestrator's own
     # fleet connection — a working status landing after the evidence in the
     # merged log is a stale cross-connection echo, never a blocker. Otherwise
@@ -481,7 +481,7 @@ def test_mixed_duo_turn_established_completion_still_blocked_by_working() -> Non
     assert is_done(task, graph, bridged={"bilby"}) is False
 
 
-# --- per-participant status authorship (PR #73 round 5) ------------------------
+# --- per-participant status authorship ------------------------
 
 
 def test_round4_native_terminal_then_evidence_then_native_working_blocks() -> None:
@@ -526,7 +526,7 @@ def test_round4_evidence_then_native_terminal_then_late_bridge_working_completes
 
 
 def test_status_from_non_participant_never_blocks() -> None:
-    # Statuses are identity-scoped like turns (issue #75): a foreign stack's
+    # Statuses are identity-scoped like turns: a foreign stack's
     # status on the task's status lane cannot reopen the task.
     task = _task("single")
     graph: list[TurnFrame | StatusFrame] = [

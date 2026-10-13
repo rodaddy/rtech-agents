@@ -1,4 +1,4 @@
-"""IntakeConfig env plumbing (#93) + the triage-agent subject builder."""
+"""IntakeConfig env plumbing + the triage-agent subject builder."""
 
 from __future__ import annotations
 

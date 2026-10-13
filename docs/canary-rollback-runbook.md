@@ -1,4 +1,4 @@
-# Canary + rollback runbook — per-agent agentd deploy (#84)
+# Canary + rollback runbook — per-agent agentd deploy
 
 Staged migration of the trio (Bilby, Skippy, Nagatha) onto source-owned
 per-agent homes (slug-named `agents/<slug>/agent.yaml` + `SOUL.md`) and the
@@ -55,7 +55,7 @@ Two nested loops bound restarts; **both** are required for a true bound:
 
 - **Inner (in-process) circuit.** The supervisor tracks its restart budget and,
   when spent, `Supervisor.run` raises `CircuitOpenError`; the entrypoint maps
-  that to a **non-zero process exit** (#84 slice A). This bounds crash-restarts
+  that to a **non-zero process exit**. This bounds crash-restarts
   *within a single process lifetime*.
 - **Outer (systemd) StartLimit.** `Restart=on-failure` would relaunch that
   non-zero exit forever, so `rtech-agentd@.service` sets
@@ -121,11 +121,11 @@ exact commands:
    ```
 
    A restart of the unit MUST produce a matching lifecycle event — that is the
-   #84 legibility guarantee.
+   legibility guarantee.
 
 4. **Scripted-engine smoke turn** — prove the wiring end to end WITHOUT a real
    model. Because a resolved manifest is now **authoritative for the engine kind**
-   (#84 slice C — the config kind overrides a stray `DEV_STACK_ENGINE`/`E2E_ENGINE`
+   (the config kind overrides a stray `DEV_STACK_ENGINE`/`E2E_ENGINE`
    and logs when it does), point `RTECH_AGENTS_ROOT` at an empty dir so the run
    takes the env-only fallback and honors `DEV_STACK_ENGINE=scripted`:
 
@@ -171,7 +171,7 @@ existing k-board-api / caddy / postgres services.
   it stops answering for a migrated agent (and re-widening it on rollback) lives
   in the Hermes repo and is a deliberate manual step. This runbook does not touch
   Hermes. There is **no runtime dependency on rtech-hermes** in this repo
-  (enforced by `scripts/grep-gate.sh`, #84).
+  (enforced by `scripts/grep-gate.sh`).
 - **Discord invites / bot presence.** Adding or removing an agent's Discord bot
   in the target server/channels is a console action. `agent.yaml` carries only a
   `discord.bot_token_ref` indirection (a `<provider>:<name>` ref, never a token);

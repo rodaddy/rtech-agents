@@ -1,12 +1,12 @@
 """aiogram wiring of the :class:`ChannelAdapter` protocol (Telegram, inbound).
 
 This is the Telegram peer of :mod:`rtech_chatd.discord_adapter`. It is the
-INBOUND half of the Telegram edge (issue #108); the outbound half (issue #109)
+INBOUND half of the Telegram edge; the outbound half
 — multi-identity sends, HTML chunking, forum topics, rate limiting, typing,
 the 👀 receipt reaction — lives in :mod:`rtech_chatd.telegram_sender` and is
 DELEGATED to via an injected :class:`TelegramSender`, so this adapter remains
 the single :class:`ChannelAdapter` seam the edge programs against. With no
-sender injected the outbound methods keep their #108 fail-soft stub behavior
+sender injected the outbound methods keep their fail-soft stub behavior
 (log + ``None``), so an inbound-only deploy is unchanged.
 
 The whole point of this slice is that the EXISTING pipeline runs unchanged on
@@ -82,7 +82,7 @@ from .telegram_sender import TelegramSender, redact_token
 # identical contract to the Discord adapter's TokenProvider.
 TokenProvider = Callable[[], str]
 
-# Invoked with the inbound message on a deterministic intake hit (issue #93). The
+# Invoked with the inbound message on a deterministic intake hit. The
 # sink owns minting + publishing the triage TaskFrame; the adapter never touches
 # the bus. May be sync OR async: the in-repo bus publisher is a coroutine, so the
 # call site awaits an awaitable result inside the intake error boundary (a
@@ -90,7 +90,7 @@ TokenProvider = Callable[[], str]
 # publishing nothing and escaping the boundary). Mirrors the Discord adapter.
 IntakeSink = Callable[[InboundMessage], Awaitable[None] | None]
 
-# Invoked with a normalized inbound callback (issue #117). The sink owns
+# Invoked with a normalized inbound callback. The sink owns
 # authentication, acknowledgement, and mapping an authorized action into a
 # bus-published SteerFrame; the adapter never touches the bus. May be sync or
 # async — awaited inside the callback error boundary exactly like IntakeSink.
@@ -362,7 +362,7 @@ def map_message(
     # on ``is_topic_message``; ``message_thread_id`` is ALSO populated for an
     # ordinary (non-forum) reply thread, so keying thread_id off the raw id alone
     # would conflate a plain reply chain with a real forum topic and mis-target
-    # #109's topic-scoped sends. Non-forum reply threads DELIBERATELY do not set
+    # the topic-scoped sends. Non-forum reply threads DELIBERATELY do not set
     # thread_id (they surface as ``is_reply`` instead).
     thread_id: str | None = None
     if message.is_topic_message and message.message_thread_id is not None:
@@ -417,7 +417,7 @@ def map_message(
 
 @dataclass(frozen=True)
 class InboundCallback:
-    """Represent a normalized inline-keyboard tap (issue #117 interactive layer).
+    """Represent a normalized inline-keyboard tap (interactive layer).
 
     ``data`` remains opaque: the callback sink authenticates it against its
     issued-capability registry before it can become a typed
@@ -463,7 +463,7 @@ def map_callback(callback: CallbackQuery) -> InboundCallback:
 
 
 class TelegramChannelAdapter:
-    """A :class:`ChannelAdapter` backed by aiogram long-polling (inbound, #108).
+    """A :class:`ChannelAdapter` backed by aiogram long-polling (inbound).
 
     Gating decisions come from the pure :mod:`rtech_chatd.gates`; this class owns
     only the surface mechanics — the getUpdates loop, chat-id normalization, and
@@ -473,8 +473,8 @@ class TelegramChannelAdapter:
 
     Outbound (:meth:`send` / :meth:`typing` / :meth:`create_thread`) is out of
     scope for this slice: the methods exist to satisfy the protocol but are
-    fail-soft stubs that log "lands in #109" and return ``None``. Chunking, forum
-    topics, and rate limiting are #109's work; nothing here silently half-sends.
+    fail-soft stubs that log "lands later" and return ``None``. Chunking, forum
+    topics, and rate limiting are later work; nothing here silently half-sends.
     """
 
     def __init__(
@@ -500,12 +500,12 @@ class TelegramChannelAdapter:
             :func:`intake_hit`.
         telegram_config: Telegram edge knobs (group allowlist, allowed_updates,
             poll timeout). Defaults to a plain :class:`TelegramConfig`.
-        intake_config: Optional intake hit-gate config (issue #93). When None or
+        intake_config: Optional intake hit-gate config. When None or
             disabled, no intake behavior runs.
         intake_sink: Callback invoked with the inbound message on an intake hit.
             Required for intake to fire; the sink mints/publishes the TaskFrame.
-        callback_sink: Callback invoked with a normalized inline-keyboard tap
-            (issue #117). Required for the interactive layer to act; the sink
+        callback_sink: Callback invoked with a normalized inline-keyboard tap.
+            Required for the interactive layer to act; the sink
             authenticates the tap, answers the query, and maps an authorized
             typed command into a bus-published SteerFrame. When None, callback
             queries are still answered (so the client spinner stops) but produce
@@ -515,11 +515,11 @@ class TelegramChannelAdapter:
         bot_factory: Optional factory building a ``Bot`` from the token at connect
             time (test seam). When both ``bot`` and ``bot_factory`` are None, the
             real ``Bot`` is constructed from the provider's token.
-        sender: Optional outbound half (issue #109). When set, ``send`` /
+        sender: Optional outbound half. When set, ``send`` /
             ``typing`` / ``create_thread`` delegate to it, the 👀 receipt
             reaction fires at intake-hit time, and its default-bot lane is
             bound to this adapter's polling bot. When None, outbound keeps the
-            #108 fail-soft stub behavior (inbound-only deploy, unchanged).
+            fail-soft stub behavior (inbound-only deploy, unchanged).
         clock: Monotonic clock for dedup time-eviction (injectable for tests).
         dedup_max_entries / dedup_horizon_s: Dedup store bounds.
         """
@@ -551,7 +551,7 @@ class TelegramChannelAdapter:
             # The sender's unstamped (edge-identity) sends use THIS adapter's
             # polling bot; per-agent identities live in the sender's own pool.
             sender.bind_default_bot(self._resolve_bot)
-        # Live fire-and-forget receipt-reaction tasks (issue #109 signal 1).
+        # Live fire-and-forget receipt-reaction tasks.
         # Held so the event loop cannot garbage-collect an in-flight task;
         # each removes itself on completion.
         self._reaction_tasks: set[asyncio.Task[None]] = set()
@@ -682,16 +682,16 @@ class TelegramChannelAdapter:
         """Dispatch one aiogram ``Update`` to its inbound handler.
 
         ``message`` and ``edited_message`` carry the text inbound surface;
-        ``callback_query`` carries an inline-keyboard tap (issue #117), routed to
-        the callback handler. ``message_reaction`` is subscribed (so #109
-        inherits the feed) but not yet acted on — logged at debug and dropped.
+        ``callback_query`` carries an inline-keyboard tap, routed to
+        the callback handler. ``message_reaction`` is subscribed (so the
+        outbound slice inherits the feed) but not yet acted on — logged at debug and dropped.
         Anything else is ignored.
         """
         if update.callback_query is not None:
             await self._on_callback(update.callback_query)
             return
         if update.edited_message is not None:
-            # v1 policy (#108): edits are LOGGED and DROPPED, never crash. A v1
+            # v1 policy: edits are LOGGED and DROPPED, never crash. A v1
             # agent does not re-answer an edited question; surfacing the edit is
             # enough for an operator to see it happened.
             edited = update.edited_message
@@ -705,7 +705,7 @@ class TelegramChannelAdapter:
             await self._on_message(update.message)
             return
         if update.message_reaction is not None:
-            logger.debug("chatd.tg.reaction | received (no-op until #109)")
+            logger.debug("chatd.tg.reaction | received (no-op for now)")
             return
 
     async def _on_message(self, message: Message) -> None:
@@ -773,7 +773,7 @@ class TelegramChannelAdapter:
         # rather double-handle than silently swallow, and the gates still filter.
         is_self = self._self_user_id is not None and msg.author == self._self_user_id
 
-        # Intake hit-gate (issue #93): independent of the responder, evaluated on
+        # Intake hit-gate: independent of the responder, evaluated on
         # the same message. Double-activation (a member-config mention that also
         # mentions us) is a deliberate, documented property — dedup of that is the
         # agentd-side sink's job, not the adapter's.
@@ -823,7 +823,7 @@ class TelegramChannelAdapter:
             return
         if not intake_hit(msg, self._gate_config, self._intake_config, is_self=is_self):
             return
-        # Receipt reaction (issue #109, signal 1 of 3): the MOMENT the hit-gate
+        # Receipt reaction (signal 1 of 3): the MOMENT the hit-gate
         # fires, 👀 lands on the asker's message — fire-and-forget so it can
         # never block or delay the mint, independent of the sink's dedup /
         # responder-yield outcome (the human's "it landed" signal is about the
@@ -849,7 +849,7 @@ class TelegramChannelAdapter:
             )
 
     async def _on_callback(self, callback: CallbackQuery) -> None:
-        """Normalize an inline-keyboard tap and route it to the callback sink (#117).
+        """Normalize an inline-keyboard tap and route it to the callback sink.
 
         The adapter only normalizes surface coordinates and delegates all
         capability validation to the injected sink. No malformed, unknown,
@@ -932,11 +932,11 @@ class TelegramChannelAdapter:
             return
 
     async def send(self, target: SendTarget, text: str, files: list[Path]) -> str | None:
-        """Send via the injected :class:`TelegramSender` (issue #109).
+        """Send via the injected :class:`TelegramSender`.
 
         Delegation only — chunking, HTML rendering, identity routing, rate
         limiting and the FloodWait-to-caller contract all live in the sender.
-        With no sender configured (inbound-only deploy) this keeps the #108
+        With no sender configured (inbound-only deploy) this keeps the
         fail-soft stub behavior: log, send nothing, return ``None``.
         """
         if self._sender is None:
@@ -948,7 +948,7 @@ class TelegramChannelAdapter:
         return await self._sender.send(target, text, files)
 
     async def typing(self, target: SendTarget, on: bool) -> None:
-        """Start/stop the sender's (chat, agent)-keyed typing keepalive (#109)."""
+        """Start/stop the sender's (chat, agent)-keyed typing keepalive."""
         if self._sender is None:
             logger.debug(
                 "chatd.tg.typing | no sender configured | target={} on={}",

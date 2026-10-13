@@ -36,7 +36,7 @@ def _server_reachable() -> bool:
 
 
 pytestmark = pytest.mark.skipif(
-    not _server_reachable(), reason="fleet NATS server (fleet-hub) not reachable"
+    not _server_reachable(), reason="NATS server at the configured URL not reachable"
 )
 
 

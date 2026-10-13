@@ -1,4 +1,4 @@
-"""Finding P1 trust plus fail-closed auth/guard seams (#146).
+"""Finding P1 trust plus fail-closed auth/guard seams.
 
 Authorization runs on a server-resolved transport principal, never the request
 frame, so a forged ``requester_id`` can reach neither the authorizer nor the

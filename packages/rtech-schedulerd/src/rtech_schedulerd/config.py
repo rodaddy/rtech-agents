@@ -7,7 +7,7 @@ the stack-scope stamp is a frozen :class:`SchedulerConfig`. Loading fails
 expression, an unknown timezone, or a scope/participant mismatch raises
 :class:`ScheduleConfigError` at startup rather than minting broken frames later.
 
-The stack id (issue #75) is REQUIRED with no default: a defaulted stack guard is
+The stack id is REQUIRED with no default: a defaulted stack guard is
 exactly how two stacks on a shared bus cross-consume, so an unset id fails loud.
 
 Security floor: the loader logs sanitized summaries only — schedule ids, cron
@@ -30,7 +30,7 @@ from .cron import CronParseError, CronSchedule, parse_cron
 
 # Env var naming the JSON schedule table. No default: unset fails closed.
 ENV_SCHEDULE_FILE = "RTECH_SCHEDULE_FILE"
-# Env var naming this stack's id, stamped on every minted frame (issue #75).
+# Env var naming this stack's id, stamped on every minted frame.
 ENV_STACK_ID = "RTECH_STACK_ID"
 
 _ALLOWED_SCOPES: frozenset[str] = frozenset({"single", "duo", "trio"})
@@ -131,7 +131,7 @@ class SchedulerConfig:
     """The frozen schedule table plus the stack-scope stamp for minted frames.
 
     Attributes:
-        stack_id: This stack's id (issue #75), stamped on every minted frame so a
+        stack_id: This stack's id, stamped on every minted frame so a
             stack-guarded orchestrator consumes it. Non-empty.
         schedules: The validated schedule entries. Schedule ids are unique.
     """
@@ -146,9 +146,7 @@ class SchedulerConfig:
             ScheduleConfigError: On a blank stack id or a repeated schedule_id.
         """
         if not self.stack_id or not self.stack_id.strip():
-            raise ScheduleConfigError(
-                "stack_id must be non-empty (issue #75); there is no default stack id"
-            )
+            raise ScheduleConfigError("stack_id must be non-empty; there is no default stack id")
         seen: set[str] = set()
         for entry in self.schedules:
             if entry.schedule_id in seen:
@@ -278,7 +276,7 @@ def load_scheduler_config(env: dict[str, str] | None = None) -> SchedulerConfig:
     stack_id = source.get(ENV_STACK_ID, "").strip()
     if not stack_id:
         logger.error("scheduler.config | {} unset; aborting", ENV_STACK_ID)
-        raise ScheduleConfigError(f"{ENV_STACK_ID} must be set (ingress guard, issue #75)")
+        raise ScheduleConfigError(f"{ENV_STACK_ID} must be set (ingress guard)")
     path = Path(file_ref).expanduser().resolve()
     try:
         text = path.read_text(encoding="utf-8")

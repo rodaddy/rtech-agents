@@ -1,9 +1,11 @@
 #!/usr/bin/env sh
-# Rootless, idempotent install of the rtech-agents stack onto the k-board LXC
-# (your deploy host) as additive, non-disruptive systemd USER services.
+# Rootless, idempotent install of the rtech-agents stack onto one Linux deploy
+# host as additive, non-disruptive systemd USER services. "k-board" is the
+# author's host: an LXC container that also runs an unrelated app (k-board-api,
+# caddy, postgres). Substitute your own host and user.
 # Run ON the host AS THE TARGET USER (bilby) -- NEVER as root, NEVER via sudo.
 # Re-runnable: every step is create-if-missing or a safe rsync/sync. Existing
-# k-board-api + caddy + postgres are NOT touched (issue #55).
+# k-board-api + caddy + postgres are NOT touched.
 #
 # Usage (on the host, as bilby):
 #   sh deploy/kboard/install.sh /path/to/rtech-agents-checkout \
@@ -13,7 +15,7 @@
 # to rsync into ~/rtech-agents). The frozen uv.lock pins two EDITABLE path deps
 # as siblings of the install root -- ../fleet-bus and ../open-brain -- so
 # `uv sync --frozen` needs those trees staged at ~/fleet-bus and ~/open-brain
-# (runbook gap, issue #49). Pass their source checkouts as the optional 2nd/3rd
+# (runbook gap). Pass their source checkouts as the optional 2nd/3rd
 # args; default source paths are the rtech-agents checkout's own siblings
 # (../fleet-bus, ../open-brain). Staging is skipped for a dep whose source is
 # absent AND whose destination already exists (idempotent re-runs).
@@ -28,9 +30,9 @@ UNIT_DIR="$HOME/.config/systemd/user"
 # instance name %i -> RTECH_AGENT_ID, and each MUST resolve to a source-owned
 # home via the entrypoint's order (exact-id agents/<id>/agent.yaml, else the
 # agentd--stripped slug agents/<slug>/agent.yaml; see the runbook's "Manifest
-# resolution convention", issue #84). Default: the three trio agents. Override
+# resolution convention"). Default: the three trio agents. Override
 # with RTECH_AGENT_INSTANCES (space-separated) for a different set/canary subset.
-# Never a bare shared "agentd" -- that collided across two agentds (issue #49).
+# Never a bare shared "agentd" -- that collided across two agentds.
 AGENT_INSTANCES="${RTECH_AGENT_INSTANCES:-agentd-nagatha agentd-skippy agentd-bilby}"
 SRC="${1:-}"
 # Editable path-dep sources (frozen lock -> ../fleet-bus, ../open-brain). Default
@@ -54,7 +56,7 @@ if [ ! -d "$SRC" ]; then
 fi
 
 # Rootless mandate: refuse to run as root. This stack is bilby-owned; root would
-# recreate the /opt system-unit install this redo exists to retire (issue #55).
+# recreate the /opt system-unit install this redo exists to retire.
 if [ "$(id -u)" -eq 0 ]; then
 	log "ERROR: do NOT run as root. This is a rootless, user-unit install."
 	log "       run it AS the target user (bilby): sh deploy/kboard/install.sh ..."
@@ -78,7 +80,7 @@ mkdir -p "$INSTALL_ROOT/state"
 # --- 1b. stage editable path deps the frozen lock needs ----------------------
 # uv.lock pins fleet-nats/fleet-subscriber (../fleet-bus) and openbrain-memory
 # (../open-brain) as EDITABLE path sources relative to the install root. Stage
-# them next to ~/rtech-agents so `uv sync --frozen` resolves (issue #49).
+# them next to ~/rtech-agents so `uv sync --frozen` resolves.
 # Idempotent: rsync when a source is given/found; else require the dest present.
 SRC_PARENT=$(dirname "$SRC")
 : "${FLEET_BUS_SRC:=$SRC_PARENT/fleet-bus}"
@@ -159,7 +161,7 @@ log "enabling and starting rtech-agents user units"
 systemctl --user enable --now rtech-orchestrator.service
 # One agentd unit per instance. Instance name %i becomes RTECH_AGENT_ID -- unique
 # per agent, never bare "agentd". Each id resolves to a slug-named home
-# (agents/<slug>/agent.yaml, exact-id dir winning if present) at runtime (#84).
+# (agents/<slug>/agent.yaml, exact-id dir winning if present) at runtime.
 # Idempotent: enable --now is a no-op when the instance is already active.
 AGENTD_STATUS_UNITS=""
 for AGENT_INSTANCE in $AGENT_INSTANCES; do

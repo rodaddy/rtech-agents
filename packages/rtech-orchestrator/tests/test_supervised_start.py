@@ -1,4 +1,4 @@
-"""Cover external-supervisor Start-only lifecycle requests (#146).
+"""Cover external-supervisor Start-only lifecycle requests.
 
 Happy-path start/bulk/subscribe plus the P2 dedup and correlated-receipt seams.
 Liveness, publish-failure, and trust coverage live in the sibling

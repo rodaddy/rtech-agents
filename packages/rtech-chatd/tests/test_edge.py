@@ -222,7 +222,7 @@ async def test_inbound_never_posts_home_advisory() -> None:
 
 
 async def test_edge_rejects_blank_stack_at_construction() -> None:
-    """A blank stack id fails closed at startup (issue #75 round 2)."""
+    """A blank stack id fails closed at startup."""
     adapter = FakeAdapter([])
     bus = FakeFrameBus()
     with pytest.raises(ValueError, match="stack must be non-empty"):
@@ -810,7 +810,7 @@ async def test_drop_task_retire_failure_holds_leaked_set_and_close_retries() -> 
     assert all(sub.unsubscribed for sub in bus.subscriptions_for("task-1"))
 
 
-# --- External-turn reply render (issue #93) -------------------------------
+# --- External-turn reply render -------------------------------
 
 TURN_WILDCARD = subjects.TASK_TURN_WILDCARD
 
@@ -1864,7 +1864,7 @@ async def test_debate_fifth_distinct_agent_tldr_suppressed_full_still_routes() -
 
 
 async def test_identity_send_debate_stamps_agent_and_drops_name_prefix() -> None:
-    """identity_send=True: every debate piece is voiced as its author (#109).
+    """identity_send=True: every debate piece is voiced as its author.
 
     The TLDR and the in-thread full both carry ``as_agent=<turn agent_id>`` so a
     multi-identity surface posts them under that agent's OWN bot; the TLDR drops
@@ -1942,7 +1942,7 @@ async def test_identity_send_off_keeps_named_tldr_and_unstamped_targets() -> Non
     assert adapter.typing_calls == []
 
 
-# --- turn-interaction hook failure log safety (issue #117) ----------------
+# --- turn-interaction hook failure log safety ----------------
 
 # The sentinel a raising interaction hook would smuggle into a log line if the
 # edge logged the raw exception text instead of only its type name.

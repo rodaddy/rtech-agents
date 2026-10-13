@@ -1,6 +1,6 @@
 """Run the chatd **Telegram** long-poll edge as a service (``rtech-tgd``).
 
-The standalone Telegram production entrypoint (issue #112): builds the
+The standalone Telegram production entrypoint: builds the
 :class:`~rtech_chatd.telegram_service.TgdServiceConfig` from the environment
 (fail-closed on a missing bot ref, group allowlist, or stack id) and runs the
 Telegram-only edge until its poll loop dies. It composes ONLY the Telegram

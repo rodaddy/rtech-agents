@@ -39,7 +39,7 @@ class InboundMessage:
             us (multi-agent channels: "talking to someone else").
         mentions_human: True when the message @mentions a human that is not us.
         guild_id: Guild (server) id, or None in a DM. Rides intake frames so
-            the downstream OB channel lane is known (issue #93).
+            the downstream OB channel lane is known.
         message_id: Opaque id of this message, or None when unavailable. Used as
             the reply reference so an intake answer lands on the asker's message.
         mentioned_ids: Opaque ids of every account @mentioned in this message
@@ -117,8 +117,8 @@ class SendTarget:
             that only its own send path interprets.
         reply_to: Optional message id to attach a reply reference to.
         as_agent: Optional typed agent identity the send should be voiced
-            under (issue #109 multi-identity render). ``None`` (default) is
-            the surface's own single/default identity — every pre-#109 call
+            under (multi-identity render). ``None`` (default) is
+            the surface's own single/default identity — every earlier call
             site is byte-identical. A surface with per-identity clients
             (Telegram) resolves it against its pool and fails LOUD on an
             unknown id, never a fallback identity; a single-identity surface

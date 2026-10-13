@@ -27,12 +27,12 @@ def test_agent_task_builder() -> None:
 
 
 def test_agent_lifecycle_builder() -> None:
-    """Per-agent lifecycle lane builder must match the ratified scheme (#84)."""
+    """Per-agent lifecycle lane builder must match the ratified scheme."""
     assert subjects.agent_lifecycle("agentd") == "rtech.agent.agentd.lifecycle"
 
 
 def test_agent_supervised_state_builder() -> None:
-    """External Start state has a distinct per-agent typed lane (#146)."""
+    """External Start state has a distinct per-agent typed lane."""
     assert subjects.agent_supervised_state("agentd") == "rtech.agent.agentd.supervised-state"
 
 

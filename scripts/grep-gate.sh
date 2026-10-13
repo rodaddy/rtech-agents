@@ -1,11 +1,11 @@
 #!/usr/bin/env zsh
-# grep-gate: anti-regression scan for doctrine rules 2 and 3, plus the #84
+# grep-gate: anti-regression scan for doctrine rules 2 and 3, plus the
 # "no new runtime dependency on rtech-hermes" invariant.
 #
 # Rule 2: agents never emit `[[done]]`; done is orchestrator-derived from the
 #         frame graph, never a sentinel token in shipped code.
 # Rule 3: signals are typed frame fields, never scraped prose trailers.
-# #84:    packages/ must not grow a live `import rtech_hermes` / `from
+# packages/ must not grow a live `import rtech_hermes` / `from
 #         rtech_hermes` — the fleet stack is off Hermes; only prose/docstring
 #         mentions and the distinct `rtech_hermes_bridge` package are allowed.
 #
@@ -20,7 +20,7 @@ set -euo pipefail
 # Single source of truth for the banned-token pattern (doctrine rules 2/3).
 GATE_PATTERN='\[\[done\]\]|done_sentinel|TurnSignal|trailer.scrape'
 
-# Single source of truth for the banned rtech-hermes import pattern (#84).
+# Single source of truth for the banned rtech-hermes import pattern.
 # Anchored to a line-leading `import`/`from` so prose/docstring mentions do not
 # trip it, and the module boundary (`.`/space/end after `rtech_hermes`) excludes
 # the legitimate distinct `rtech_hermes_bridge` package.
@@ -51,7 +51,7 @@ if matches="$(rg -n "${GATE_PATTERN}" "${SCAN_DIR}")"; then
 fi
 
 if hermes="$(rg -n "${HERMES_IMPORT_PATTERN}" "${SCAN_DIR}")"; then
-  print -u2 "grep-gate: FAIL — live rtech_hermes import found in packages/ (#84: no runtime dep on rtech-hermes):"
+  print -u2 "grep-gate: FAIL — live rtech_hermes import found in packages/ (no runtime dep on rtech-hermes):"
   print -u2 -- "${hermes}"
   exit 1
 fi

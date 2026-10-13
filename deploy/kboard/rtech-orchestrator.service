@@ -10,7 +10,7 @@ EnvironmentFile=%h/rtech-agents/.env
 # Scrub the cc-env poison: ~/.cc-env pins stale 4-6-era ANTHROPIC_* values that
 # route the SDK engine through a LiteLLM proxy and break real-engine turns. The
 # env -u wrapper strips them from the child so the engine uses the box's
-# subscription CLI auth with its own model defaults (issue #55).
+# subscription CLI auth with its own model defaults.
 ExecStart=/usr/bin/env -u ANTHROPIC_BASE_URL -u ANTHROPIC_API_KEY -u ANTHROPIC_MODEL -u ANTHROPIC_DEFAULT_OPUS_MODEL -u ANTHROPIC_DEFAULT_SONNET_MODEL uv run --frozen python -m rtech_orchestrator
 Restart=on-failure
 RestartSec=5

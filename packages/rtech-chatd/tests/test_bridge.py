@@ -97,7 +97,7 @@ def test_intake_mint_stamps_created_at_and_channel_identity() -> None:
     assert frame.text == "what is the deploy status"
     assert frame.scope == "single"
     assert frame.stack == "dev"
-    # created_at is always stamped (#83 fail-closed downstream).
+    # created_at is always stamped (fail-closed downstream).
     assert frame.created_at is not None
     # channel identity rides the frame.
     assert frame.origin is not None
@@ -362,14 +362,14 @@ def test_status_frame_responding_preserves_working_indicator() -> None:
 
 
 def test_inbound_rejects_blank_stack() -> None:
-    # The stack stamp is required addressing config (issue #75 round 2): a
+    # The stack stamp is required addressing config: a
     # blank id would mint tasks every stack-guarded orchestrator drops.
     with pytest.raises(ValueError, match="stack must be non-empty"):
         inbound_to_task_frame(_inbound(), task_id="task-3", stack="  ")
 
 
 def test_tldr_named_default_prefixes_agent() -> None:
-    # Single-bot surfaces: the name prefix IS the attribution (pre-#109 shape).
+    # Single-bot surfaces: the name prefix IS the attribution (earlier shape).
     frame = TurnFrame(
         agent_id="agentd-nagatha",
         task_id="t1",
@@ -380,7 +380,7 @@ def test_tldr_named_default_prefixes_agent() -> None:
 
 
 def test_tldr_unnamed_drops_prefix_for_identity_send() -> None:
-    # Issue #109: the posting bot IS the attribution — no ventriloquism prefix.
+    # the posting bot IS the attribution — no ventriloquism prefix.
     frame = TurnFrame(
         agent_id="agentd-nagatha",
         task_id="t1",

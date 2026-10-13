@@ -1,4 +1,4 @@
-"""Argument parsing for the rtech-tg-admin CLI (issue #110).
+"""Argument parsing for the rtech-tg-admin CLI.
 
 Locks the footgun that --env must work on EITHER side of the subcommand, and
 that ensure-forum requires --chat. The network dispatch itself is not exercised

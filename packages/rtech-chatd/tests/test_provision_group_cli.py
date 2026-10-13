@@ -1,4 +1,4 @@
-"""Argument parsing + bot-list splitting for the provision-debate-group CLI (#110).
+"""Argument parsing + bot-list splitting for the provision-debate-group CLI.
 
 The network dispatch itself is not exercised here (it needs a live account); only
 the pure argparse layer and the ``--bots`` comma-split helper are — the same

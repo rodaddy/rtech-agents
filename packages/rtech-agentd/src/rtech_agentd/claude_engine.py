@@ -76,7 +76,7 @@ class ClaudeEngine:
         engine_config: Engine kind/model/litellm_base from the agent config.
         env: Extra environment for the SDK subprocess (e.g. ANTHROPIC_BASE_URL,
             ANTHROPIC_API_KEY). Never logged.
-        wake_service: The wake capability (issue #93). When present, the in-process
+        wake_service: The wake capability. When present, the in-process
             ``wake_agent`` MCP tool is registered so the triage model can wake an
             allow-listed teammate; when ``None`` (a non-waker agent) the tool is
             NOT exposed at all — its mere presence is the allow-list opt-in.
@@ -104,7 +104,7 @@ class ClaudeEngine:
         self._pending_verification: VerificationReport | None = None
 
     def set_wake_service(self, wake_service: WakeService) -> None:
-        """Attach the wake capability BEFORE the session starts (issue #93).
+        """Attach the wake capability BEFORE the session starts.
 
         The wake ``WakeService`` needs the frame bus and the runner's active-origin
         provider, which are wired after the engine is built — so it is injected
@@ -129,7 +129,7 @@ class ClaudeEngine:
 
         Shared by :meth:`_build_options` (fresh start) AND :meth:`resume` so a
         resumed session keeps the SAME in-process tools as a fresh one. The
-        ``stance`` tool is always registered; the ``wake`` tool (issue #93) is
+        ``stance`` tool is always registered; the ``wake`` tool is
         registered ONLY when a :class:`WakeService` is attached (the waker opt-in),
         so a non-waker never gets it and cannot wake-chain.
 
@@ -197,7 +197,7 @@ class ClaudeEngine:
         the SAME :meth:`_tool_registration` a fresh start uses. Without this a
         resumed triage session would silently lose its ``wake_agent`` tool (and
         stance capture) — a correctness gap, since the supervisor resumes on
-        restart and on dead-session recovery (issue #93).
+        restart and on dead-session recovery.
         """
         if not session_ref:
             raise ValueError("claude_engine.resume: session_ref must be non-empty")

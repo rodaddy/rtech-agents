@@ -129,7 +129,7 @@ STANCE_DIRECTIVE = (
 #   This can never be trusted as a substantive answer AND must never leak raw
 #   JSON into chat. The engine turns it into a typed engine-error/failure turn
 #   (``TurnDone(is_error=True)``) so it fails SAFE through the human-one-liner
-#   failure path (issue #123) instead of publishing a false substantive terminal
+#   failure path instead of publishing a false substantive terminal
 #   turn or hanging a single-scope task on an invented non-terminal stance.
 StanceOutcome = Literal["stance", "prose", "blocked"]
 

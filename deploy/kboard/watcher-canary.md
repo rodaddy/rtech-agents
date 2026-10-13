@@ -1,7 +1,6 @@
 # Watcher canary kit — trio-debate in a fresh no-agents channel
 
-A paste-and-start runbook for proving the trio-intake debate path (issue #93,
-PRs #98–#104) end to end, in **one fresh Discord channel with no Hermes agents
+A paste-and-start runbook for proving the trio-intake debate path end to end, in **one fresh Discord channel with no Hermes agents
 present**, driven by a **dedicated watcher bot** (its own Discord app, not any
 agent bot). An intake hit fans out to a real duo/trio `TaskFrame`; each
 participant's turn renders back as a stance **TLDR** in the channel plus **full
@@ -49,7 +48,7 @@ do (mirrors `docs/canary-rollback-runbook.md` "Not automated").
       only bot in-channel is the watcher edge; the three participants act purely
       as bus consumers (agentd), never as in-channel Discord bots.
 - [ ] **Store the watcher bot token in Vaultwarden.** Ref:
-      `rtech-agents/kboard/RTECH_WATCHER_BOT_TOKEN`. The config expects an
+      `<your-secret-store-path>/RTECH_WATCHER_BOT_TOKEN`. The config expects an
       indirection ref in `RTECH_CHATD_TOKEN_REF` (default `env:RTECH_CHATD_BOT_TOKEN`);
       the operator fetches the VALUE from Vaultwarden and writes it into the env
       var that ref names, in `~/rtech-agents/.env` — **never** a literal token in
@@ -82,10 +81,10 @@ enables orchestrator + the three agentd + webchat, and **copies but does not
 enable** `rtech-chatd.service` (operator opt-in — enabling without a token/inbox/
 stack would crash-loop). The webchat edge is not needed for this test.
 
-**Atomic-ship requirement (README, #104).** The trio-debate path needs the
+**Atomic-ship requirement (README).** The trio-debate path needs the
 orchestrator + agentd built from the branch with the `TASK_INGRESS` fan-out
 consumer AND an rtech-frames build that decodes `origin`/`debate`
-(SCHEMA_VERSION 6). On `main` today (#98–#104) it does. Upgrade rtech-frames
+(SCHEMA_VERSION 6). On `main` today it does. Upgrade rtech-frames
 consumers first, then orchestrator + agentd, **then** enable the chatd debate
 participants — a debate frame published against an old orchestrator (no
 `TASK_INGRESS` fan-out) or an old rtech-frames (`extra="forbid"` rejects the
@@ -106,7 +105,7 @@ it never cross-consumes the live `dev` stack on the shared bus.
 RTECH_CHATD_NATS_URL=nats://127.0.0.1:4223
 RTECH_STACK_ID=canary
 RTECH_CHATD_TOKEN_REF=env:RTECH_CHATD_BOT_TOKEN
-RTECH_CHATD_BOT_TOKEN=<from Vaultwarden rtech-agents/kboard/RTECH_WATCHER_BOT_TOKEN>
+RTECH_CHATD_BOT_TOKEN=<from Vaultwarden <your-secret-store-path>/RTECH_WATCHER_BOT_TOKEN>
 RTECH_CHATD_INBOX_CHANNEL=<fresh channel id>
 RTECH_CHATD_INTAKE_ENABLED=1
 RTECH_CHATD_INTAKE_MODE=listed
@@ -303,7 +302,7 @@ systemctl --user start rtech-agentd@agentd-nagatha
 
 ---
 
-## Telegram edge variant (`rtech-tgd`, issue #112)
+## Telegram edge variant (`rtech-tgd`)
 
 The SAME trio-debate canary, driven by the standalone **Telegram** edge
 (`rtech-tgd.service`) instead of Discord. Everything downstream is identical —
@@ -318,7 +317,7 @@ so there is nothing to expose or proxy.
       distinct from the agent bots). This bot long-polls and posts the edge acks.
 - [ ] **Create one per-agent bot for each debate voice** (nagatha/bilby/skippy) —
       the multi-identity render posts each turn under that agent's OWN bot. Store
-      each token in Vaultwarden (`rtech-agents/kboard/RTECH_TG_TOKEN_<NAME>`).
+      each token in Vaultwarden (`<your-secret-store-path>/RTECH_TG_TOKEN_<NAME>`).
 - [ ] **Disable each bot's group privacy mode** (@BotFather → Bot Settings →
       Group Privacy → Turn OFF) so the polling bot receives non-command group
       messages; without it the gateway delivers empty bodies and no trigger ever
@@ -338,7 +337,7 @@ Full template: `deploy/kboard/env/watcher-tgd.env.example`. Minimum:
 RTECH_CHATD_NATS_URL=nats://127.0.0.1:4223
 RTECH_STACK_ID=canary
 RTECH_CHATD_TOKEN_REF=env:RTECH_CHATD_BOT_TOKEN
-RTECH_CHATD_BOT_TOKEN=<from Vaultwarden rtech-agents/kboard/RTECH_TG_WATCHER_BOT_TOKEN>
+RTECH_CHATD_BOT_TOKEN=<from Vaultwarden <your-secret-store-path>/RTECH_TG_WATCHER_BOT_TOKEN>
 RTECH_TG_ALLOWED_GROUPS=<fresh supergroup -100… id>
 RTECH_TG_IDENTITY_MAP=agentd-nagatha=env:RTECH_TG_TOKEN_NAGATHA,agentd-bilby=env:RTECH_TG_TOKEN_BILBY,agentd-skippy=env:RTECH_TG_TOKEN_SKIPPY
 RTECH_TG_TOKEN_NAGATHA=<from Vaultwarden>

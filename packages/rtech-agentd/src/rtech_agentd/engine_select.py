@@ -51,7 +51,7 @@ DEFAULT_ENGINE = "claude"
 DEFAULT_MODEL = "claude-sonnet-5"
 # ``gpt-5-codex`` is a RETIRED model id — the app-server 400s on it on
 # ChatGPT-account turns ("model not supported when using Codex with a ChatGPT
-# account", issue #132). The fallback must itself be a supported tier. The live
+# account"). The fallback must itself be a supported tier. The live
 # GPT-5.6 family is Luna/Sol/Terra (see the operator's model-routing notes); Sol is the
 # routine-implementation default and matches the model the interactive codex CLI
 # resolves for ChatGPT accounts (~/.codex/config.toml model = "gpt-5.6-sol").
@@ -208,7 +208,7 @@ def _build_claude_engine(env: dict[str, str]) -> EngineSession:
 
 
 def _resolve_codex_model(env: dict[str, str]) -> str:
-    """Resolve (and sanitize) the codex model from the environment (issue #132).
+    """Resolve (and sanitize) the codex model from the environment.
 
     Two untrusted-input hazards are closed HERE, at the config boundary, before
     the value can ever reach a log line at :meth:`CodexEngine.start`:

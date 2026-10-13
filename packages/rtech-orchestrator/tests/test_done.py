@@ -5,7 +5,7 @@ from __future__ import annotations
 from rtech_frames import Stance, StatusFrame, TaskFrame, TurnFrame, is_done
 from rtech_orchestrator import TaskGraph
 
-# Dispatched participant sets per scope (issue #75: done is participant-scoped).
+# Dispatched participant sets per scope (done is participant-scoped).
 _SCOPE_DISPATCH: dict[str, frozenset[str]] = {
     "single": frozenset({"a1"}),
     "duo": frozenset({"a1", "a2"}),
@@ -15,8 +15,8 @@ _SCOPE_DISPATCH: dict[str, frozenset[str]] = {
 def _task(scope: str) -> TaskFrame:
     """Build a valid task frame for a given scope.
 
-    Duo/trio frames must name their participants (wire invariant, issue #75
-    round 2); ``_SCOPE_DISPATCH`` remains the dispatched identity source the
+    Duo/trio frames must name their participants (wire
+    invariant); ``_SCOPE_DISPATCH`` remains the dispatched identity source the
     derivation actually uses.
     """
     return TaskFrame(
@@ -135,7 +135,7 @@ def test_undispatched_graph_has_no_participants() -> None:
 
 
 def test_foreign_agent_turn_does_not_count() -> None:
-    """(k) issue #75: a terminal turn from a non-dispatched agent never counts."""
+    """(k): a terminal turn from a non-dispatched agent never counts."""
     graph = _graph("single")
     graph.add_turn(_turn("agentd-bilby"))
     assert _done(graph) is False

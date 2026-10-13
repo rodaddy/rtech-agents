@@ -1,4 +1,4 @@
-"""Cover the TaskFrame scope/participant wire invariant (issue #75 round 2)."""
+"""Cover the TaskFrame scope/participant wire invariant."""
 
 from __future__ import annotations
 

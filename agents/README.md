@@ -1,4 +1,4 @@
-# agents/ — source-owned per-agent homes (#84)
+# agents/ — source-owned per-agent homes
 
 Each agent gets a **slug-named** directory here holding its deployment manifest
 and persona:

@@ -10,7 +10,7 @@ TASK_STATUS_TEMPLATE = "rtech.task.{task_id}.status"
 TASK_STEER_TEMPLATE = "rtech.task.{task_id}.steer"
 TASK_RESULT_TEMPLATE = "rtech.task.{task_id}.result"
 AGENT_TASK_TEMPLATE = "rtech.agent.{agent_id}.task"
-# The one presence-transition subject (issue #147): the deriver publishes a typed
+# The one presence-transition subject: the deriver publishes a typed
 # PresenceTransitionFrame here on each genuine online<->offline edge, and a chatd
 # consumer subscribes it to render an operator Offline/Recovered notification. A
 # flat constant (like TASK_INGRESS) — the subject carries no per-task token.

@@ -1,4 +1,4 @@
-"""CLI for idempotent trio debate-group provisioning (issue #110).
+"""CLI for idempotent trio debate-group provisioning.
 
 The automation-tier entry point, installed as ``provision-debate-group`` (also
 ``python -m rtech_chatd.provision_group``). It drives the one command the

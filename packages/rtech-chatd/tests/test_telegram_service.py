@@ -1,4 +1,4 @@
-"""Tests for the standalone Telegram edge entrypoint (issue #112).
+"""Tests for the standalone Telegram edge entrypoint.
 
 Assembly + fail-closed config for ``rtech-tgd``: the entrypoint composes ONLY the
 Telegram surface (adapter + sender + intake sink + edge), never a Discord adapter
@@ -218,7 +218,7 @@ def test_assembly_uses_identity_stamped_debate_render(monkeypatch: pytest.Monkey
 def test_assembly_wires_multi_identity_sender(monkeypatch: pytest.MonkeyPatch) -> None:
     components = _build(monkeypatch)
     # The adapter received a sender (the multi-identity pool), preserved from the
-    # PR #122 baseline — not the #108 stub.
+    # baseline — not the stub.
     assert components.adapter._sender is not None  # noqa: SLF001
 
 
@@ -227,7 +227,7 @@ def test_assembly_wires_intake_sink_when_enabled(monkeypatch: pytest.MonkeyPatch
     assert components.adapter._intake_sink is not None  # noqa: SLF001
 
 
-# --- presence-notify config + wiring (issue #147) ----------------------------
+# --- presence-notify config + wiring ----------------------------
 
 
 def test_from_env_presence_notify_unset_disables(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -280,7 +280,7 @@ def test_assembly_presence_target_builds_consumer(monkeypatch: pytest.MonkeyPatc
 def test_assembly_wires_callback_sink_and_interaction_when_intake_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # The interactive steer layer (issue #117) is wired end-to-end in production
+    # The interactive steer layer is wired end-to-end in production
     # composition: the adapter receives a callback sink (so a tap becomes a typed
     # steer) and the edge receives a turn-interaction hook (so a landed debate TLDR
     # gets an actor-bound keyboard). Both ride the SAME shared registry.

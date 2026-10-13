@@ -1,6 +1,6 @@
 # Bridged participants: lifecycle, ownership, done derivation
 
-Design for PR #73 round 3 (redesign after the stop-rule). Supersedes the
+Design for (redesign after the stop-rule). Supersedes the
 round-1/round-2 reverse-path shape, in which the bridge edge authored the
 terminal `TurnFrame` (first from `kind=status`, then from the typed fleet
 `Done`). Both shapes put terminal-turn authorship at the edge — a violation of
@@ -8,9 +8,9 @@ doctrine rules 1/2 at the root. This document moves terminal semantics for
 bridged participants to the orchestrator and constrains the bridge to content
 translation only.
 
-Builds on PR #77's participant-scoped done model (`is_done(task, graph,
-participants=...)`, dispatch record on `TaskGraph`); this branch is based on
-PR #77's head.
+Builds on participant-scoped done model (`is_done(task, graph,
+participants=...)`, dispatch record on `TaskGraph`); this design builds on
+that model.
 
 ## Who owns what
 
@@ -60,7 +60,7 @@ distinguishes participant kinds recorded at dispatch:
 
 - **Native participants** (agentd): terminal evidence is the LATEST `TurnFrame`
   being terminal (`stance.needs_from` empty), sequence-aware with retraction —
-  unchanged from PR #77.
+  unchanged from the earlier design.
 - **Bridged participants**: terminal evidence is ONLY a recorded
   `TerminalEvidence` entry — the orchestrator's typed record of the fleet
   `Done` it consumed (agent id, task id, outcome, source). `TurnFrame`s from a
@@ -73,7 +73,7 @@ it has no codec registration, cannot be published, and exists only inside the
 orchestrator's `TaskGraph` event log. This is what "consume the typed Done as a
 typed input, do not re-author it" means concretely.
 
-Fail-closed rules (all pre-existing rules from PR #77 kept):
+Fail-closed rules (all pre-existing rules from kept):
 
 - Evidence whose agent id is not a **dispatched bridged participant** of the
   task is rejected at the graph boundary (spoof on the fleet lane).

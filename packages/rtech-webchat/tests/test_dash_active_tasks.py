@@ -1,4 +1,4 @@
-"""Test the bearer-gated active Dash task recovery endpoint (issue #144).
+"""Test the bearer-gated active Dash task recovery endpoint.
 
 Every case is hermetic: a ``FakeFrameBus`` captures publishes and routes
 emitted frames to the connector's own subscribers, so completion is driven by
@@ -29,7 +29,7 @@ DASH_ACTIVE_URL = "/api/dash/active-tasks"
 
 @pytest.fixture(autouse=True)
 def _stack_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Provide the REQUIRED stack id (issue #75): explicit dev id, test harness only."""
+    """Provide the REQUIRED stack id: explicit dev id, test harness only."""
 
     monkeypatch.setenv("RTECH_STACK_ID", "dev")
 
@@ -58,7 +58,7 @@ class FakeFrameBus:
     connected: bool = True
 
     def is_connected(self) -> bool:
-        """Report the fake transport's current connection state (issue #145).
+        """Report the fake transport's current connection state.
 
         The presence read consults this at every poll, so a test can flip it to
         ``False`` after subscribe to simulate a later connection drop.
@@ -282,8 +282,7 @@ def test_ttl_eviction_of_buffer_still_clears_completed_dash_task() -> None:
 
     The replay buffer is the evictable SSE-bound surface; the result interest
     that mirrors orchestrator-derived completion must outlive it. If it did not,
-    the completed dash-dash task would stay authoritatively active forever
-    (issue #144).
+    the completed dash-dash task would stay authoritatively active forever.
     """
 
     ids = iter(["dash-ttl", "dash-sweep"])

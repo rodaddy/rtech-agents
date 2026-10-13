@@ -1,4 +1,4 @@
-"""Cover bridged-participant done derivation (PR #73 redesign).
+"""Cover bridged-participant done derivation.
 
 The orchestrator — never the bridge edge — owns terminal semantics for a
 bridged participant: it consumes the typed fleet ``Done`` through the

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify-agent-deploy: READ-ONLY post-deploy checks for one agentd instance (#84).
+# verify-agent-deploy: READ-ONLY post-deploy checks for one agentd instance.
 #
 # Companion to docs/canary-rollback-runbook.md. Every check below only READS
 # state (systemctl status/show, a source-file existence probe) — it NEVER starts,
@@ -37,7 +37,7 @@ fail() {
 	rc=1
 }
 
-# 1. Source-owned config + persona exist for this id (the #84 invariant: no
+# 1. Source-owned config + persona exist for this id (the invariant: no
 #    hardcoded agent — the id must map to a source-owned home + SOUL.md).
 #    Manifest resolution mirrors rtech_agentd.__main__._resolve_manifest_path:
 #    exact-id dir wins, then the `agentd-`-stripped slug dir.

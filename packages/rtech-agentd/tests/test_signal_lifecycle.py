@@ -1,4 +1,4 @@
-"""Cover the agentd signal -> shutdown-lifecycle initiator seam (#84).
+"""Cover the agentd signal -> shutdown-lifecycle initiator seam.
 
 The shutdown lifecycle frame names its initiator ``signal:<name>``. The signal
 handler must stamp the triggering signal onto the shared ``_StopSignal`` so the

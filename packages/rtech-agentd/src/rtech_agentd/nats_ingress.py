@@ -268,7 +268,7 @@ class NatsIngress:
         """
         if turn.is_error:
             # Failed turns render a human one-liner; the raw payload (often the
-            # vendor's error body) is logged ONCE here, never shipped (issue #123).
+            # vendor's error body) is logged ONCE here, never shipped.
             logger.error(
                 "nats_ingress.reply | failed turn; payload withheld from chat | "
                 "inbound_id={} payload={}",

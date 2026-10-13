@@ -42,7 +42,7 @@ def _idempotent_unsubscribe(subject: str, subscription: _RawSubscription) -> Uns
     """Wrap a raw NATS subscription in an idempotent async retire callable.
 
     The frame-turn runner retires a sibling/steer lane exactly once at task
-    completion, but a redriven ``SubscriptionSet.retire()`` (issue #80) may call
+    completion, but a redriven ``SubscriptionSet.retire()`` may call
     the handle again; the second call must be a clean no-op, not a double
     ``unsubscribe`` on an already-closed raw subscription. So the returned
     callable retires the live handle on first use and short-circuits thereafter.
@@ -72,7 +72,7 @@ class _NatsSubscription:
 
     Carries the live ``nats.aio`` subscription so the
     :func:`~rtech_frames.subs.subscribe_all` primitive can retire a
-    partially-established set (issue #80). ``unsubscribe`` is idempotent: the
+    partially-established set. ``unsubscribe`` is idempotent: the
     same shared retire callable the plain :meth:`TypedFrameBus.subscribe_frame`
     return uses, so a redriven ``retire()`` never double-cancels the raw handle.
     """
@@ -120,7 +120,7 @@ class TypedFrameBus:
         Raises:
             FramePublishError: If the transport publish failed. Swallowing
                 this would let the orchestrator record a dispatch that never
-                happened (issue #75 round 2), so the failure is typed and
+                happened, so the failure is typed and
                 loud.
         """
         data = encode_frame(frame)
@@ -137,7 +137,7 @@ class TypedFrameBus:
         logger.debug("typedbus.publish | subject={}", subject)
 
     async def publish_frame_checked(self, subject: str, frame: Frame) -> None:
-        """Publish a typed frame and RE-RAISE on transport failure (issue #93).
+        """Publish a typed frame and RE-RAISE on transport failure.
 
         This shared bus already propagates on :meth:`publish_frame`, so the checked
         twin — required by the agentd ``FrameBus`` structural Protocol both buses
@@ -214,7 +214,7 @@ class TypedFrameBus:
         Same delivery semantics as :meth:`subscribe_frame`, but the returned
         handle wraps the live NATS subscription so a caller — the typed-bus
         :func:`~rtech_frames.subs.subscribe_all` primitive — can retire it to
-        roll a partially-established set back (issue #80).
+        roll a partially-established set back.
 
         Raises:
             FrameSubscribeError: If the transport subscribe failed; a silently

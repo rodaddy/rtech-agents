@@ -46,8 +46,8 @@ _CRED_PREFIXES: tuple[str, ...] = (
 # (not a bare "sk-" substring) so ordinary hyphenated words do not match.
 _OPENAI_KEY = re.compile(r"sk-[A-Za-z0-9_-]{" + "20" + ",}")
 
-# PII/infra shapes the #119 redaction pass removed — pinned so they cannot
-# regress while CI stays green (PR #127 review finding):
+# PII/infra shapes the redaction pass removed — pinned so they cannot
+# regress while CI stays green:
 # email addresses, US phone shapes, RFC1918/internal IPs, and long unbroken
 # base64/hex blobs (key or hash material; no persona word is that shape).
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")

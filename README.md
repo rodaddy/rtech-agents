@@ -31,7 +31,7 @@ token in the model's reply.
 | `rtech-webchat` | A small web-chat edge for local use. |
 | `rtech-persona` | Loads `SOUL.md` / `USER.md` / `KERNEL.md`, scans and caps them, composes the system prompt. |
 | `rtech-schedulerd` | Cron-scheduled task minter. |
-| `rtech-hermes-bridge` | Adapter that fronts existing Hermes gateway agents on the same bus. |
+| `rtech-hermes-bridge` | Optional adapter that fronts agents running on an external Hermes gateway attached to the same NATS bus through fleet-bus's `fleet-subscriber` adapter. The Hermes gateway is not part of this repo; skip this package if you do not run one. |
 
 ## Agents are config
 
@@ -56,11 +56,15 @@ parent/
 ```
 
 ```bash
+mkdir parent && cd parent
 git clone https://github.com/rodaddy/rtech-agents.git
 git clone https://github.com/rodaddy/fleet-bus.git
 git clone https://github.com/rodaddy/open-brain.git
 cd rtech-agents
 ```
+
+The three clones must sit side by side under the same parent directory; the
+directory names must stay `rtech-agents`, `fleet-bus` and `open-brain`.
 
 The root `pyproject.toml` resolves `fleet-core`, `fleet-nats` and
 `fleet-subscriber` from `../fleet-bus/packages/*`, and `openbrain-memory` from
@@ -87,14 +91,19 @@ authenticated `claude` CLI on PATH.
 
 ## Tests
 
-`uv run pytest -q` runs the unit suite with no network. Tests that need a live
-NATS server (`test_nats_live.py`) skip when it is unreachable; the Discord and
-Telegram canaries in `packages/rtech-chatd/scripts/` and
-`scripts/e2e_evidence.py` are manual integration runs.
+`uv run pytest -q` runs the unit suite with no network. On a fresh checkout
+expect 7 skips:
 
-Three tests are skipped because the author's agent configs and the `secrets/`
-templates are not part of this export; the other skips are live-service smokes
-gated on an env var or a reachable server.
+- 3 because this export ships only `agents/_skeleton` and no `secrets/` tree
+  (two tests in `rtech-agentd/tests/test_agent_config_resolve.py`, one in
+  `rtech-chatd/tests/test_user_session_config.py`);
+- 4 live smokes: `test_nats_live.py` (skips when no NATS server answers at the
+  configured URL), `test_codex_live.py` (`RTECH_CODEX_LIVE=1`),
+  `test_memory.py` (`OB_LIVE`), and `rtech-chatd/tests/e2e/test_telegram_live.py`
+  (`RTECH_TG_E2E_LIVE`, see `docs/telegram-live-e2e.md`).
+
+The Discord canary (`packages/rtech-chatd/scripts/discord_canary.py`) and
+`scripts/e2e_evidence.py` are manual integration runs.
 
 ## What is production-proven and what is not
 
@@ -102,8 +111,9 @@ gated on an env var or a reachable server.
   on one host as rootless systemd user services (`deploy/kboard/`).
 - Not proven: any other deployment. The systemd units and env examples are a
   worked example for one host, not an installer for yours.
-- Not included: the author's agent personas, the k-board service, or the
-  Open Brain server.
+- Not included: the author's agent personas, the unrelated app that shares
+  the author's deploy host (`deploy/kboard/` is named after it), the Open Brain
+  server, or a Hermes gateway.
 
 ## Naming notes
 

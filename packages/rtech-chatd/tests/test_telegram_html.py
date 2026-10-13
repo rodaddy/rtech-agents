@@ -1,4 +1,4 @@
-"""Markdown -> Telegram-HTML conversion + 4096-safe chunking tests (issue #109).
+"""Markdown -> Telegram-HTML conversion + 4096-safe chunking tests.
 
 Two surfaces: :func:`render_telegram_html` (per-chunk conversion, allowlist-only
 tags, code extracted-then-restored so markdown inside code stays literal, and a
@@ -205,7 +205,7 @@ def test_pathological_escape_density_all_chunks_within_ceiling() -> None:
         assert chunk != ""
 
 
-# ------------------------------------------- gauntlet fix regressions (PR #122)
+# ------------------------------------------- gauntlet fix regressions
 
 
 def test_nul_bytes_are_stripped_and_cannot_forge_stash_sentinels() -> None:
@@ -238,7 +238,7 @@ def test_crossing_inline_tags_degrade_chunk_to_plain() -> None:
 
 
 def test_resplit_of_crossing_bold_body_stays_parser_safe() -> None:
-    # F6 adjudication (PR #122 follow-up): the re-split path emits no mis-nested
+    # F6 adjudication (follow-up): the re-split path emits no mis-nested
     # piece even for a huge, escape-dense, emphasis-heavy body. Taking a
     # contiguous sub-piece of a well-formed chunk can only UNMATCH an emphasis
     # span (a lone ``**``/``*``/``_`` renders as a literal metachar, never a
@@ -277,7 +277,7 @@ def test_forged_inline_sentinel_is_stripped_too() -> None:
 
 
 def test_plain_pieces_never_split_an_html_entity() -> None:
-    # PR #122 terminal audit: the plain-degrade hard cut must not sever an
+    # the plain-degrade hard cut must not sever an
     # escaped entity (a piece ending "&am" 400s the HTML attempt and renders
     # literally on the plain resend). Dense '&' input puts an entity on every
     # boundary candidate.

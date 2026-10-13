@@ -1,6 +1,6 @@
-"""Failed turns render a human one-liner, never the raw engine payload (#123).
+"""Failed turns render a human one-liner, never the raw engine payload.
 
-Observed live (AI Test Group, #109 smoke): an engine terminal error produced a
+Observed live (AI Test Group, smoke): an engine terminal error produced a
 TurnFrame whose ``visible_text`` was the vendor's raw error JSON, which the edge
 posted verbatim to chat. Chat surfaces are treated as leaked, so the summary is
 built by :func:`rtech_agentd.engine.failure_visible_text` and applied at BOTH
@@ -75,7 +75,7 @@ def test_failure_text_malformed_json_is_generic() -> None:
 
 
 def test_failure_text_json_extracted_detail_gets_the_same_payload_guards() -> None:
-    # Review finding (PR #125): the URL/brace/newline guards must apply to
+    # Review finding: the URL/brace/newline guards must apply to
     # JSON-extracted type/code values too, not only to the plain branch — a
     # vendor payload can smuggle payload material inside those fields.
     generic = "engine error — details in agentd logs"
@@ -90,7 +90,7 @@ def test_failure_text_json_extracted_detail_gets_the_same_payload_guards() -> No
 
 
 def test_failure_text_detail_is_allowlisted_not_blocklisted() -> None:
-    # Verifier finding (PR #125): a blocklist missed Unicode line separators,
+    # Verifier finding: a blocklist missed Unicode line separators,
     # control chars, bidi overrides, scheme-less URLs, and token-shaped
     # payloads. The detail must FULLMATCH a plain-ASCII sentence shape with no
     # unbroken run longer than a real word or vendor error code.
@@ -118,7 +118,7 @@ def test_failure_text_detail_is_allowlisted_not_blocklisted() -> None:
 
 
 def test_failure_text_boolean_status_is_not_a_status() -> None:
-    # Review finding (PR #125): bool is a subclass of int; {"status": true}
+    # Review finding: bool is a subclass of int; {"status": true}
     # must not render "(status True)".
     assert (
         failure_visible_text('{"status":true,"type":"rate_limit"}')

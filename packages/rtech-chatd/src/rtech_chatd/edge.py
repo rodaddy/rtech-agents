@@ -109,9 +109,9 @@ class TurnInteraction(Protocol):
         ...
 
 
-# Bound on the external-turn dedup seen-set (issue #93 reply render). Each entry
+# Bound on the external-turn dedup seen-set (reply render). Each entry
 # keys an already-processed external turn to the SET of render pieces that landed
-# for it, so redelivery resumes only the MISSING piece (issue #93 R4/R5 partial
+# for it, so redelivery resumes only the MISSING piece (R4/R5 partial
 # failure): a debate turn that posted its TLDR but whose in-thread full send
 # failed retries only the full on redelivery, never re-posting the TLDR.
 #
@@ -152,7 +152,7 @@ def _turn_identity_digest(frame: TurnFrame) -> str:
     return hashlib.sha256(encode_frame(frame)).hexdigest()
 
 
-# Render-progress piece markers stored in the seen-set value (issue #93 R4/R5).
+# Render-progress piece markers stored in the seen-set value (R4/R5).
 # A non-debate turn is one atomic ``full`` send; a debate turn is a ``tldr`` to
 # the parent channel plus a ``full`` in-thread, each marked independently so a
 # partial failure retries only the missing piece.
@@ -172,7 +172,7 @@ class _ExternalRenderProgress:
         return not self.pieces and not self.chunk_cursors
 
 
-# Per-task distinct-agent TLDR cap (issue #93 R hardening / D8). A TurnFrame
+# Per-task distinct-agent TLDR cap (R hardening / D8). A TurnFrame
 # carries no participant roster, so the edge renders a TLDR for ANY novel
 # agent_id on a debate origin. This bounds how many DISTINCT agents may post a
 # TLDR per debate task: trio (3) + one closing author = 4. A novel agent past the
@@ -383,7 +383,7 @@ class DiscordEdge:
     ) -> None:
         """Store injected dependencies without opening any connection.
 
-        ``stack`` is REQUIRED addressing config (issue #75): every minted
+        ``stack`` is REQUIRED addressing config: every minted
         TaskFrame is stamped with it, and a blank id fails closed at
         construction — an independently launched edge never defaults to a
         shared literal.
@@ -401,7 +401,7 @@ class DiscordEdge:
         ``agent_id``.
 
         ``identity_send`` opts the DEBATE render into per-agent identity
-        routing (issue #109): each debate piece's :class:`SendTarget` is
+        routing: each debate piece's :class:`SendTarget` is
         stamped ``as_agent=frame.agent_id`` so a multi-identity surface
         (Telegram) posts it under that agent's OWN bot, the TLDR drops its
         now-redundant name prefix, and the agent's typing indicator is stopped
@@ -409,7 +409,7 @@ class DiscordEdge:
         deploy byte-identical (single-bot voice, named TLDRs).
 
         ``intake_enabled`` is the SAME opt-in that makes this deploy a triage
-        edge (issue #93). Only when it is true does the edge subscribe the shared
+        edge. Only when it is true does the edge subscribe the shared
         turn wildcard and render EXTERNAL task turns (answers for tasks it did not
         mint — an intake/wake answer) back into the asking channel. When false the
         edge behaves EXACTLY as before: no wildcard subscription, byte-identical.
@@ -425,7 +425,7 @@ class DiscordEdge:
         byte-identical to the pre-lane per-turn behavior.
 
         ``presence_notify_target`` opts this edge into rendering operator
-        presence notifications (issue #147): when set, the edge subscribes the
+        presence notifications: when set, the edge subscribes the
         shared :data:`subjects.PRESENCE_TRANSITION` subject and renders the typed
         ``PresenceTransitionFrame`` the web-chat deriver publishes into THIS
         surface's send path (markdown body, so the surface applies its own safe
@@ -443,7 +443,7 @@ class DiscordEdge:
 
         if not stack.strip():
             logger.error("chatd.edge | blank stack id rejected at construction")
-            raise ValueError("stack must be non-empty (issue #75); there is no default stack id")
+            raise ValueError("stack must be non-empty; there is no default stack id")
         self._adapter = adapter
         self._bus = bus
         self._id_factory = id_factory or _new_task_id
@@ -475,7 +475,7 @@ class DiscordEdge:
         # separate subjects with NO cross-subject ordering guarantee, so the
         # edge must know whether the terminal text still needs rendering.
         self._rendered_turns: dict[str, set[tuple[str, str]]] = {}
-        # External-turn reply render (issue #93): only a triage edge (intake
+        # External-turn reply render: only a triage edge (intake
         # enabled) subscribes the shared turn wildcard to answer tasks it did not
         # mint. The subscription handle is retired at close; the seen-set dedups
         # a redelivered external turn so a single answer never double-posts.
@@ -496,7 +496,7 @@ class DiscordEdge:
         # legacy path unchanged; purely additive, never drops an unlisted
         # chat/agent's full text.
         self._debate_chat_lanes = dict(debate_chat_lanes or {})
-        # Narrow surface-owned interaction hook (issue #117). When set, the edge
+        # Narrow surface-owned interaction hook. When set, the edge
         # offers each landed debate TLDR to the surface so it may attach a
         # display-only, actor-bound interaction (a Telegram inline keyboard whose
         # taps become typed steers on the bus). None (default) keeps every deploy
@@ -504,7 +504,7 @@ class DiscordEdge:
         self._turn_interaction = turn_interaction
         self._external_seen_max = external_seen_max
         self._external_subscription: Subscription | None = None
-        # Presence-transition notifications (issue #147). Only wired when a notify
+        # Presence-transition notifications. Only wired when a notify
         # target is configured, so an edge without one is byte-identical. The
         # consumer decodes the typed frame and renders THIS surface's markdown body
         # (Telegram vs the bare-URL Discord body, keyed off ``origin_edge``) through
@@ -522,7 +522,7 @@ class DiscordEdge:
                 send_telegram=self._send_presence if is_telegram else None,
                 send_discord=None if is_telegram else self._send_presence,
             )
-        # External-turn render-progress marks (issue #93). Key shape is
+        # External-turn render-progress marks. Key shape is
         # (task_id, agent_id, digest) for BOTH render modes (see
         # DEFAULT_EXTERNAL_SEEN_MAX): the digest is a content-safe hash of the FULL
         # typed TurnFrame identity, so a byte-identical redelivery shares this
@@ -554,7 +554,7 @@ class DiscordEdge:
         # after its TLDR lands.
         self._debate_tldr_inflight: set[tuple[str, str]] = set()
         # Per debate TASK: the set of DISTINCT agent_ids that have already rendered
-        # a TLDR, for the distinct-agent TLDR cap (issue #93 D8). Bounded by the cap
+        # a TLDR, for the distinct-agent TLDR cap (D8). Bounded by the cap
         # itself (at most DEBATE_DISTINCT_AGENT_TLDR_CAP ids per task) and retired
         # with the seen-set.
         self._debate_tldr_agents: OrderedDict[str, set[str]] = OrderedDict()
@@ -615,7 +615,7 @@ class DiscordEdge:
             msg.channel_id,
             msg.thread_id,
         )
-        # Reply subscriptions are installed BEFORE the publish (PR #73 round 3
+        # Reply subscriptions are installed BEFORE the publish (same
         # pattern, mirroring rtech_orchestrator): a fast orchestrator/agent can
         # emit the first turn/status/result the moment the task lands, and a
         # subscription installed after the publish misses it forever. The whole
@@ -740,7 +740,7 @@ class DiscordEdge:
         await self._dispatch(send.target, send.text, suppressed=send.suppressed)
 
     async def _subscribe_external_turns(self) -> None:
-        """Subscribe the shared turn wildcard for external answers (issue #93).
+        """Subscribe the shared turn wildcard for external answers.
 
         A no-op unless this deploy is a triage edge (``intake_enabled``): only
         then does the edge render answers for tasks it did not mint itself. A
@@ -776,7 +776,7 @@ class DiscordEdge:
         debate rounds do NOT render, trickle pacing is a future layer) AND carries
         an ``origin`` the answer can be routed back to.
 
-        PER-KEY DEDUP with split render-progress marks (issue #93 R3/R4/R5). The
+        PER-KEY DEDUP with split render-progress marks (R3/R4/R5). The
         key is ``(task_id, agent_id, digest)`` for BOTH render modes, where
         ``digest`` is a content-safe hash of the FULL typed TurnFrame identity
         (:func:`_turn_identity_digest`). A byte-identical redelivery hashes the
@@ -798,7 +798,7 @@ class DiscordEdge:
         per task+agent, UX v2); when the thread cannot be created the full text
         degrades to the parent channel (loud, never dropped) alongside the TLDR.
         A render failure is contained (never crashes the edge); its send-failure
-        log is owned by ``_dispatch`` (issue #93 R5).
+        log is owned by ``_dispatch`` (R5).
         """
 
         try:
@@ -875,7 +875,7 @@ class DiscordEdge:
         )
 
     async def _subscribe_presence_transitions(self) -> None:
-        """Subscribe the shared presence-transition subject (issue #147).
+        """Subscribe the shared presence-transition subject.
 
         A no-op unless a notify target is configured (``_presence_consumer`` set):
         only then does this edge render operator Offline/Recovered notifications
@@ -930,7 +930,7 @@ class DiscordEdge:
         """Render one external terminal turn per its typed ``origin.debate`` shape.
 
         ``progress`` is the shared render-progress state for this turn's dedup key
-        (issue #93 R4/R5). Each piece is RESERVED in its mark set BEFORE dispatch,
+        (R4/R5). Each piece is RESERVED in its mark set BEFORE dispatch,
         so a concurrent redelivery sharing the same set finds the piece claimed and
         does not double-post (the R3 concurrency guard); on a dispatch FAILURE the
         piece is removed so redelivery resumes ONLY the missing piece — a landed
@@ -981,7 +981,7 @@ class DiscordEdge:
         # thread. Each piece is reserved-before-dispatch and un-reserved on
         # failure so a partial failure retries only the missing piece (R4/R5)
         # while a redelivery cannot double-post a landed piece (R3).
-        # Identity routing (issue #109): with ``identity_send`` every debate
+        # Identity routing: with ``identity_send`` every debate
         # piece is voiced as its author — the target carries the typed agent_id
         # for the surface's per-identity pool, and the TLDR drops its name
         # prefix (the posting bot IS the attribution).
@@ -1044,7 +1044,7 @@ class DiscordEdge:
                     self._debate_tldr_msgs[(frame.task_id, frame.agent_id)] = tldr_msg_id
                     self._evict_debate_threads()
                     # The TLDR message id is now known — the ONLY point a callback
-                    # capability can be minted and bound to it (issue #117). Offer
+                    # capability can be minted and bound to it. Offer
                     # the landed TLDR to the surface interaction hook so it may
                     # attach a display-only, actor-bound keyboard on its polled
                     # default bot. Contained: a hook failure never crashes the
@@ -1107,7 +1107,7 @@ class DiscordEdge:
     async def _offer_turn_interaction(
         self, frame: TurnFrame, target: SendTarget, anchor_message_id: str
     ) -> None:
-        """Offer a just-landed debate TLDR to the surface interaction hook (#117).
+        """Offer a just-landed debate TLDR to the surface interaction hook.
 
         Contained best-effort: the interaction is display plumbing, so a hook
         failure is logged and swallowed — it must never crash the render path or
@@ -1452,7 +1452,7 @@ class DiscordEdge:
         """
 
         logger.debug("edge.close | task_subscriptions={}", len(self._task_subscriptions))
-        # Retire the shared external-turn wildcard (issue #93) before the per-task
+        # Retire the shared external-turn wildcard before the per-task
         # sets. A failure is logged and contained so teardown still proceeds.
         if self._external_subscription is not None:
             try:
@@ -1465,7 +1465,7 @@ class DiscordEdge:
             else:
                 logger.debug("edge.close | external turn subscription retired")
             self._external_subscription = None
-        # Retire the shared presence-transition subscription (issue #147). Contained
+        # Retire the shared presence-transition subscription. Contained
         # exactly like the external-turn one so a failure never aborts teardown.
         if self._presence_subscription is not None:
             try:

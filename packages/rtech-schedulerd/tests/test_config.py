@@ -102,7 +102,7 @@ def test_duplicate_schedule_ids_rejected() -> None:
 
 
 def test_blank_stack_id_rejected() -> None:
-    """A blank stack id fails closed (issue #75 ingress guard)."""
+    """A blank stack id fails closed (ingress guard)."""
     with pytest.raises(ScheduleConfigError):
         load_schedules([_single()], stack_id="  ")
 

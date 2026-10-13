@@ -138,7 +138,7 @@ async def test_turn_without_pending_task_is_dropped(tmp_path: Path) -> None:
     assert bus.by_type(TurnFrame) == []
 
 
-# --- completion contract: in-flight tracking + no-steer completion (issue #51) --
+# --- completion contract: in-flight tracking + no-steer completion --
 
 
 def _make_supervisor_and_runner(
@@ -194,7 +194,7 @@ async def test_failed_send_retires_in_flight_tracking(tmp_path: Path) -> None:
 
 
 async def test_scripted_task_completes_without_steer(tmp_path: Path) -> None:
-    """Regression pin (#51): a scripted task send drives a TurnFrame, NO steer.
+    """Regression pin: a scripted task send drives a TurnFrame, NO steer.
 
     The scripted engine completes its own turn — no ``complete_open_turn`` flush,
     no SteerFrame. Task in -> StatusFrame(working) -> TurnFrame out, end to end
@@ -234,7 +234,7 @@ async def test_scripted_task_completes_without_steer(tmp_path: Path) -> None:
     assert bus.by_type(SteerFrame) == []
 
 
-# --- steer target contract: broadcast default honored, ignores are loud (#74) ---
+# --- steer target contract: broadcast default honored, ignores are loud ---
 
 
 def _steer(task_id: str, target: str, text: str = "steer text") -> SteerFrame:
@@ -242,7 +242,7 @@ def _steer(task_id: str, target: str, text: str = "steer text") -> SteerFrame:
 
 
 async def test_steer_broadcast_target_all_reaches_active_agent(tmp_path: Path) -> None:
-    """A steer with the edge-default target "all" is injected, not dropped (#74).
+    """A steer with the edge-default target "all" is injected, not dropped.
 
     The edge fills ``target_agent="all"`` when the human names no agent; agentd
     honors it as a first-class broadcast target for its active task, and the
@@ -279,7 +279,7 @@ async def test_steer_explicit_self_target_still_accepted(tmp_path: Path) -> None
 async def test_steer_wrong_explicit_target_is_ignored_loudly(tmp_path: Path) -> None:
     """A steer naming a different agent is NOT injected and the ignore is loud.
 
-    No silent drops (#74): the guard trigger emits a warning carrying the typed
+    No silent drops: the guard trigger emits a warning carrying the typed
     context (target, self, task_id), never a bare return.
     """
     from loguru import logger
@@ -305,7 +305,7 @@ async def test_steer_wrong_explicit_target_is_ignored_loudly(tmp_path: Path) -> 
 
 
 async def test_steer_broadcast_for_non_active_task_is_ignored_loudly(tmp_path: Path) -> None:
-    """The non-active ignore is loud WITH the full typed context (#74/#76).
+    """The non-active ignore is loud WITH the full typed context.
 
     The lane handler is bound to its task id, so the non-active branch is
     exercised directly: a lane-matching payload whose task is no longer active
@@ -335,14 +335,14 @@ async def test_steer_broadcast_for_non_active_task_is_ignored_loudly(tmp_path: P
     assert "task_id=T-not-active" in loud[0]
 
 
-# --- steer lane live semantics: bound handlers, retired subscriptions (#76) -----
+# --- steer lane live semantics: bound handlers, retired subscriptions -----
 
 
 async def test_steer_lane_payload_task_mismatch_is_rejected_loudly(tmp_path: Path) -> None:
     """A payload cannot ride a foreign lane: lane/payload mismatch is rejected.
 
     Two tasks are active; a frame published on task A's steer lane carrying
-    ``task_id=B`` (the stale-lane spoof from the #76 review) must NOT be
+    ``task_id=B`` (the stale-lane spoof from the review) must NOT be
     injected, and the ignore logs the full typed context including the lane.
     """
     from loguru import logger
@@ -372,7 +372,7 @@ async def test_steer_lane_payload_task_mismatch_is_rejected_loudly(tmp_path: Pat
 
 
 async def test_completed_task_steer_lane_is_unsubscribed(tmp_path: Path) -> None:
-    """Completion retires the LIVE lane subscription, not just guard state (#76)."""
+    """Completion retires the LIVE lane subscription, not just guard state."""
     _engine, runner, bus = _make(tmp_path)
     await runner.start()
     task = _task(task_id="T-retire")
@@ -508,14 +508,14 @@ async def test_untimestamped_untracked_task_fails_closed(tmp_path: Path) -> None
     """An untracked frame with no ``created_at`` cannot be proven within-horizon.
 
     It is indistinguishable from an evicted, arbitrarily old completed replay,
-    so it must FAIL CLOSED (issue #83) rather than fail open and risk a
+    so it must FAIL CLOSED rather than fail open and risk a
     double-dispatch. This is the symmetric half of the dedup cache: within-horizon
     completed replays are deduped by the cache; anything the cache cannot vouch
     for and cannot prove within-horizon is refused before any side effect.
     """
     engine, runner, bus = _make(tmp_path)
     await runner.start()
-    # A legacy/untimestamped frame (created_at=None) is the pre-#83 fail-open branch.
+    # A legacy/untimestamped frame (created_at=None) is the earlier fail-open branch.
     untimestamped = _task(task_id="T-no-ts").model_copy(update={"created_at": None})
     assert untimestamped.created_at is None
 
@@ -526,8 +526,8 @@ async def test_untimestamped_untracked_task_fails_closed(tmp_path: Path) -> None
     assert bus.handlers_on(subjects.task_steer(untimestamped.id)) == []
     assert list(runner._pending) == []
     # A regression that mutated supervisor tracking, the active-task marker, or
-    # the persisted dedup state on the refuse path would otherwise stay green
-    # (issue #83 review). Pin them untouched.
+    # the persisted dedup state on the refuse path would otherwise stay green.
+    # Pin them untouched.
     assert runner._supervisor.in_flight_task_id is None
     assert runner._steer_refs == {}
     assert runner._persisted_completions == {}
@@ -535,7 +535,7 @@ async def test_untimestamped_untracked_task_fails_closed(tmp_path: Path) -> None
 
 async def test_within_horizon_replay_survives_eviction_pressure(tmp_path: Path) -> None:
     """A within-horizon completed replay is NEVER re-dispatched, regardless of
-    how many completions intervene — the pinned issue #83 invariant.
+    how many completions intervene — the pinned invariant.
 
     A long horizon means the completed key is retained past the soft count
     bound (the cache grows loudly rather than under-retain), so replaying the
@@ -580,7 +580,7 @@ async def test_within_horizon_replay_survives_eviction_pressure(tmp_path: Path) 
 
 
 async def test_failed_send_retires_steer_lane_subscription(tmp_path: Path) -> None:
-    """The failed-send rollback also retires the live lane subscription (#76)."""
+    """The failed-send rollback also retires the live lane subscription."""
     engine, runner, bus = _make(tmp_path)
     await runner.start()
 
@@ -594,18 +594,18 @@ async def test_failed_send_retires_steer_lane_subscription(tmp_path: Path) -> No
 
 
 def test_broadcast_target_is_the_frames_owned_constant() -> None:
-    """agentd consumes the rtech-frames broadcast token, never its own literal (#76)."""
+    """agentd consumes the rtech-frames broadcast token, never its own literal."""
     from rtech_agentd.frame_turn import BROADCAST_TARGET as agentd_broadcast
     from rtech_frames import BROADCAST_TARGET as frames_broadcast
 
     assert agentd_broadcast is frames_broadcast
 
 
-# --- steer lane over the subscribe_all primitive (issue #80) -------------------
+# --- steer lane over the subscribe_all primitive -------------------
 
 
 async def test_steer_lane_installed_through_subscription_set(tmp_path: Path) -> None:
-    """(#80) The steer lane is held as a ``SubscriptionSet``, not a raw callable.
+    """The steer lane is held as a ``SubscriptionSet``, not a raw callable.
 
     The atomic primitive replaces the hand-rolled per-task unsubscribe handle:
     an active task carries exactly one live-set handle, and completion retires
@@ -631,7 +631,7 @@ async def test_steer_lane_installed_through_subscription_set(tmp_path: Path) -> 
 
 
 async def test_steer_subscribe_failure_fails_lane_without_leaking(tmp_path: Path) -> None:
-    """(#80) A steer-lane subscribe failure leaves NOTHING live-but-untracked.
+    """A steer-lane subscribe failure leaves NOTHING live-but-untracked.
 
     A single-subject set that fails to subscribe has nothing already made, so
     ``subscribe_all`` rolls back to an empty set: no handler is registered, the
@@ -669,7 +669,7 @@ async def test_steer_subscribe_failure_fails_lane_without_leaking(tmp_path: Path
     assert [send.text for send in engine.sends] == [task.text]
 
 
-# --- sibling turn fanout: the real inter-agent debate (issue #81) --------------
+# --- sibling turn fanout: the real inter-agent debate --------------
 
 
 def _runner_for(agent_id: str, tmp_path: Path) -> tuple[FakeEngine, FrameTurnRunner, FakeFrameBus]:
@@ -821,7 +821,7 @@ async def test_sibling_lane_outlives_a_single_turn_done(tmp_path: Path) -> None:
 
     A co-participant can publish after this agent's round completes; the lane
     must remain live to deliver the NEXT sibling (whoever-finishes-first must not
-    go deaf mid-debate) — but the debate is STRUCTURED BOUNDED ROUNDS (#87), so
+    go deaf mid-debate) — but the debate is STRUCTURED BOUNDED ROUNDS, so
     the lane is retired the moment this agent has opened its cap of
     sibling-triggered follow-ups, not left live forever.
     """
@@ -878,7 +878,7 @@ async def test_failed_send_retires_sibling_lane(tmp_path: Path) -> None:
 
 
 async def test_steer_lane_retire_failure_is_held_not_discarded(tmp_path: Path) -> None:
-    """(#80) A lane whose unsubscribe fails on completion is HELD, never dropped.
+    """A lane whose unsubscribe fails on completion is HELD, never dropped.
 
     ``SubscriptionSet.retire()`` retains a handle whose unsubscribe raises and
     reports incomplete; the runner must stash the still-live set for retry in
@@ -920,7 +920,7 @@ async def test_steer_lane_retire_failure_is_held_not_discarded(tmp_path: Path) -
     assert task.id not in runner._steer_subscriptions
 
 
-# --- bounded sibling rounds over a DELIVERING bus (issue #87 defect fixes) ------
+# --- bounded sibling rounds over a DELIVERING bus (defect fixes) ------
 #
 # The plain FakeFrameBus records publishes but never loops them back to
 # subscribed handlers, so the self-reinforcing sibling loop and the lane leak
@@ -1153,7 +1153,7 @@ async def test_duo_debate_settling_below_cap_retires_lane_and_clears_counter(
     tmp_path: Path,
 ) -> None:
     """(a) A duo debate that SETTLES below the cap retires the sibling lane and
-    clears its counter — no lane/counter leak for the common consensus case (#81).
+    clears its counter — no lane/counter leak for the common consensus case.
 
     Alice opens still needing bob (non-terminal); bob's first turn also needs
     alice, so the debate is live and the lane stays. When bob then publishes a
@@ -1230,7 +1230,7 @@ async def test_cap_with_non_terminal_latest_emits_one_closing_terminal_turn(
     assert closing.stance.needs_from == []
     assert closing.stance.position == "dissent"  # honest: the position that stood
     # Terminality lives in the typed stance; the visible_text REUSES alice's real
-    # last substantive answer (issue #87 follow-up), never a synthetic placeholder.
+    # last substantive answer (follow-up), never a synthetic placeholder.
     assert closing.visible_text == "alice still disagrees"
     assert "round budget" not in closing.visible_text.lower()
     assert "stands as final" not in closing.visible_text.lower()
@@ -1281,9 +1281,9 @@ async def test_closing_publish_failure_retries_on_next_event_exactly_once(
 
         async def publish_frame_checked(self, subject: str, frame: Frame) -> None:
             # The cap-closing turn is the only terminal alice turn that rides the
-            # CHECKED publish path (issue #87 D7); detect it by that, not by any
+            # CHECKED publish path (D7); detect it by that, not by any
             # placeholder text — the closing visible_text now reuses alice's real
-            # substantive answer (issue #87 follow-up).
+            # substantive answer (follow-up).
             if (
                 isinstance(frame, TurnFrame)
                 and frame.agent_id == "alice"
@@ -1548,7 +1548,7 @@ async def test_concurrent_sibling_deliveries_reserve_under_lock_do_not_overshoot
     assert follow_up_sends == MAX_SIBLING_ROUNDS
 
 
-# --- persisted dedup across restarts (issue #83) -----------------------------
+# --- persisted dedup across restarts -----------------------------
 
 
 def _persisting_runner(
@@ -1575,7 +1575,7 @@ def _persisting_runner(
 
 async def test_completed_dedup_survives_a_restart(tmp_path: Path) -> None:
     """A completed frame redelivered to a FRESH runner over the same state home
-    within the horizon is NOT re-dispatched — the persisted half of #83.
+    within the horizon is NOT re-dispatched — the persisted half of the dedup.
 
     The pre-fix cache was memory-only, so a restart within the horizon started
     empty and a redelivered completed frame (fresh timestamp) was re-dispatched.
@@ -1631,7 +1631,7 @@ async def test_corrupt_dedup_file_opens_distrust_window_and_refuses_within_horiz
 ) -> None:
     """A CORRUPT dedup file opens a distrust window: an untracked-but-within-
     horizon frame is REFUSED (fail closed, loud), while a frame delivered AFTER
-    the window dispatches normally (issue #83).
+    the window dispatches normally.
 
     Corrupt = provable integrity loss, so the store cannot silently start empty
     and fail open. It starts empty AND distrusts for ``horizon_s`` seconds; the
@@ -1687,7 +1687,7 @@ async def test_value_level_damage_opens_distrust_and_keeps_parseable_entries(
     """An unparseable timestamp inside structurally-valid JSON is still damage:
     the dropped record's redelivery would dispatch as fresh, so it opens the
     SAME distrust window structural corruption does, while parseable entries
-    are kept (they refuse strictly more) (issue #83, cross-review find).
+    are kept (they refuse strictly more) (cross-review find).
     """
     import json as _json
 
@@ -1719,7 +1719,7 @@ async def test_value_level_damage_opens_distrust_and_keeps_parseable_entries(
 
 async def test_missing_dedup_file_starts_empty_no_distrust(tmp_path: Path) -> None:
     """No dedup file yet: legitimate first boot — start empty, INFO log, NO
-    distrust window, and dispatch proceeds normally (issue #83).
+    distrust window, and dispatch proceeds normally.
     """
     from loguru import logger
 
@@ -1749,7 +1749,7 @@ async def test_missing_dedup_file_starts_empty_no_distrust(tmp_path: Path) -> No
 
 async def test_nul_bearing_task_id_round_trips_and_dedups_across_restart(tmp_path: Path) -> None:
     """A NUL-bearing task id round-trips the NESTED store: complete -> restart ->
-    the redelivered frame is REFUSED (issue #83 hostile-key hardening).
+    the redelivered frame is REFUSED (hostile-key hardening).
 
     The nested ``{task_id: {agent_id: ts}}`` shape lets an arbitrary string
     (NUL bytes included) be a native JSON object key — no composite key, no
@@ -1779,7 +1779,7 @@ async def test_nul_bearing_task_id_round_trips_and_dedups_across_restart(tmp_pat
 
 
 def test_per_agent_filename_derivation_including_sanitize_hash_path() -> None:
-    """The dedup filename is PER-AGENT and collision-safe (issue #83).
+    """The dedup filename is PER-AGENT and collision-safe.
 
     Every filename carries a short stable hash of the RAW id — unconditionally,
     so a crafted clean id can never impersonate a dirty id's stem+hash (the
@@ -1822,7 +1822,7 @@ def test_per_agent_filename_derivation_including_sanitize_hash_path() -> None:
     assert again.path == dirty.path
 
 
-# --- fail closed on future-dated frames (issue #83) --------------------------
+# --- fail closed on future-dated frames --------------------------
 
 
 async def test_future_dated_beyond_skew_tolerance_fails_closed(tmp_path: Path) -> None:
@@ -1863,7 +1863,7 @@ async def test_future_dated_within_skew_tolerance_dispatches(tmp_path: Path) -> 
 
 
 async def test_current_origin_reflects_active_task(tmp_path: Path) -> None:
-    """The runner exposes the active task's ChannelOrigin for the wake tool (#93).
+    """The runner exposes the active task's ChannelOrigin for the wake tool.
 
     A wake fired mid-turn must carry the SAME origin as the triggering intake
     task, so the runner tracks the active task's origin and surfaces it via
@@ -1883,7 +1883,7 @@ async def test_current_origin_reflects_active_task(tmp_path: Path) -> None:
 
 
 async def test_active_origin_cleared_on_turn_done_no_bleed(tmp_path: Path) -> None:
-    """The active origin does not bleed past its task's TurnDone (issue #93).
+    """The active origin does not bleed past its task's TurnDone.
 
     A wake fired in the gap between one task completing and the next dispatching
     must NOT read the finished task's origin — that would route a woken agent's
@@ -1936,7 +1936,7 @@ async def test_current_origin_tracks_fifo_head_across_two_pending_tasks(tmp_path
 
 
 async def test_failed_send_rollback_of_later_task_retains_active_origin(tmp_path: Path) -> None:
-    """A failed-send rollback of B (arriving mid-A-turn) keeps A's origin (#93).
+    """A failed-send rollback of B (arriving mid-A-turn) keeps A's origin.
 
     B's send blows up, rolling back ONLY B's per-task state; A is still the
     executing head, so current_origin must still report A's origin X. A full
@@ -1973,7 +1973,7 @@ async def test_failed_send_rollback_of_later_task_retains_active_origin(tmp_path
 
 
 async def test_reply_turn_carries_triggering_task_origin(tmp_path: Path) -> None:
-    """A reply TurnFrame copies the triggering intake task's origin (issue #93).
+    """A reply TurnFrame copies the triggering intake task's origin.
 
     An intake/wake task carries a ChannelOrigin; the reply TurnFrame agentd
     publishes must copy it so a triage edge can render the answer back into the

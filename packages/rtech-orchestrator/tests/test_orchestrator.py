@@ -54,7 +54,7 @@ class FakeFrameBus:
     ``tests.fakes`` import resolves to whichever package loads first. Subjects
     fan out to EVERY registered handler (a list per subject), so two
     orchestrators subscribed to the same ingress model the shared live bus
-    (issue #75 cross-stack shape).
+    (cross-stack shape).
     """
 
     def __init__(self) -> None:
@@ -240,7 +240,7 @@ async def test_duo_fan_out_two_turns_derive_done_one_result() -> None:
     assert result_publishes == [(result_subject, second)]
 
 
-# --- issue #75: ingress stack scoping + participant-scoped done ----------------
+# --- ingress stack scoping + participant-scoped done ----------------
 
 
 async def test_foreign_stack_task_is_not_consumed() -> None:
@@ -337,8 +337,8 @@ class ByteFakeFrameBus:
     ``publish_frame`` encodes via ``encode_frame`` and delivers the bytes to
     every handler registered for the subject, each of which decodes its OWN
     copy via ``decode_frame`` — so subject/payload binding, codec round-trips,
-    and two-consumer fan-out all traverse the real wire path (issue #75
-    round 2). ``deliver_bytes`` injects foreign raw bytes exactly as a live
+    and two-consumer fan-out all traverse the real wire path.
+    ``deliver_bytes`` injects foreign raw bytes exactly as a live
     NATS delivery would.
     """
 
@@ -560,7 +560,7 @@ async def test_failed_lane_subscription_fails_closed() -> None:
 
 
 async def test_partial_lane_subscription_rolls_back_atomically() -> None:
-    """(#80) A status-lane failure rolls the already-live turn lane back.
+    """A status-lane failure rolls the already-live turn lane back.
 
     The turn lane subscribes first and succeeds; the status lane then fails.
     ``subscribe_all`` must retire the turn lane (no live-but-untracked handle),
@@ -597,7 +597,7 @@ async def test_partial_lane_subscription_rolls_back_atomically() -> None:
 
 
 async def test_rollback_leak_is_held_not_discarded() -> None:
-    """(#80) A rollback whose unsubscribe fails holds the live handle, not drops it.
+    """A rollback whose unsubscribe fails holds the live handle, not drops it.
 
     Turn subscribes; status fails; but the turn lane's ``unsubscribe`` ALSO
     fails during rollback. The still-live handle must ride on

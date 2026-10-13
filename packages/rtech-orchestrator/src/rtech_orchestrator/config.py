@@ -2,7 +2,7 @@
 
 Minimal POC config: the single agentd agent id that ``scope=single`` tasks route
 to. The target id is NEVER a hardcoded literal — a bare ``"agentd"`` default is
-exactly what let two agentds collide on the shared bus (issue #49). The id comes
+exactly what let two agentds collide on the shared bus. The id comes
 from ``RTECH_TARGET_AGENT_ID`` (or the back-compat ``RTECH_SINGLE_AGENT_ID``
 alias), or a JSON registry file (``RTECH_AGENT_REGISTRY`` → ``{"single": "<id>"}``).
 If neither is set, resolution FAILS LOUDLY at startup rather than silently
@@ -21,9 +21,9 @@ from loguru import logger
 # Primary + back-compat env vars naming the single-scope target agent id.
 ENV_TARGET_AGENT_ID = "RTECH_TARGET_AGENT_ID"
 ENV_SINGLE_AGENT_ID = "RTECH_SINGLE_AGENT_ID"
-# Env var naming this orchestrator's stack id for the ingress guard (issue #75).
+# Env var naming this orchestrator's stack id for the ingress guard.
 ENV_STACK_ID = "RTECH_STACK_ID"
-# Optional comma-separated fleet ids fronted by a hermes bridge (PR #73):
+# Optional comma-separated fleet ids fronted by a hermes bridge:
 # dispatches to these participants complete via the typed fleet Done the
 # orchestrator consumes directly, never via edge-authored turn terminality.
 ENV_BRIDGED_AGENTS = "RTECH_BRIDGED_AGENTS"
@@ -47,11 +47,11 @@ class OrchestratorConfig:
     Attributes:
         single_agent_id: The agentd agent id that ``scope=single`` tasks route
             to. Required and non-empty.
-        stack_id: This orchestrator's stack id for the ingress guard
-            (issue #75). Only ``TaskFrame``s whose ``stack`` matches are
+        stack_id: This orchestrator's stack id for the ingress guard.
+            Only ``TaskFrame``s whose ``stack`` matches are
             consumed; a missing id fails loudly at startup — the guard is
             security-floor config and never defaults to a shared literal.
-        bridged_agents: Fleet ids fronted by a hermes bridge (PR #73 redesign).
+        bridged_agents: Fleet ids fronted by a hermes bridge.
             A dispatch to one of these records the participant as bridged on
             the task graph; its terminal evidence is the typed fleet ``Done``
             the orchestrator consumes directly. Empty by default — no bridge,
@@ -154,7 +154,7 @@ def resolve_target_agent_id(env: dict[str, str] | None = None) -> str:
 def resolve_stack_id(env: dict[str, str] | None = None) -> str:
     """Resolve this orchestrator's stack id, failing loudly when unset.
 
-    The stack id scopes task ingress (issue #75): the orchestrator only
+    The stack id scopes task ingress: the orchestrator only
     consumes ``TaskFrame``s whose ``stack`` field matches. There is NO default
     — a defaulted guard is exactly how two stacks on the shared bus
     cross-consume, so a missing id fails closed at startup.
@@ -175,14 +175,14 @@ def resolve_stack_id(env: dict[str, str] | None = None) -> str:
         return value
     logger.error("config.stack | UNSET | set {} to this stack's id", ENV_STACK_ID)
     raise StackResolutionError(
-        f"no stack id: set {ENV_STACK_ID} to this stack's id (ingress guard, issue #75)"
+        f"no stack id: set {ENV_STACK_ID} to this stack's id (ingress guard)"
     )
 
 
 def resolve_bridged_agents(env: dict[str, str] | None = None) -> frozenset[str]:
     """Resolve the bridge-fronted fleet ids, empty when none are configured.
 
-    Optional by design (PR #73): with no bridge deployed there is nothing to
+    Optional by design: with no bridge deployed there is nothing to
     consume on the fleet side. When set, ``RTECH_BRIDGED_AGENTS`` is a
     comma-separated id list; blank fragments are rejected loudly rather than
     silently skipped so a typo never half-configures the bridge boundary.

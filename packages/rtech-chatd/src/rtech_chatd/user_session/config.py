@@ -250,7 +250,7 @@ def load_telegram_user_config(
     Returns:
         A validated :class:`TelegramUserConfig`.
     """
-    # TODO(#110-secrets-backend): VaultwardenSource/GsmSource once VW proven fast.
+    # TODO(secrets-backend): VaultwardenSource/GsmSource once VW proven fast.
     # Select the source here (e.g. by an env flag) — no caller changes needed:
     # every caller already goes through this one function and the SecretsSource
     # protocol, so a new impl slots in behind it. JSON file is the proven dev

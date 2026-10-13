@@ -1,4 +1,4 @@
-"""The intake SINK: mint + publish a triage TaskFrame from an intake hit (#93).
+"""The intake SINK: mint + publish a triage TaskFrame from an intake hit.
 
 The pure hit-gate (:func:`rtech_chatd.gates.intake_hit`) decides WHETHER a
 channel message is an intake hit; the adapter fires the injected sink on a hit
@@ -85,7 +85,7 @@ ShouldRespond = Callable[[InboundMessage, GateConfig], bool]
 # Instant-ack sender (UX v2): fire-and-forget surface send wired to the adapter
 # by the service layer. Returns the sent message id (unused here) or None.
 AckSend = Callable[[SendTarget, str], Awaitable[str | None]]
-# Typing starter (issue #109 three-signal contract, signal 3): wired to the
+# Typing starter (three-signal contract, signal 3): wired to the
 # adapter's typing-on by the composition layer. Invoked once per debate
 # participant with a target stamped ``as_agent`` so each drafting agent's OWN
 # identity shows a live typing indicator; the edge stops it when that agent's
@@ -189,7 +189,7 @@ class _MessageIdDedup:
 
 
 class IntakeSink:
-    """Mint + publish a triage TaskFrame from a deterministic intake hit (#93).
+    """Mint + publish a triage TaskFrame from a deterministic intake hit.
 
     Wired at chatd's composition layer against the same :class:`FrameBus` the
     edge uses. On an intake hit the adapter invokes :meth:`__call__`; the sink
@@ -203,7 +203,7 @@ class IntakeSink:
         intake_config: Intake config (triage agent id lives here).
         gate_config: The responder gate config, reused so the responder-yield
             decision is IDENTICAL to what the responder path itself computes.
-        stack: Required stack-scope stamp (issue #75); a blank stack fails closed
+        stack: Required stack-scope stamp; a blank stack fails closed
             in the mint (never a default shared literal).
         id_factory: Task-id minter (uuid4 hex by default).
         should_respond_fn: The responder decision (injectable for tests); the
@@ -212,13 +212,13 @@ class IntakeSink:
         dedup_max_entries / dedup_horizon_s: Dedup store bounds.
         ack_send: Optional surface send for the instant debate-mint ack (UX v2);
             when None (default, and for single-scope mints) no ack is posted.
-        typing_start: Optional per-participant typing starter (issue #109);
+        typing_start: Optional per-participant typing starter;
             when set, a debate mint starts a typing indicator for EVERY
             participant identity in the origin chat. None (default) preserves
             existing behavior exactly.
         voiced: True (default): the ack text carries the ``**arbiter** —``
             name prefix (single-bot surfaces, where the prefix IS the
-            attribution). False (issue #109): the ack is sent under the triage
+            attribution). False: the ack is sent under the triage
             agent's OWN bot identity (``as_agent`` stamped on the target), so
             the prefix is dropped as redundant ventriloquism.
     """
@@ -243,7 +243,7 @@ class IntakeSink:
             # Fail closed at construction, mirroring DiscordEdge: an intake sink
             # that would mint blank-stack frames every orchestrator drops is a
             # misconfiguration, caught before the first live hit.
-            raise ValueError("stack must be non-empty (issue #75); there is no default stack id")
+            raise ValueError("stack must be non-empty; there is no default stack id")
         self._bus = bus
         self._intake_config = intake_config
         self._gate_config = gate_config
@@ -377,7 +377,7 @@ class IntakeSink:
         #    message (never a reply). Best-effort: an ack failure is logged and
         #    contained — the task is already published and must not be affected.
         if scope is not None and self._ack_send is not None:
-            # Unvoiced (issue #109): the ack goes out under the triage agent's
+            # Unvoiced: the ack goes out under the triage agent's
             # OWN bot, so the target carries the identity and the text drops
             # the name prefix. Voiced (default) is the existing single-bot ack.
             ack_target = SendTarget(
@@ -395,7 +395,7 @@ class IntakeSink:
                     type(exc).__name__,
                 )
 
-        # 6. Typing start (issue #109, signal 3): every debate participant's
+        # 6. Typing start (signal 3): every debate participant's
         #    identity starts typing in the origin chat so the gap between ack
         #    and first TLDR never looks dead. Best-effort per participant and
         #    contained — the task is already published; a typing failure (or an
@@ -426,7 +426,7 @@ class IntakeSink:
         Pure template over configured ids (no model output, nothing user-echoed):
         the triage agent announces pickup and names the other participants as
         drafting. Ids render with the ``agentd-`` convention prefix stripped.
-        With ``voiced=False`` (issue #109) the arbiter's name prefix is dropped
+        With ``voiced=False`` the arbiter's name prefix is dropped
         — the ack is posted under the arbiter's own bot identity, which IS the
         attribution.
 

@@ -59,7 +59,7 @@ def agent_task(agent_id: str) -> str:
 
 
 def agent_lifecycle(agent_id: str) -> str:
-    """Return the per-agent lifecycle lane subject (issue #84).
+    """Return the per-agent lifecycle lane subject.
 
     Daemon shutdown/restart and supervisor recovery publish a ``LifecycleFrame``
     here so the transition is legible on the bus, beside the per-agent dispatch

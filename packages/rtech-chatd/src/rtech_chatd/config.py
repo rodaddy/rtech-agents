@@ -103,7 +103,7 @@ class GateConfig:
 
 
 class IntakeMode(StrEnum):
-    """Channel scope for the always-on intake listener (issue #93).
+    """Channel scope for the always-on intake listener.
 
     LISTED: intake hits only fire in channels the existing gate config already
         scopes to (``allowed_channels`` / ``free_response_channels``). This is
@@ -240,7 +240,7 @@ def _env_chat_lane_tuple(name: str) -> tuple[tuple[str, str, str], ...]:
 
 @dataclass(frozen=True)
 class IntakeConfig:
-    """Deterministic intake hit-gate configuration (issue #93).
+    """Deterministic intake hit-gate configuration.
 
     Intake is OFF unless ``enabled`` is true, so an existing deploy that builds a
     default :class:`IntakeConfig` sees no behavior change. When on, a message is a
@@ -251,7 +251,7 @@ class IntakeConfig:
 
     The ``DISCORD_ALLOW_BOTS`` baseline is untouched: intake reuses the
     responder's bot policy, so under the default ``AllowBots.NONE`` no bot
-    message is ever an intake hit (humans only, per #93).
+    message is ever an intake hit (humans only).
 
     Double-activation is deliberate: a message that both @mentions the triage
     agent AND matches an intake trigger fires the responder AND intake for the
@@ -389,7 +389,7 @@ class IntakeConfig:
 
     @classmethod
     def from_env(cls) -> IntakeConfig:
-        """Build intake config from the environment (issue #93).
+        """Build intake config from the environment.
 
         Intake is OFF unless ``RTECH_CHATD_INTAKE_ENABLED`` is truthy, so an
         existing deploy that sets none of these vars builds a disabled config and
@@ -460,13 +460,13 @@ class ThreadConfig:
 
 # Telegram long-poll update kinds this edge subscribes to. ``message`` and
 # ``edited_message`` are the inbound surface (edits are logged+dropped, never
-# crash — issue #108 v1 policy). ``message_reaction`` is opt-in on the Bot API:
+# crash — v1 policy). ``message_reaction`` is opt-in on the Bot API:
 # reactions are NEVER auto-included in getUpdates ``allowed_updates`` — a bot that
-# does not list them explicitly is silently blind to every reaction (the #108
-# decision-comment gotcha). We list it now so slice #109 (outbound + reactions)
+# does not list them explicitly is silently blind to every reaction. We list it
+# now so the outbound + reactions slice
 # inherits a subscription already receiving the events; the inbound half here
 # does not yet act on a reaction, it just no longer drops it at the transport.
-# ``callback_query`` is the inline-keyboard tap surface (issue #117) — like
+# ``callback_query`` is the inline-keyboard tap surface — like
 # ``message_reaction`` it is NEVER auto-included, so a bot that omits it is
 # silently blind to every button tap. It is listed so the interactive layer's
 # taps actually reach the poll loop.
@@ -533,7 +533,7 @@ def _parse_allowed_groups(raw: str | None) -> frozenset[str]:
 
 @dataclass(frozen=True)
 class TelegramConfig:
-    """Typed, immutable Telegram long-poll edge settings (issue #108, inbound).
+    """Typed, immutable Telegram long-poll edge settings (inbound).
 
     Mirrors :class:`ChatdConfig`'s credential discipline: the bot token is NEVER
     a literal here. It arrives as a VALUE resolved elsewhere (deploy wiring /
@@ -552,9 +552,9 @@ class TelegramConfig:
         allowed_updates: The getUpdates ``allowed_updates`` subscription. MUST
             explicitly include ``message_reaction`` — the Bot API never
             auto-includes it, so omitting it makes the bot silently blind to
-            reactions (#108 gotcha) — and ``callback_query``, which is likewise
+            reactions — and ``callback_query``, which is likewise
             never auto-included, so omitting it silently disables every
-            interactive steer button (#117). Defaults to
+            interactive steer button. Defaults to
             :data:`DEFAULT_TELEGRAM_ALLOWED_UPDATES`.
         poll_timeout_s: Long-poll hold (seconds) handed to getUpdates. MUST be
             >= 1 — a 0 hold returns immediately and hot-loops the poll. The
@@ -574,26 +574,26 @@ class TelegramConfig:
             raise ValueError("poll_timeout_s must be >= 1 (timeout=0 hot-loops the poll)")
         # A subscription that omits message_reaction silently drops every reaction
         # (Bot API never auto-includes it). This edge always subscribes to it so
-        # slice #109 inherits a live reaction feed; guard against a caller
+        # inherits a live reaction feed; guard against a caller
         # accidentally handing an allowed_updates tuple that would blind us.
         if "message_reaction" not in self.allowed_updates:
             raise ValueError(
                 "allowed_updates must include 'message_reaction': the Telegram Bot "
                 "API never auto-includes reaction updates in getUpdates, so omitting "
-                "it makes the bot silently blind to every reaction (issue #108)"
+                "it makes the bot silently blind to every reaction"
             )
         if "message" not in self.allowed_updates:
             raise ValueError("allowed_updates must include 'message' (the inbound surface)")
         # A subscription that omits callback_query silently drops every inline-keyboard
         # tap (Bot API never auto-includes it, exactly like message_reaction). The
-        # interactive steer layer (issue #117) rides those taps, so omitting it would
+        # interactive steer layer rides those taps, so omitting it would
         # silently disable every steer button — guard against a caller handing an
         # allowed_updates tuple that would blind us.
         if "callback_query" not in self.allowed_updates:
             raise ValueError(
                 "allowed_updates must include 'callback_query': the Telegram Bot API "
                 "never auto-includes inline-keyboard tap updates in getUpdates, so "
-                "omitting it silently disables every interactive steer button (issue #117)"
+                "omitting it silently disables every interactive steer button"
             )
 
     @classmethod
@@ -692,7 +692,7 @@ class ChatdConfig:
         inbox_channel: Designated free-response inbox channel id, or None.
         origin_edge: Edge label stamped onto minted task frames.
         home_channel: Per-agent home channel (id-based), or None when unset.
-        dash_base_url: Base URL of the Dash live-page (issue #147). A presence
+        dash_base_url: Base URL of the Dash live-page. A presence
             notification composes its live-page link as
             ``f"{dash_base_url.rstrip('/')}/agents/<agent_id>"``. Empty (default)
             means render the notification WITHOUT a link rather than a broken URL —
@@ -748,7 +748,7 @@ class ChatdConfig:
         )
 
 
-# Per-identity bot token refs (issue #109 multi-identity sender). Comma list of
+# Per-identity bot token refs (multi-identity sender). Comma list of
 # ``agent=token_ref`` pairs; ``=`` separates because refs contain ``:``.
 ENV_TG_IDENTITY_MAP = "RTECH_TG_IDENTITY_MAP"
 

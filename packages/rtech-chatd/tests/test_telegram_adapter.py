@@ -1,4 +1,4 @@
-"""Fake-transport tests for the aiogram Telegram adapter (issue #108, inbound).
+"""Fake-transport tests for the aiogram Telegram adapter (inbound).
 
 No live token, no network: aiogram's ``Update`` / ``Message`` types are pydantic
 models constructible directly, so we build real update objects and drive
@@ -141,7 +141,7 @@ def test_map_message_reply_thread_without_topic_flag_has_no_thread_id() -> None:
     # An ORDINARY reply thread carries message_thread_id too, but NOT
     # is_topic_message. aiogram gates topic routing on is_topic_message, so this
     # deliberately does not set thread_id (it surfaces as is_reply instead) —
-    # conflating it with a forum topic would mis-target #109's topic sends.
+    # conflating it with a forum topic would mis-target the topic sends.
     msg = _message(
         chat=_supergroup_chat(),
         author=_user(2),
@@ -375,7 +375,7 @@ def test_migrate_from_service_message_emits_nothing() -> None:
     assert adapter._inbound.qsize() == 0
 
 
-# --------------------------------------------------------------- callback (#117)
+# --------------------------------------------------------------- callback
 
 
 class _FakeAnsweringSender:
@@ -687,7 +687,7 @@ class _FlakyBot(_FakeBot):
 def test_poll_failure_backs_off_and_loop_survives(monkeypatch: pytest.MonkeyPatch) -> None:
     """A failed poll pauses (never hot-spins) and the loop keeps polling after.
 
-    Regression for the review finding on #108: a dead transport makes
+    Regression: a dead transport makes
     get_updates raise INSTANTLY (no long-poll hold spent), so without the
     failure backoff the loop spins flooding the error log. The backoff sleep
     lives on the failure branch only; a recovered transport still delivers.

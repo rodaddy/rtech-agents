@@ -1,4 +1,4 @@
-"""Request-pair idempotency and the already-online publish-failure fast path (#146).
+"""Request-pair idempotency and the already-online publish-failure fast path.
 
 The same logical (principal, request_id, agent) pair publishes AT MOST ONE terminal
 receipt across concurrent AND sequential redelivery — for authorization, guard,

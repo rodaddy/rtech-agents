@@ -12,7 +12,7 @@ from __future__ import annotations
 TASK_INGRESS = "rtech.task.new"
 TASK_TURN_TEMPLATE = "rtech.task.{task_id}.turn"
 # The NATS single-token wildcard over every per-task turn subject. A triage edge
-# (issue #93 reply render) subscribes it to see EXTERNAL task turns — turns for
+# (reply render) subscribes it to see EXTERNAL task turns — turns for
 # tasks the edge did not mint itself (an intake/wake answer) — and render the
 # terminal, origin-carrying ones back into the asking channel. ``*`` matches
 # exactly one token (a task id), so it never widens to status/steer/result.
@@ -20,7 +20,7 @@ TASK_TURN_WILDCARD = "rtech.task.*.turn"
 TASK_STATUS_TEMPLATE = "rtech.task.{task_id}.status"
 TASK_STEER_TEMPLATE = "rtech.task.{task_id}.steer"
 # The NATS single-token wildcard over every per-task steer subject. A live
-# reaction-steer canary (issue #111) cannot predict the opaque task id BEFORE it
+# reaction-steer canary cannot predict the opaque task id BEFORE it
 # reacts, so it subscribes this wildcard UP FRONT to capture the first-class
 # typed ``SteerFrame`` a reaction produces on ``rtech.task.<opaque-id>.steer``,
 # then filters by the discovered id. ``*`` matches exactly one token (a task id),
@@ -29,7 +29,7 @@ TASK_STEER_TEMPLATE = "rtech.task.{task_id}.steer"
 TASK_STEER_WILDCARD = "rtech.task.*.steer"
 TASK_RESULT_TEMPLATE = "rtech.task.{task_id}.result"
 AGENT_TASK_TEMPLATE = "rtech.agent.{agent_id}.task"
-# The one presence-transition subject (issue #147). The web-chat presence deriver
+# The one presence-transition subject. The web-chat presence deriver
 # publishes a typed ``PresenceTransitionFrame`` here on each genuine
 # online<->offline edge; a triage edge subscribes it to render an operator
 # Offline/Recovered notification. It MUST match the producer's flat constant
@@ -39,7 +39,7 @@ PRESENCE_TRANSITION = "rtech.presence.transition"
 
 
 def agent_task(agent_id: str) -> str:
-    """Return the per-agent dispatch subject (issue #93 intake → triage agent).
+    """Return the per-agent dispatch subject (intake → triage agent).
 
     Mirrors the ratified per-agent scheme exactly (``rtech.agent.<id>.task``, the
     same string ``rtech_orchestrator.subjects.agent_task`` produces): a triage

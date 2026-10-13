@@ -66,7 +66,7 @@ def test_registry_without_single_key_fails_loudly(tmp_path: Path) -> None:
 
 
 def test_stack_id_resolves_from_env() -> None:
-    """RTECH_STACK_ID supplies the ingress-guard stack id (issue #75)."""
+    """RTECH_STACK_ID supplies the ingress-guard stack id."""
     assert resolve_stack_id(env={"RTECH_STACK_ID": "mini-m4-dev"}) == "mini-m4-dev"
 
 

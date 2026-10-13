@@ -1,4 +1,4 @@
-"""Test the PresenceTransitionFrame wire contract (issue #147)."""
+"""Test the PresenceTransitionFrame wire contract."""
 
 from __future__ import annotations
 

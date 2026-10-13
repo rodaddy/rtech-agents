@@ -1,5 +1,5 @@
-"""Rotation-during-debate overlap stress (issue #81 x #96, graduated from the
-post-#84 integration harness S3b/S3c).
+"""Rotation-during-debate overlap stress (graduated from the
+integration harness S3b/S3c).
 
 These are cross-slice integration tests, not unit tests: the REAL Orchestrator,
 REAL Supervisor (with its REAL event pump ``sup.run()``), and REAL
@@ -189,7 +189,7 @@ class DeliveringBus:
 class QueueEngine:
     """A genuinely DECOUPLED scripted ``EngineSession`` (no external I/O).
 
-    Contract (issue #51 completion + the engine ordering invariant): every
+    Contract (completion + the engine ordering invariant): every
     ``send`` opens a turn that COMPLETES with a terminal ``TurnDone`` — but the
     ``TurnDone`` is ENQUEUED, never delivered inside ``send``. The supervisor's
     own pump (``events()`` → ``_handle_event``) drains the queue on a later tick,

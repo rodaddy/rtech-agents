@@ -25,8 +25,8 @@ Direction 2 — Hermes reply ``Envelope`` -> CONTENT-ONLY translation:
     runtime for LIFECYCLE ONLY: unsubscribe, drop state, advance the queue; it
     never becomes a frame here). Terminal semantics for bridged participants
     live in the ORCHESTRATOR, which consumes the same typed ``Done`` on its own
-    fleet-side subscription and records it as in-graph terminal evidence (PR #73
-    redesign; docs/bridged-participant-lifecycle.md). Every signal is read from
+    fleet-side subscription and records it as in-graph terminal evidence (see
+    docs/bridged-participant-lifecycle.md). Every signal is read from
     NAMED typed fields (``kind`` / ``sender`` / ``task_id`` / ``typed_signal`` /
     ``payload["text"]``) — never scraped from prose. Identity is fail-closed:
     an envelope whose ``sender`` or ``task_id`` does not match the dispatched
@@ -262,7 +262,7 @@ def build_content_turn(
     ``needs_from``) when one rode the envelope. Nothing is synthesized as a
     control signal: for a BRIDGED participant the orchestrator ignores turn
     terminality entirely — its terminal evidence is exclusively the typed fleet
-    ``Done`` the orchestrator consumes itself (PR #73 redesign) — so these
+    ``Done`` the orchestrator consumes itself — so these
     stance fields are display/content data, not completion state.
 
     When the envelope carried no typed stance, the fixed content attribution

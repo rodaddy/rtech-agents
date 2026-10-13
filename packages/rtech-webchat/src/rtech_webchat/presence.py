@@ -17,11 +17,11 @@ Clock = Callable[[], float]
 # Typed liveness probe: returns True while the heartbeat subscription's transport
 # is still connected. The presence read consults it so a subscription proven
 # healthy once can still re-derive ``subscription_failed`` if the connection is
-# later severed (issue #145). It is NOT an agent-count or heartbeat-presence
+# later severed. It is NOT an agent-count or heartbeat-presence
 # check — a healthy-but-empty edge (zero agents, feed up) stays healthy.
 LivenessProbe = Callable[[], bool]
 
-# Typed presence-pipeline health (issue #145). This is the ONE signal Dash needs
+# Typed presence-pipeline health. This is the ONE signal Dash needs
 # to tell a reachable-but-empty edge apart from a broken heartbeat feed:
 #   - "healthy":             the heartbeat subscription is established, so the
 #                            agent list is authoritative — an empty list means
@@ -44,7 +44,7 @@ class AgentPresence(BaseModel):
 class AgentPresenceResponse(BaseModel):
     """Serialize the agent presence list with typed pipeline health.
 
-    ``pipeline`` is the minimal typed health verdict (issue #145): ``"healthy"``
+    ``pipeline`` is the minimal typed health verdict: ``"healthy"``
     means the agent list is authoritative (empty == zero agents), whereas
     ``"subscription_failed"`` means the heartbeat feed is down and the list is
     not liveness truth. Known stale agents still appear here with ``alive=False``
@@ -81,7 +81,7 @@ class PresenceRegistry:
         """Create an empty registry.
 
         The pipeline starts as ``subscription_failed``: presence is not trustworthy
-        until the heartbeat subscription is proven established (issue #145). The
+        until the heartbeat subscription is proven established. The
         edge lifespan flips it to ``healthy`` only after :meth:`mark_subscribed`,
         and the read path re-derives ``subscription_failed`` if the subscription's
         transport is later severed (see :meth:`_current_pipeline`).
@@ -100,7 +100,7 @@ class PresenceRegistry:
         ``liveness`` is a typed probe over the subscription's transport. When
         supplied it is consulted on every read so a later connection drop or
         subscription retirement re-derives ``subscription_failed`` instead of the
-        pipeline remaining healthy forever (issue #145). Omitting it preserves the
+        pipeline remaining healthy forever. Omitting it preserves the
         one-shot verdict for callers with no live transport to probe.
         """
 
@@ -120,8 +120,8 @@ class PresenceRegistry:
 
         A subscription marked healthy once is only *still* healthy while its
         transport remains connected: the probe closes the gap where a severed
-        connection would otherwise leave the pipeline healthy indefinitely
-        (issue #145). No probe (or an already-failed pipeline) returns the stored
+        connection would otherwise leave the pipeline healthy indefinitely.
+        No probe (or an already-failed pipeline) returns the stored
         verdict unchanged. This never inspects agent count — a connected feed with
         zero agents is a valid healthy-empty edge.
         """

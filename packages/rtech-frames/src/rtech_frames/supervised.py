@@ -1,4 +1,4 @@
-"""Define the supervised-Start frame family (issue #146).
+"""Define the supervised-Start frame family.
 
 The external-supervisor Start control plane is a cohesive, recently added frame
 family: a request to start one agent (:class:`StartAgentFrame`) or every agent
@@ -25,7 +25,7 @@ from pydantic import Field, model_validator
 from .frames import WireFrame
 
 # One shared conservative maximum length for a supervised-Start ``request_id``
-# (issue #146, terminal-audit finding). ``request_id`` is a caller-supplied
+# (terminal-audit finding). ``request_id`` is a caller-supplied
 # correlation/idempotency key that flows straight into the supervisor's in-flight
 # and completed-receipt keys and rides every terminal receipt on the wire — so an
 # oversized id must be rejected at DECODE, before it can enter those maps or blow a
@@ -70,7 +70,7 @@ class StartAgentFrame(WireFrame):
     lane) and the server-side authorizer, which authorizes on a server-resolved
     principal — never on this field. That separation is STRUCTURAL: the
     supervisor's authorizer and principal-resolver trust seams are never handed
-    this frame at all (issue #146, finding P1 trust), so an implementation cannot
+    this frame at all (finding P1 trust), so an implementation cannot
     authorize from ``requester_id`` even by mistake. The frame carries neither
     configuration nor a process command; the external supervisor resolves the
     named agent from its server-side registry and authorizes the request before it
@@ -113,7 +113,7 @@ class SupervisedAgentStateFrame(WireFrame):
     shared per-agent process start may be awaited by many distinct requests
     (including a bulk request racing a single one); each distinct request gets its
     OWN terminal receipt carrying its OWN ``request_id`` — one requester's receipt
-    is never reused for another (issue #146, finding P2). ``Starting`` is the
+    is never reused for another (finding P2). ``Starting`` is the
     per-request breadcrumb; ``Online``/``Failed`` are the per-request terminal.
     ``request_id`` is bounded to :data:`MAX_REQUEST_ID_LEN` on all three Start
     models so an oversized id is rejected at decode before it can enter an in-flight
@@ -126,7 +126,7 @@ class SupervisedAgentStateFrame(WireFrame):
       liveness probe did NOT affirmatively confirm the process is alive (missing,
       failing, or DOWN probe). A start action returning is not proof of Online, so
       the supervisor fails closed here rather than publish a false ``Online`` for a
-      process that did not become ready or has already exited (issue #146, finding
+      process that did not become ready or has already exited (finding
       P1 liveness). Safe retry/reconciliation is preserved.
     - ``state_publish_failed`` is a terminal Failed outcome that means the process
       was started AND confirmed alive but the confirmed ``Online`` receipt could

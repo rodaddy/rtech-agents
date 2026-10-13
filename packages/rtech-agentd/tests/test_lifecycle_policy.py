@@ -1,4 +1,4 @@
-"""Bounded restart (circuit breaker) + bounded context rotation (issue #84).
+"""Bounded restart (circuit breaker) + bounded context rotation.
 
 House style: injected ``FakeEngine`` / ``RecordingPublisher`` / fake sleep, a fake
 clock for age/backoff, policies constructed with explicit tunables (never env) so
@@ -384,7 +384,7 @@ async def test_task_arriving_mid_summary_aborts_rotation_and_serves_task(tmp_pat
 
     The summary turn's own TurnDone is consumed by the rotation state machine and
     NEVER correlated to the arriving task; the session is not swapped; the task is
-    served and its TurnFrame is published under its OWN task_id (issue #84).
+    served and its TurnFrame is published under its OWN task_id.
     """
     from rtech_agentd.frame_turn import FrameTurnRunner
     from rtech_frames import TaskFrame, TurnFrame

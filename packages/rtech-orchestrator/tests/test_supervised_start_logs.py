@@ -1,4 +1,4 @@
-"""Assert supervised-Start logs never interpolate a raw request_id (#146).
+"""Assert supervised-Start logs never interpolate a raw request_id.
 
 Terminal-audit finding: logs are a possibly-leaked surface, so the caller-supplied
 ``request_id`` must never ride a log line raw. Every log site instead emits a

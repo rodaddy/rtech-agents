@@ -9,7 +9,7 @@ coordination truth; the scheduler is a dumb producing edge.
 
 ## What it is (and is not)
 
-- **Is:** a small long-running daemon (own systemd/lingering unit, #112 pattern)
+- **Is:** a small long-running daemon (own systemd/lingering unit, pattern)
   that evaluates a frozen schedule table, and at each occurrence mints a
   `TaskFrame` and publishes it to `TASK_INGRESS`.
 - **Is not:** a distributed scheduler. There is **no Redis/database/distributed
@@ -73,6 +73,6 @@ queried during the second fold.
 
 - `RTECH_SCHEDULE_FILE` — path to the JSON schedule table (required).
 - `RTECH_STACK_ID` — this stack's id, stamped on every minted frame's `stack`
-  so a stack-guarded orchestrator consumes it (issue #75). No default; fails
+  so a stack-guarded orchestrator consumes it. No default; fails
   closed when unset.
 - `NATS_URL` — the fleet NATS server.

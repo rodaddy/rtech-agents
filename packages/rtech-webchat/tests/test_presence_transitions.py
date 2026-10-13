@@ -1,4 +1,4 @@
-"""Test the presence-transition deriver dedup + display-name (issue #147)."""
+"""Test the presence-transition deriver dedup + display-name."""
 
 from __future__ import annotations
 

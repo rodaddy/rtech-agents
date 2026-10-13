@@ -21,7 +21,7 @@ EnvironmentFile=%h/rtech-agents/.env
 #
 # Scrub the cc-env poison for parity with the other units: ~/.cc-env pins stale
 # 4-6-era ANTHROPIC_* values; the edge itself spawns no engine, but env -u keeps
-# the child env clean and identical across units (issue #55).
+# the child env clean and identical across units.
 ExecStart=/usr/bin/env -u ANTHROPIC_BASE_URL -u ANTHROPIC_API_KEY -u ANTHROPIC_MODEL -u ANTHROPIC_DEFAULT_OPUS_MODEL -u ANTHROPIC_DEFAULT_SONNET_MODEL uv run --frozen rtech-tgd
 Restart=on-failure
 RestartSec=5

@@ -14,8 +14,8 @@ DEFAULT_REPLAY_FRAME_LIMIT = 200
 DEFAULT_REPLAY_TTL_SECONDS = 900
 DEFAULT_REPLAY_MAX_TASKS = 1000
 DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 30.0
-# Env var naming the stack id stamped on every TaskFrame this edge publishes
-# (issue #75). The orchestrator's ingress guard only consumes matching tasks.
+# Env var naming the stack id stamped on every TaskFrame this edge publishes.
+# The orchestrator's ingress guard only consumes matching tasks.
 # There is NO default: a shared literal is fail-open producer addressing — two
 # unconfigured edges on the shared bus would stamp the same address — so the
 # stack id is required, mirroring orchestratord's loud missing-id behavior.
@@ -53,7 +53,7 @@ class WebchatConfig:
         if not self.stack or not self.stack.strip():
             raise ValueError(
                 "stack must be non-empty: this edge stamps every TaskFrame with its "
-                f"stack id (issue #75); set {ENV_STACK_ID} — there is no default"
+                f"stack id; set {ENV_STACK_ID} — there is no default"
             )
         if self.replay_frame_limit <= 0:
             raise ValueError(f"replay_frame_limit must be positive, got {self.replay_frame_limit}")
@@ -73,15 +73,14 @@ class WebchatConfig:
 
         Raises:
             ValueError: If ``RTECH_STACK_ID`` is unset or blank — the stack
-                stamp is security-floor addressing config with no default
-                (issue #75).
+                stamp is security-floor addressing config with no default.
         """
 
         stack = os.getenv(ENV_STACK_ID, "").strip()
         if not stack:
             raise ValueError(
                 f"{ENV_STACK_ID} must be set to this deployment's stack id "
-                "(issue #75); the edge never defaults to a shared literal"
+                "; the edge never defaults to a shared literal"
             )
         raw_port = os.getenv("RTECH_WEBCHAT_PORT")
         port = int(raw_port) if raw_port is not None else DEFAULT_PORT

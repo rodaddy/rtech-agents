@@ -23,7 +23,7 @@ class FrameTransportError(RuntimeError):
 
     ``FrameBus`` implementations raise these instead of swallowing transport
     errors: the orchestrator's dispatch record must reflect CONFIRMED publishes
-    only (issue #75 round 2), so a failed publish has to surface as a typed
+    only, so a failed publish has to surface as a typed
     error, never a logged no-op.
     """
 
@@ -89,7 +89,7 @@ class FrameBus(Protocol):
         :class:`~rtech_frames.subs.Subscription` exposes ``unsubscribe`` so the
         caller can retire the subscription — the handle the typed-bus
         :func:`~rtech_frames.subs.subscribe_all` primitive needs to roll a
-        partially-established set back on failure (issue #80). A bus that cannot
+        partially-established set back on failure. A bus that cannot
         offer per-subscription retirement cannot support atomic rollback.
 
         Args:

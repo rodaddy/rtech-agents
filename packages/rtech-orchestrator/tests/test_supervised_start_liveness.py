@@ -1,4 +1,4 @@
-"""Finding P1 liveness: Online is published only for a probe-confirmed start (#146).
+"""Finding P1 liveness: Online is published only for a probe-confirmed start.
 
 A ``start()`` action returning is not proof the process is alive; every Online
 requires an affirmative post-start liveness confirmation. Shared doubles come

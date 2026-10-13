@@ -9,7 +9,7 @@ frame is one typed event) and the NATS bus semantics, where frames arrive in
 publish order. Sequence position is therefore load-bearing: it orders turns and
 statuses so supersession can be decided by "which came later", not adjacency.
 
-Participant-scoped derivation (issue #75): done derives ONLY from the task's
+Participant-scoped derivation: done derives ONLY from the task's
 dispatched participant set -- the typed identities the orchestrator actually
 routed the task to (or ``task.participants`` when the frame names them).
 Counting distinct terminal agents against a scope COUNT is identity-blind: on a
@@ -19,16 +19,16 @@ Terminal turns from non-participants are ignored, and with no known participant
 set the derivation FAILS CLOSED. ``task.scope`` remains a consistency check:
 a participant set whose size does not match the scope count also fails closed.
 
-Status authorship (frame contract amendment, PR #73 round 5): ``StatusFrame``
+Status authorship (frame contract amendment): ``StatusFrame``
 carries a required ``agent_id`` mirroring ``TurnFrame``, so status is evaluated
 PER PARTICIPANT. Rounds 3/4 proved the task-wide alternative unsound: one
 ``completion_by_evidence`` boolean classified every later ``working`` status by
 whichever participant happened to complete the set, so mixed native+bridged
 orderings either weakened native semantics or reopened the cross-subject
 contradiction. Statuses from agents outside the dispatched participant set are
-ignored (identity-scoped, exactly like turns -- issue #75).
+ignored (identity-scoped, exactly like turns --).
 
-Sequence-aware supersession (issue #22): all three ``StatusFrame`` states
+Sequence-aware supersession: all three ``StatusFrame`` states
 (``working``/``input_required``/``blocked``) are non-terminal and there is NO
 terminal status value -- agentd emits ``StatusFrame(state="working")`` at turn
 START, before the terminal ``TurnFrame``. Treating the latest status
@@ -43,7 +43,7 @@ ONLY its author's terminality -- never another participant's. We do NOT add a
 terminal status value or a completion sentinel -- the StatusFrame state enum is
 unchanged.
 
-Bridged participants (PR #73 redesign; see docs/bridged-participant-lifecycle.md):
+Bridged participants (see docs/bridged-participant-lifecycle.md):
 a participant fronted by a bus-side bridge (an existing Hermes gateway agent)
 never emits its own rtech frames -- the bridge translates its reply CONTENT into
 ``TurnFrame``s whose stance fields are a verbatim copy of the gateway's typed
@@ -56,7 +56,7 @@ wire frame: it has no codec registration and can never be published; terminal
 semantics for bridged participants therefore originate in exactly one place,
 the orchestrator.
 
-Evidence-established terminality vs status supersession (PR #73 rounds 3/5):
+Evidence-established terminality vs status supersession:
 ``TerminalEvidence`` arrives on the orchestrator's OWN fleet-side connection,
 while the bridge's frames (including the ``working`` status it pairs with each
 content turn) ride the rtech connection. The merged log's relative order
@@ -120,7 +120,7 @@ class TerminalEvidence:
 
 @dataclass
 class _ParticipantState:
-    """Track one dispatched participant's derivation state (PR #73 round 5).
+    """Track one dispatched participant's derivation state.
 
     Attributes:
         terminal_index: Log position of the event establishing the
@@ -149,14 +149,14 @@ def _resolve_participants(
     The explicit ``participants`` argument (the orchestrator's dispatched set)
     wins; otherwise the task frame's own ``participants`` field is used. With
     neither available there is no identity set to derive against -- the
-    identity-blind count path was defect B (issue #75) and is removed.
+    identity-blind count path was defect B and is removed.
     """
     if participants:
         return frozenset(participants)
     if task.participants:
         return frozenset(task.participants)
     logger.warning(
-        "no participant identities for task; failing closed (issue #75)",
+        "no participant identities for task; failing closed",
         task_id=task.id,
         scope=task.scope,
     )
@@ -179,17 +179,16 @@ def is_done(
     ``StatusFrame`` it authored later in the log than its own
     terminal-establishing event. A status at or before its author's terminal
     event is superseded by that completion and does not block; a later one
-    reopens ONLY its author (PR #73 round 5 — per-participant, keyed by the
+    reopens ONLY its author (per-participant, keyed by the
     status frame's ``agent_id``). One carve-out: a participant whose
     terminality is EVIDENCE-established is not reopened by its own later
     ``working`` status — evidence rides the orchestrator's own fleet
     connection, so its log order against bridge-published statuses is
     transport noise (see the module docstring) — while
     ``blocked``/``input_required`` escalations still block fail-closed. Turns
-    and statuses from agents outside the participant set NEVER count
-    (issue #75).
+    and statuses from agents outside the participant set NEVER count.
 
-    BRIDGED participants complete differently (PR #73 redesign): their turns
+    BRIDGED participants complete differently: their turns
     are content only -- terminality is decided EXCLUSIVELY by a
     :class:`TerminalEvidence` entry the orchestrator recorded from the typed
     fleet ``Done`` signal. A bridged participant's turn can neither complete
@@ -304,7 +303,7 @@ def is_done(
 
         if isinstance(frame, StatusFrame) and frame.state in _NON_TERMINAL_STATES:
             if frame.agent_id not in required:
-                # Statuses are identity-scoped like turns (issue #75): a
+                # Statuses are identity-scoped like turns: a
                 # non-participant can never reopen a task it was not
                 # dispatched to.
                 logger.debug(
@@ -334,8 +333,8 @@ def is_done(
         # author's later `working` is a cross-connection stale echo (the
         # gateway's typed Done is strictly later than every paired working
         # status at the source) that must not block, or the paired status
-        # either deadlocks the task or contradicts an already-published result
-        # (PR #73 rounds 3/5). blocked/input_required escalations still block
+        # either deadlocks the task or contradicts an already-published result.
+        # blocked/input_required escalations still block
         # fail-closed.
         reopen_index = state.last_escalation_index if state.by_evidence else state.last_status_index
         if reopen_index is not None and reopen_index > state.terminal_index:

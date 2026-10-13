@@ -157,7 +157,7 @@ async def test_run_service_wires_normalized_persistent_debate_lanes(
 async def test_run_service_wires_presence_notify_from_home_channel(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Presence notify (issue #147) targets the home channel + carries the Dash URL."""
+    """Presence notify targets the home channel + carries the Dash URL."""
 
     _set_min_env(monkeypatch)
     monkeypatch.setenv("DISCORD_HOME_CHANNEL", "home-777")

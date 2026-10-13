@@ -42,15 +42,15 @@ SCOPE_PARTICIPANT_COUNT: dict[str, int] = {
 # wire enforces a conservative safe alphabet.
 _AGENT_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 
-# Bounded cap for a presence-transition ``agent_id`` (issue #147). It is a persona
+# Bounded cap for a presence-transition ``agent_id``. It is a persona
 # slug that also rides as a Dash live-page URL path segment; bound it with the same
 # 64-char cap convention the evidence source ids use (``MAX_SOURCE_ID_LEN``) so an
 # over-long slug can neither blow the frame nor the URL. Its own named constant so
 # the bound is documented and not a re-used magic literal.
 MAX_PRESENCE_AGENT_ID_LEN = 64
 
-# Bounded SAFE human display vocabulary for a rendered presence ``display_name``
-# (issue #147): letters, digits, spaces, dot, hyphen, underscore ONLY. It rejects
+# Bounded SAFE human display vocabulary for a rendered presence ``display_name``:
+# letters, digits, spaces, dot, hyphen, underscore ONLY. It rejects
 # ``@`` (mentions), brackets/parentheses, slashes, backticks, any markup char, and
 # control characters. Leading/trailing whitespace is rejected separately in the
 # model validator. A connector renders this string into a possibly-leaked surface,
@@ -61,7 +61,7 @@ _DISPLAY_NAME_PATTERN = re.compile(r"^[A-Za-z0-9 ._-]+$")
 MAX_PRESENCE_DISPLAY_NAME_LEN = 64
 
 # Bounded cap + safe alphabet for a presence-transition ``transition_id`` (issue
-# #147 delivery idempotency). The deriver mints ONE stable id per edge when the
+# delivery idempotency). The deriver mints ONE stable id per edge when the
 # pending frame is created (the repo's ``uuid4().hex`` idiom -> 32 hex chars) and
 # retains it on retry, so an ambiguous at-least-once redelivery of the SAME edge
 # carries the SAME id and a consumer renders it exactly once. It is NOT rendered to
@@ -76,7 +76,7 @@ MAX_PRESENCE_TRANSITION_ID_LEN = 64
 def is_valid_presence_agent_id(agent_id: str) -> bool:
     """Return True iff ``agent_id`` is a valid presence-transition authoritative id.
 
-    The ONE shared identity predicate for a presence ``agent_id`` (issue #147): a
+    The ONE shared identity predicate for a presence ``agent_id``: a
     subject-safe ``[A-Za-z0-9_-]+`` token within :data:`MAX_PRESENCE_AGENT_ID_LEN`.
     :meth:`PresenceTransitionFrame._check_identity` enforces exactly these
     constraints at construction/decode; the deriver calls it BEFORE frame
@@ -126,7 +126,7 @@ def validate_participants(participants: list[str], scope: str) -> None:
         )
 
 
-# The one broadcast wire token for ``SteerFrame.target_agent`` (issue #74/#76):
+# The one broadcast wire token for ``SteerFrame.target_agent``:
 # edges default to it when the human names no agent, and consumers honor it as
 # "any agent with the steer's task active". Owned here — the producer/consumer
 # boundary imports this constant, never re-declares the literal.
@@ -168,7 +168,7 @@ class WireFrame(BaseModel):
 
 
 class ChannelOrigin(BaseModel):
-    """Carry the chat-surface identity a task came from (issue #93 intake).
+    """Carry the chat-surface identity a task came from (intake).
 
     Rides a :class:`TaskFrame` so a downstream triage agent knows both the Open
     Brain channel lane (guild + channel) and the exact reply destination
@@ -205,7 +205,7 @@ class ChannelOrigin(BaseModel):
     thread_id: str | None = None
     message_id: str | None = None
     asker: str | None = None
-    # Render-intent marker (issue #93 trio intake): True only when this origin
+    # Render-intent marker (trio intake): True only when this origin
     # rides a MULTI-participant debate task (duo/trio). A triage edge renders a
     # debate answer as a short stance-derived TLDR in the parent channel plus the
     # full turn text in-thread, instead of the full text in-channel used for a
@@ -244,14 +244,14 @@ class TaskFrame(WireFrame):
     ``scope`` names the required COUNT; ``participants`` names the identities —
     the edge derives scope from the participant count and validates consistency.
 
-    ``stack`` is the typed stack-scope guard (issue #75): the edge stamps the
+    ``stack`` is the typed stack-scope guard: the edge stamps the
     stack id of the deployment it fronts, and an orchestrator only consumes
     tasks whose ``stack`` matches its own configured id — so dev and deployed
     stacks sharing one bus cannot cross-consume. Additive with a default of
-    ``""`` (unscoped legacy wire) so pre-#75 bytes still decode; stack-guarded
+    ``""`` (unscoped legacy wire) so earlier bytes still decode; stack-guarded
     orchestrators fail closed on any mismatch, including ``""``.
 
-    ``origin`` carries the originating chat-surface identity (issue #93 intake):
+    ``origin`` carries the originating chat-surface identity (intake):
     an always-on channel listener mints a task the triage agent must be able to
     answer back in-channel, so the guild/channel/thread/message ids and asker
     ride the frame. Additive-optional (default ``None``); non-intake frames omit
@@ -290,7 +290,7 @@ class TaskFrame(WireFrame):
     def _check_participants(self) -> TaskFrame:
         """Reject blank/duplicate/subject-unsafe ids and scope/count mismatches.
 
-        The wire enforces the invariant (issue #75 round 2): a duplicate like
+        The wire enforces the invariant: a duplicate like
         ``['a', 'a']`` would derive ``duo``, publish twice to one agent lane,
         and collapse to a one-member dispatch set that can never satisfy duo
         completion — so it never validates in the first place.
@@ -311,7 +311,7 @@ class TaskFrame(WireFrame):
         """Omit the ``origin``/``arbiter`` keys from the wire when they are None.
 
         A legacy-shaped frame (no ``origin``, no ``arbiter``) MUST serialize
-        byte-identically to the pre-#93 wire so an old ``extra="forbid"`` decoder
+        byte-identically to the earlier wire so an old ``extra="forbid"`` decoder
         without the fields still accepts it: ``origin`` and ``arbiter`` are the
         ONLY keys dropped-on-None. Every other Optional field's wire behavior is
         left exactly as the base serializer emits it (e.g. ``created_at`` still
@@ -468,13 +468,13 @@ class VerificationReport(BaseModel):
 class TurnFrame(WireFrame):
     """Carry visible agent output plus typed stance data.
 
-    ``origin`` carries the originating chat-surface identity (issue #93 reply
+    ``origin`` carries the originating chat-surface identity (reply
     render), copied from the triggering :class:`TaskFrame` when the answered task
     arrived from an intake/wake path. It lets a triage edge render an EXTERNAL
     agent's answer back into the SAME channel the question came from, for a task
     the edge did not mint itself. Additive-optional (default ``None``), mirroring
     :class:`TaskFrame`'s precedent EXACTLY: omitted from the wire when None so a
-    legacy-shaped turn is byte-identical to the pre-#93 wire and an old
+    legacy-shaped turn is byte-identical to the earlier wire and an old
     ``extra="forbid"`` decoder without the field still accepts it.
 
     Deploy ordering (wire compat): the ``origin`` key rides an ``extra="forbid"``
@@ -539,8 +539,8 @@ class SteerFrame(WireFrame):
 class StatusFrame(WireFrame):
     """Carry typed in-progress or blocked task status.
 
-    ``agent_id`` is the status author (frame contract amendment, PR #73
-    round 5): per-participant staleness classification in done derivation
+    ``agent_id`` is the status author (frame contract
+    amendment): per-participant staleness classification in done derivation
     needs the participant on the frame, mirroring ``TurnFrame`` authorship.
     Required with no default — a v1 status without authorship fails closed at
     decode (schema_version 2 wire change; deployed stacks re-sync on merge).
@@ -580,7 +580,7 @@ class StatusFrame(WireFrame):
 
 
 class LifecycleFrame(WireFrame):
-    """Carry a daemon lifecycle event so shutdown/recovery is legible (issue #84).
+    """Carry a daemon lifecycle event so shutdown/recovery is legible.
 
     Daemon stop/restart was opaque: Discord users saw a shutdown with no reason
     or initiator, and supervisor recovery was silent to the bus. This frame makes
@@ -605,11 +605,11 @@ class LifecycleFrame(WireFrame):
 
 
 class PresenceTransitionFrame(WireFrame):
-    """Carry ONE typed agent presence-edge event (issue #147).
+    """Carry ONE typed agent presence-edge event.
 
     Rendered operator notifications (Telegram/Discord) are dumb edges: they ONLY
     format this typed frame, never infer a transition from prose. Presence/liveness
-    truth is owned upstream by the web-chat ``PresenceRegistry`` (issue #145); a
+    truth is owned upstream by the web-chat ``PresenceRegistry``; a
     deriver observes that registry's alive-state deltas and emits exactly one frame
     per genuine edge (``offline`` on alive->dead, ``recovered`` on dead->alive),
     with steady-state repeats deduped to nothing.
@@ -640,13 +640,13 @@ class PresenceTransitionFrame(WireFrame):
     leading/trailing whitespace) so a connector can never render a mention, a
     Markdown link, or a Telegram HTML tag from it.
 
-    ``transition_id`` is a STABLE typed delivery-idempotency key (issue #147),
+    ``transition_id`` is a STABLE typed delivery-idempotency key,
     minted ONCE by the deriver when the pending frame is created and RETAINED on
     retry, so an at-least-once redelivery of the SAME edge (an ambiguous transport
     ack) carries the SAME id and a consumer renders/sends it exactly once while two
     DISTINCT edges (distinct ids) still deliver in order. It is a delivery-
     idempotency key ONLY — the NATS typed frame remains truth — and is NEVER rendered
-    to an operator surface. Required (this frame kind is new in #147, so there is no
+    to an operator surface. Required (this frame kind is new, so there is no
     legacy id-less wire to stay compatible with); bounded to a short subject-safe
     token (:data:`MAX_PRESENCE_TRANSITION_ID_LEN`, ``[A-Za-z0-9_-]+``) so an
     oversized/unsafe id can neither blow the frame nor poison a consumer's cache key

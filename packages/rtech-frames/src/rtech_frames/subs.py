@@ -1,6 +1,6 @@
 """Own the atomic all-or-nothing subscription-set primitive for the typed bus.
 
-Three surfaces (orchestrator PR #73, steer lane PR #76, chatd edge PR #79) have
+Three surfaces (orchestrator, steer lane, chatd edge) have
 independently hand-rolled "subscribe N subjects sequentially" and independently
 reproduced the same defect: a failure partway through leaves earlier
 subscriptions live but untracked, so nothing ever retires them. This module is

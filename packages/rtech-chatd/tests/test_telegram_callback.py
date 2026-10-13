@@ -314,7 +314,7 @@ def test_publish_failure_never_logs_raw_exception_text() -> None:
     assert [subject for subject, _ in healthy.published] == [subjects.task_steer("task-123")]
 
 
-# --- outbound interaction: attach an actor-bound steer keyboard (issue #117) ---
+# --- outbound interaction: attach an actor-bound steer keyboard ---
 
 
 class InteractionSender(FakeSender):
