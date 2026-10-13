@@ -1,0 +1,30 @@
+[Unit]
+Description=rtech-agents tgd Telegram edge (long-poll TaskFrame ingress, multi-identity turn render-back)
+After=network-online.target
+Wants=network-online.target
+# Backoff bound: if the edge crash-loops (a missing bot ref, group allowlist, or
+# stack id fails closed at startup), stop after 5 rapid starts in 60s instead of
+# hammering the Telegram API and journald forever. `systemctl --user reset-failed
+# rtech-tgd` clears the latch after fixing .env.
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=%h/rtech-agents
+EnvironmentFile=%h/rtech-agents/.env
+# One explicit non-templated unit for the Telegram multi-identity edge.
+# The per-agent bot identities are the sender's own token-ref pool
+# (RTECH_TG_IDENTITY_MAP), resolved inside ONE process; a systemd template would
+# collapse that multi-identity edge into N single-identity processes racing the
+# same long-poll offset. Long polling means NO inbound port, webhook, or domain.
+#
+# Scrub the cc-env poison for parity with the other units: ~/.cc-env pins stale
+# 4-6-era ANTHROPIC_* values; the edge itself spawns no engine, but env -u keeps
+# the child env clean and identical across units (issue #55).
+ExecStart=/usr/bin/env -u ANTHROPIC_BASE_URL -u ANTHROPIC_API_KEY -u ANTHROPIC_MODEL -u ANTHROPIC_DEFAULT_OPUS_MODEL -u ANTHROPIC_DEFAULT_SONNET_MODEL uv run --frozen rtech-tgd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

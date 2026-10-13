@@ -1,0 +1,5 @@
+# Test fixtures and detector patterns, not secrets (checked 2026-10-13).
+packages/rtech-agentd/tests/test_outbound_guard.py:stripe-access-token:112
+packages/rtech-chatd/tests/test_outbound_guard.py:stripe-access-token:114
+packages/rtech-chatd/tests/test_user_session_config.py:generic-api-key:38
+packages/rtech-chatd/tests/test_user_session_config.py:generic-api-key:55

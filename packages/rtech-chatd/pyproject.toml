@@ -1,0 +1,28 @@
+[project]
+name = "rtech-chatd"
+version = "0.0.1"
+description = "Chat ingress/egress daemon: ChannelAdapter protocol + Discord v1."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "loguru>=0.7.0",
+  "discord.py>=2.4.0",
+  "rtech-frames",
+  "fleet-nats",
+  "aiogram>=3.29,<3.30",
+  "telethon>=1.41,<2",
+]
+
+[project.scripts]
+rtech-chatd = "rtech_chatd.__main__:main"
+rtech-tgd = "rtech_chatd.tgd_main:main"
+rtech-tg-session = "rtech_chatd.mint_session:main"
+rtech-tg-admin = "rtech_chatd.tg_admin:main"
+provision-debate-group = "rtech_chatd.provision_group:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rtech_chatd"]

@@ -1,0 +1,27 @@
+[project]
+name = "rtech-schedulerd"
+version = "0.0.1"
+description = "Cron-scheduled TaskFrame minter for rtech-agents."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "croniter>=6.0.0",
+  "loguru>=0.7.0",
+  "rtech-frames",
+  "rtech-orchestrator",
+  "fleet-nats",
+]
+
+[project.scripts]
+rtech-schedulerd = "rtech_schedulerd.__main__:run_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rtech_schedulerd"]
+
+[tool.uv.sources]
+rtech-frames = { workspace = true }
+rtech-orchestrator = { workspace = true }

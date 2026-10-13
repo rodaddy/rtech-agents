@@ -1,0 +1,55 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# ── uv / venv ──
+.venv/
+venv/
+uv.lock.bak
+
+# ── tooling caches ──
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── evidence / runtime artifacts ──
+.evidence/*
+!.evidence/README.md
+.dev-stack/
+*.log
+
+# ── secrets / credentials ──
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Exclude the whole secrets tree, but allowlist the committed template dir and
+# the .gitkeep so a fresh checkout has the layout + example without any real
+# credential (issue #110).
+secrets/*
+!secrets/.gitkeep
+!secrets/examples/
+!secrets/examples/**
+config.local.*
+
+# ── telethon session files (user-session artifacts) ──
+*.session
+*.session-journal
+
+# ── editor / OS junk ──
+.DS_Store
+.idea/
+.vscode/
+
+
+# qmd project-local search index: the database is rebuildable
+# and never committed; the allowlist config is tracked.
+

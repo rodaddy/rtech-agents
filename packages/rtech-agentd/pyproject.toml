@@ -1,0 +1,31 @@
+[project]
+name = "rtech-agentd"
+version = "0.0.1"
+description = "Per-agent supervisor daemon: managed engine session + NATS ingress/egress."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "loguru>=0.7.0",
+  "pyyaml>=6.0",
+  "claude-agent-sdk>=0.2.0",
+  "nats-py>=2.6.0",
+  "fleet-core",
+  "fleet-nats",
+  "fleet-subscriber",
+  "openbrain-memory",
+  "rtech-persona",
+  "rtech-frames",
+  "rtech-orchestrator",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rtech_agentd"]
+
+[dependency-groups]
+dev = [
+  "types-pyyaml>=6.0",
+]

@@ -1,0 +1,109 @@
+[project]
+name = "rtech-agents"
+version = "0.0.1"
+description = "NATS-native managed-agent stack — Hermes runtime replacement."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "rtech-persona",
+  "rtech-agentd",
+  "rtech-chatd",
+  "rtech-frames",
+  "rtech-orchestrator",
+  "rtech-schedulerd",
+  "rtech-webchat",
+  "rtech-hermes-bridge",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+rtech-persona = { workspace = true }
+rtech-agentd = { workspace = true }
+rtech-chatd = { workspace = true }
+rtech-frames = { workspace = true }
+rtech-orchestrator = { workspace = true }
+rtech-schedulerd = { workspace = true }
+rtech-webchat = { workspace = true }
+rtech-hermes-bridge = { workspace = true }
+# fleet-bus packages consumed as the wire contract + pure subscriber pieces.
+# Local path sources for dev/CI on this checkout; deploys pin these as git deps
+# (see packages/rtech-agentd/README.md → Dependencies).
+# fleet-core is the shared base (spec/config/transport) that fleet-nats and
+# fleet-subscriber now sit on; it is a transitive dep of fleet-nats and must be
+# path-resolvable on this checkout.
+fleet-core = { path = "../fleet-bus/packages/fleet-core", editable = true }
+fleet-nats = { path = "../fleet-bus/packages/fleet-nats", editable = true }
+fleet-subscriber = { path = "../fleet-bus/packages/fleet-subscriber", editable = true }
+openbrain-memory = { path = "../open-brain/python/openbrain-memory", editable = true }
+
+[dependency-groups]
+dev = [
+  "mypy>=1.18.0",
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0",
+  "ruff>=0.14.0",
+  "types-croniter>=2.0",
+  "types-pyyaml>=6.0",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["packages"]
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+explicit_package_bases = true
+namespace_packages = true
+# src-layout across multiple packages: give mypy each package's `src` as a base
+# so product modules resolve to distinct top-level names.
+mypy_path = [
+  "packages/rtech-persona/src",
+  "packages/rtech-agentd/src",
+  "packages/rtech-chatd/src",
+  "packages/rtech-frames/src",
+  "packages/rtech-orchestrator/src",
+  "packages/rtech-webchat/src",
+  "packages/rtech-hermes-bridge/src",
+  "../open-brain/python/openbrain-memory/src",
+]
+# Per-package `tests/` trees all share the bare module name `tests`, which
+# collides under a single mypy run. Tests are exercised (and type-surfaced) by
+# pytest; mypy strictness targets the product source. Exclude the test trees
+# from the duplicate-name check while still checking every `src/` module.
+exclude = ['(^|/)tests(/|$)']
+
+# The reused `openbrain-memory` package is consumed AS-IS (zero changes). Its
+# `src` is on `mypy_path` so imports resolve, but its internals are the reused
+# package's own concern — skip following into them so this repo's strict gate
+# never type-checks (or fails on) third-party source we do not own.
+[[tool.mypy.overrides]]
+module = "openbrain_memory.*"
+ignore_errors = true
+
+# Telethon (user-session minting, issue #110) ships no type stubs and no
+# py.typed marker, so under strict mypy its imports are `import-untyped`. aiogram
+# — the bot-API edge dep — DOES ship inline types and needs no override; this
+# narrow per-library allowlist targets only the stub-less telethon package (NOT a
+# blanket `ignore_missing_imports`), so our own source stays fully strict-checked.
+[[tool.mypy.overrides]]
+module = "telethon.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Placeholder-safe: a scaffold with no collected tests must not fail the gate.
+# `--import-mode=importlib` keeps src-layout test packages importable without
+# installed-name collisions.
+addopts = "--import-mode=importlib"
+testpaths = ["packages"]
+# agentd's supervisor/ingress/steering tests are async.
+asyncio_mode = "auto"
+markers = [
+  "e2e: authorization-gated real-account integration scenarios",
+]

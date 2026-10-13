@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  grep-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep and zsh
+        run: sudo apt-get update && sudo apt-get install -y ripgrep zsh
+
+      - name: Doctrine grep-gate (rules 2/3)
+        run: ./scripts/grep-gate.sh
+
+  gates:
+    runs-on: ubuntu-latest
+    # The workspace layout must let ``../fleet-bus/packages/fleet-nats`` (the
+    # editable path dep in pyproject/uv.lock) resolve from the repo root.
+    # actions/checkout rejects a ``path`` outside $GITHUB_WORKSPACE, so a bare
+    # ``path: ../fleet-bus`` is not allowed. Instead check both repos out into
+    # sibling subdirectories inside the workspace and run every step from the
+    # repo subdir; then ``../fleet-bus`` points at the fleet-bus checkout.
+    defaults:
+      run:
+        working-directory: rtech-agents
+    steps:
+      - name: Checkout rtech-agents
+        uses: actions/checkout@v4
+        with:
+          path: rtech-agents
+
+      - name: Checkout fleet-bus (sibling path dep)
+        uses: actions/checkout@v4
+        with:
+          repository: rodaddy/fleet-bus
+          path: fleet-bus
+
+      - name: Checkout open-brain (sibling path dep)
+        uses: actions/checkout@v4
+        with:
+          # open-brain is public; the default GITHUB_TOKEN suffices. The
+          # ``openbrain-memory`` editable path dep (added in #66) resolves via
+          # ``../open-brain/python/openbrain-memory`` from the repo subdir.
+          repository: rodaddy/open-brain
+          path: open-brain
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+      - name: mypy
+        run: uv run mypy packages/
+
+      - name: pytest
+        run: uv run pytest -q

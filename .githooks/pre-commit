@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# rtech-agents pre-commit hook
+# Installed by: bash scripts/install-hooks.sh
+
+# ── LAW #8: Block commits on protected branches ──
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+case "$BRANCH" in
+  main|master|production)
+    echo "BLOCKED: Commits to '$BRANCH' are not allowed. Create a feature branch first."
+    echo "  git checkout -b feat/your-feature"
+    exit 1
+    ;;
+esac
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# ── AGENTS.md is the only root instruction file; CLAUDE.md must not exist ──
+# A CLAUDE.md suppresses Claude Code's native AGENTS.md load.
+if ! test ! -e "$REPO_ROOT/CLAUDE.md"; then
+  echo "BLOCKED: CLAUDE.md must not exist. Put repo instructions in AGENTS.md."
+  exit 1
+fi
