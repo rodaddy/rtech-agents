@@ -16,7 +16,7 @@ from .channel import InboundMessage, SendTarget
 class _HasOrigin(Protocol):
     """A frame carrying an optional channel origin (TaskFrame or TurnFrame).
 
-    Both frames expose ``origin`` (issue #93), so the reply-target resolver reads
+    Both frames expose ``origin``, so the reply-target resolver reads
     the field structurally rather than binding to one concrete frame type — the
     intake path resolves from a :class:`TaskFrame`, the external reply-render path
     from a :class:`TurnFrame`.
@@ -69,7 +69,7 @@ def inbound_to_task_frame(
     The inbound edge does not infer stance, done state, participants, or control
     signals. It only copies the requester/text fields and supplies the typed
     frame identity fields provided by the caller. ``stack`` is the typed
-    stack-scope stamp (issue #75) — REQUIRED addressing config supplied by the
+    stack-scope stamp — REQUIRED addressing config supplied by the
     caller, never a defaulted shared literal and never a control signal
     inferred by the edge. ``participants`` is likewise caller-supplied typed
     identity data (duo/trio frames require it).
@@ -81,7 +81,7 @@ def inbound_to_task_frame(
 
     if not stack.strip():
         logger.error("bridge.inbound_to_task_frame | blank stack rejected task_id={}", task_id)
-        raise ValueError("stack must be non-empty (issue #75); there is no default stack id")
+        raise ValueError("stack must be non-empty; there is no default stack id")
     frame = TaskFrame(
         id=task_id,
         origin_edge=origin_edge,
@@ -114,12 +114,12 @@ def inbound_to_intake_task_frame(
     debate: bool = False,
     arbiter: str | None = None,
 ) -> TaskFrame:
-    """Mint a triage TaskFrame from an intake-gated channel message (issue #93).
+    """Mint a triage TaskFrame from an intake-gated channel message.
 
-    Like :func:`inbound_to_task_frame`, ``stack`` is REQUIRED addressing config
-    (issue #75): a blank stack would mint a task every stack-guarded orchestrator
+    Like :func:`inbound_to_task_frame`, ``stack`` is REQUIRED addressing config:
+    a blank stack would mint a task every stack-guarded orchestrator
     drops, so the edge fails closed. ``created_at`` is always stamped (the
-    agentd-side dedup/retry horizon of #83 fails closed on frames it cannot age).
+    agentd-side dedup/retry horizon of fails closed on frames it cannot age).
 
     Unlike the plain mint, this packs the originating chat-surface identity into
     ``origin`` (:class:`rtech_frames.ChannelOrigin`) so the triage agent knows the
@@ -129,7 +129,7 @@ def inbound_to_intake_task_frame(
     Args:
         msg: The intake-gated inbound message (already a confirmed hit).
         task_id: Caller-supplied unique task id.
-        stack: Required stack-scope stamp (issue #75); blank fails closed.
+        stack: Required stack-scope stamp; blank fails closed.
         triage_agent: The configured triage agent id (the deployed
             ``agentd-<name>``, e.g. ``agentd-nagatha``); folded into
             ``origin_edge`` so downstream logs/subjects name the destination.
@@ -156,7 +156,7 @@ def inbound_to_intake_task_frame(
         logger.error(
             "bridge.inbound_to_intake_task_frame | blank stack rejected task_id={}", task_id
         )
-        raise ValueError("stack must be non-empty (issue #75); there is no default stack id")
+        raise ValueError("stack must be non-empty; there is no default stack id")
 
     origin = ChannelOrigin(
         channel_id=msg.channel_id,
@@ -196,7 +196,7 @@ def intake_reply_target(frame: _HasOrigin) -> SendTarget | None:
     only supplies the :class:`SendTarget` so the answer returns to the SAME
     channel/thread the question came from, as a reply to the asker's message.
     Accepts any origin-carrying frame (a :class:`TaskFrame` on the intake mint
-    path, a :class:`TurnFrame` on the external reply-render path — issue #93).
+    path, a :class:`TurnFrame` on the external reply-render path).
     Returns None when the frame carries no channel origin (a non-intake frame).
     """
     origin = frame.origin
@@ -278,7 +278,7 @@ def turn_frame_to_tldr(frame: TurnFrame, *, named: bool = True) -> str:
 
     ``named`` controls the attribution prefix. True (default, Discord v1): the
     agent name is prefixed because all posts go out under the single edge bot
-    identity. False (issue #109): the surface posts under the agent's OWN bot,
+    identity. False: the surface posts under the agent's OWN bot,
     so the prefix would be redundant ventriloquism — the identity IS the
     attribution. Shape: ``[**<agent>** — ]<position>: <because (≤ cap)>``.
     """

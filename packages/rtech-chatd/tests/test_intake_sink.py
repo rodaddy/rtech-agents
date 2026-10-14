@@ -1,4 +1,4 @@
-"""Functional tests for the intake SINK (issue #93, slice 2).
+"""Functional tests for the intake SINK (slice 2).
 
 The sink turns a confirmed intake hit into a bus publish toward the triage agent.
 These cover the four behaviors the sink owns:
@@ -643,7 +643,7 @@ def test_publish_failure_posts_no_ack() -> None:
 
 
 def test_debate_mint_starts_typing_for_every_participant() -> None:
-    # Issue #109 signal 3: a debate mint starts a typing indicator for EVERY
+    # a debate mint starts a typing indicator for EVERY
     # participant identity in the origin chat (targets stamped as_agent), so the
     # gap between ack and first TLDR never looks dead.
     bus = FakeBus()
@@ -732,7 +732,7 @@ def test_single_scope_mint_starts_no_typing() -> None:
 
 
 def test_unvoiced_ack_is_identity_stamped_and_unprefixed() -> None:
-    # Issue #109: voiced=False sends the ack under the triage agent's OWN bot —
+    # voiced=False sends the ack under the triage agent's OWN bot —
     # the target carries as_agent and the text drops the name prefix.
     bus = FakeBus()
     acks: list[tuple[SendTarget, str]] = []

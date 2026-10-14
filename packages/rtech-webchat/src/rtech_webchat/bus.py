@@ -34,7 +34,7 @@ class FrameBus(Protocol):
         """Report whether the underlying transport is currently connected.
 
         This is the typed liveness surface the presence pipeline consults at read
-        time (issue #145): a subscription established once can still be silently
+        time: a subscription established once can still be silently
         severed by a later connection drop, so the health verdict must be able to
         re-derive ``subscription_failed`` from live transport state rather than a
         one-shot success flag.
@@ -85,7 +85,7 @@ class NatsFrameBus:
         """Report whether the underlying FleetBus transport is connected.
 
         ``FleetBus.is_connected`` is a property; this method wraps it so the edge
-        exposes one uniform callable liveness probe (issue #145).
+        exposes one uniform callable liveness probe.
         """
 
         return self._bus.is_connected

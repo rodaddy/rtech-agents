@@ -1,4 +1,4 @@
-"""Multi-identity Telegram outbound: pool, send, typing, topics, reactions (#109).
+"""Multi-identity Telegram outbound: pool, send, typing, topics, reactions.
 
 This module is the OUTBOUND half of the Telegram edge. The inbound adapter
 (:mod:`rtech_chatd.telegram_adapter`) delegates its :class:`ChannelAdapter`
@@ -18,7 +18,7 @@ against while this module owns every send mechanic:
   :class:`rtech_chatd.telegram_rate_limiter.TelegramRateLimiter`, acquired
   before every send. A served FloodWait (429) records its penalty in the
   limiter and RE-RAISES to the caller: the edge's piece-mark render semantics
-  (#93 R4/R5) already resume only the missing piece, so retry/backoff policy
+  already resume only the missing piece, so retry/backoff policy
   stays with the render loop, never a blind retry here.
 * **Forum topics with a reply-chain degrade.** ``create_thread`` on a forum
   supergroup creates a real topic; on a plain group it returns the synthetic
@@ -66,7 +66,7 @@ from .telegram_rate_limiter import TelegramRateLimiter
 # transport errors can embed the full request URL — which contains the bot
 # token — in their str(), so EVERY logged exception in this module (and the
 # inbound adapter, which imports this) is routed through :func:`redact_token`
-# first (PR #122 gauntlet, security lane).
+# first (security lane).
 _BOT_TOKEN_URL_RE = re.compile(r"/bot[^/\s]+")
 
 
@@ -101,7 +101,7 @@ TYPING_FAILURE_BACKOFF_S = 10.0
 TYPING_MAX_LIFETIME_S = 120.0
 
 # The receipt reaction set on the asker's message the moment an intake hit
-# fires (issue #109 three-signal contract, signal 1).
+# fires (three-signal contract, signal 1).
 RECEIPT_REACTION = "👀"
 
 # Synthetic thread-id namespace for the non-forum degrade (module docstring).
@@ -180,7 +180,7 @@ class TelegramSender:
         self._identity_bots: dict[str, Bot] = {}
         # (chat_id, thread-or-"", agent_id-or-"") -> live typing keepalive task.
         # The thread dimension keeps two topics of one chat from coalescing
-        # into (and cancelling) each other's indicator (PR #122 gauntlet).
+        # into (and cancelling) each other's indicator.
         self._typing_tasks: dict[tuple[str, str, str], Task[None]] = {}
         # (chat_id, agent_id-or-"") -> send serialization lock: a multi-chunk
         # logical message must not interleave with a concurrent send from the
@@ -287,10 +287,10 @@ class TelegramSender:
         ``None`` when nothing was sent. The reply anchor attaches to the first
         chunk only; every chunk individually clears the rate limiter.
 
-        ``reply_markup`` (issue #117, additive-optional) attaches an inline
+        ``reply_markup`` (additive-optional) attaches an inline
         keyboard to the FIRST text chunk only — the buttons ride the head of the
         logical message, never repeat on every chunk. ``None`` (default) is the
-        exact pre-#117 send: every existing call site is byte-identical. The
+        exact earlier send: every existing call site is byte-identical. The
         keyboard is DISPLAY; its buttons carry only the bounded typed
         callback-data contract (:mod:`rtech_chatd.telegram_callback`), and a tap
         becomes a typed steer on the bus — the sender never puts a control signal
@@ -346,7 +346,7 @@ class TelegramSender:
 
         # One logical message at a time per (chat, identity): without this,
         # two concurrent multi-chunk sends interleave (A1, B1, A2), splitting
-        # A's continuation in the surface (PR #122 gauntlet).
+        # A's continuation in the surface.
         lock_key = (target.channel_id, target.as_agent or "")
         lock = self._send_locks.get(lock_key)
         if lock is None:
@@ -470,7 +470,7 @@ class TelegramSender:
         request URL) is logged redacted and re-raised SANITIZED so a generic
         upstream ``reason={exc}`` log can never leak the credential.
 
-        ``reply_markup`` (issue #117) attaches an inline keyboard; the caller
+        ``reply_markup`` attaches an inline keyboard; the caller
         passes it only for the first chunk (see :meth:`send`).
         """
         try:
@@ -593,7 +593,7 @@ class TelegramSender:
             # Self-remove ONLY when the registered task is still THIS task: a
             # typing(off) -> typing(on) restart installs a NEW task under the
             # same key before this cancelled loop unwinds, and an unconditional
-            # pop would orphan that fresh task (PR #122 gauntlet).
+            # pop would orphan that fresh task.
             try:
                 me = current_task()
             except RuntimeError:  # pragma: no cover - loop already torn down

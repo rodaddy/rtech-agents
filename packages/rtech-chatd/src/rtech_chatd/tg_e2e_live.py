@@ -6,7 +6,7 @@ constructing a deferred Telethon client and its actor, and the bus correlator th
 subscribes the REAL product subjects BEFORE a Telegram action so a plain NATS
 pub/sub cannot miss the frames the action causes.
 
-The correlation is the crux of issue #111 done right: the product mints an OPAQUE
+The correlation is the crux of done right: the product mints an OPAQUE
 ``uuid4`` task id and publishes ``TaskFrame`` on ``rtech.task.new`` and ``TurnFrame``
 on ``rtech.task.<opaque-id>.turn`` (:mod:`rtech_chatd.subjects`). A scenario cannot
 predict the id or invent a ``rtech.task.<id>.frames`` subject. So the observer
@@ -325,7 +325,7 @@ def resolve_live_targets(env: Mapping[str, str] | None = None) -> LiveTargets:
 class CorrelatedObserver:
     """Subscribe the REAL product subjects BEFORE an action, then correlate frames.
 
-    This is the correction at the heart of issue #111. The product publishes
+    This is the correction at the heart of this harness. The product publishes
     ``TaskFrame`` on ``TASK_INGRESS`` (``rtech.task.new``) with an OPAQUE ``uuid4``
     id, then ``TurnFrame`` on ``rtech.task.<opaque-id>.turn``; the id cannot be
     predicted and no ``rtech.task.<id>.frames`` subject exists. So this observer:

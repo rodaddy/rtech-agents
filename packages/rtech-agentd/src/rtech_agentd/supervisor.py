@@ -51,7 +51,7 @@ __all__ = [
 class CircuitOpenError(RuntimeError):
     """The restart circuit opened: a fatal marker :meth:`Supervisor.run` raises.
 
-    The bounded-inner-loop design (issue #84) only stops the *machine* from
+    The bounded-inner-loop design only stops the *machine* from
     crash-looping if the process actually exits non-zero so systemd's outer
     ``Restart=on-failure`` loop fires. A clean ``run()`` return would let the
     entrypoint mistake a spent restart budget for a normal shutdown. So when the
@@ -286,7 +286,7 @@ class Supervisor:
     ) -> None:
         """Signal loops to stop, cancel them, and close the session.
 
-        Publishes a lifecycle frame (issue #84) BEFORE tearing down loops/session
+        Publishes a lifecycle frame BEFORE tearing down loops/session
         so the bus is still connected. ``reason``/``initiator`` name the caller's
         intent (the signal path passes ``initiator="signal:<name>"``). The publish
         can never block or fail the shutdown — :meth:`_publish_lifecycle` swallows
@@ -458,7 +458,7 @@ class Supervisor:
         correlation_id: str,
         detail: str = "",
     ) -> None:
-        """Publish a lifecycle frame on the per-agent lifecycle lane (issue #84).
+        """Publish a lifecycle frame on the per-agent lifecycle lane.
 
         This MUST NEVER block or fail the shutdown/recovery path: any failure to
         build or publish the frame is logged loudly and swallowed so the caller
@@ -561,7 +561,7 @@ class Supervisor:
     async def _recover_dead_session(self, detail: str = "") -> None:
         if self._stopped.is_set() or self._circuit_open:
             return
-        # One id links the death and its recovery into a correlated pair (#84):
+        # One id links the death and its recovery into a correlated pair:
         # the "crash" frame marks the session dying, "supervisor_recovery" marks
         # the supervisor bringing it back. ``detail`` distinguishes stream-ended
         # from stream-error.

@@ -1,4 +1,4 @@
-# Turn completion contract (issue #51)
+# Turn completion contract
 
 A stop-rule redesign, not a patch. Two prior manifestations of the same root
 (scripted stall; real-engine stall masked by a steer flush) shared one missing
@@ -58,7 +58,7 @@ same missing completion semantics. Both are closed by the contract above.
 - `test_frame_turn.py::test_task_frame_tracks_in_flight_task_until_done` —
   the watchdog sees the active task while a turn runs; cleared on `TurnDone`.
 - `test_frame_turn.py::test_scripted_task_completes_without_steer` (regression
-  pin for the #50 scenario) — a scripted task send drives a `TurnFrame` with no
+  pin for the scenario) — a scripted task send drives a `TurnFrame` with no
   steer involved.
 - `test_dev_stack_smoke.py` — the dev-stack wiring: task in → `TurnFrame` out,
   no steer, no flush call.

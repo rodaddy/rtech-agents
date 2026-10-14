@@ -4,7 +4,7 @@ Extracted from ``scripts/e2e_evidence.py`` so both the engine-selection helper
 (:mod:`rtech_agentd.engine_select`) and the local dev stack can import the same
 class.
 
-Completion contract (issue #51): every ``send`` opens a turn that COMPLETES on
+Completion contract: every ``send`` opens a turn that COMPLETES on
 its own with a terminal ``TurnDone`` — a task send never depends on a later steer
 "flush" to finish. The first send is the task turn; a subsequent send (during a
 now-idle session) is a steer turn whose ``TurnDone`` text reflects the steer.
@@ -33,7 +33,7 @@ class ScriptedEngine:
     """A deterministic ``EngineSession``: every send completes its own turn.
 
     A task send opens a turn (``TextDelta``) and completes it with a terminal
-    ``TurnDone`` in the same call — no steer flush required (issue #51). A later
+    ``TurnDone`` in the same call — no steer flush required. A later
     send is treated as a steer: it opens and completes a second turn whose
     ``TurnDone`` text reflects the steer, so the frame graph shows two completed
     turns (task then steer) without ever holding a turn open.

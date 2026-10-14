@@ -1,4 +1,4 @@
-"""Deterministic-clock tests for the edge's Telegram send pacer (issue #109).
+"""Deterministic-clock tests for the edge's Telegram send pacer.
 
 No real time passes: a mutable float is the monotonic clock and a fake sleeper
 BOTH records the requested sleep AND advances that clock by the slept amount, so
@@ -197,7 +197,7 @@ def test_lru_eviction_readmits_evicted_chat_at_full_budget() -> None:
     assert len(fake.sleeps) == sleeps_before  # no 1/s wait — record was evicted
 
 
-# ------------------------------------------- gauntlet fix regressions (PR #122)
+# ------------------------------------------- gauntlet fix regressions
 
 
 def test_acquire_prunes_expired_flood_entries_for_other_chats() -> None:
@@ -215,7 +215,7 @@ def test_acquire_prunes_expired_flood_entries_for_other_chats() -> None:
 
 
 def test_flood_ledger_is_bounded_and_folds_into_global() -> None:
-    # PR #122 terminal audit: a 429 storm across many distinct chats must not
+    # a 429 storm across many distinct chats must not
     # grow the FloodWait ledger without limit. Eviction is fail-closed: the
     # evicted chat penalty folds into the global lane.
     fake = FakeClock()

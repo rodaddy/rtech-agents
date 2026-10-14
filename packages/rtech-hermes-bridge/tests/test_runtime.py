@@ -5,7 +5,7 @@ Every fleet envelope a test delivers passes through the real wire codec
 prove the bridge's actual wire contract: typed signals must survive
 serialization, every reply becomes an immediate CONTENT turn, and the typed
 completion produces NO frame — it only ends the bridge's local lifecycle
-(PR #73 redesign: terminal semantics live in the orchestrator).
+(terminal semantics live in the orchestrator).
 """
 
 from __future__ import annotations

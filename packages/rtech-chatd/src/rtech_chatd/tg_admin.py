@@ -1,4 +1,4 @@
-"""CLI for the Telegram user-session admin ops (issue #110).
+"""CLI for the Telegram user-session admin ops.
 
 Wraps :mod:`rtech_chatd.user_session.admin` in a small argparse front end,
 installed as ``rtech-tg-admin`` (also ``python -m rtech_chatd.tg_admin``).

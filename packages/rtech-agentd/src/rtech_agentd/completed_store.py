@@ -1,4 +1,4 @@
-"""Persist completed-task dedup state across agentd restarts (issue #83).
+"""Persist completed-task dedup state across agentd restarts.
 
 The frame-turn runner keeps an in-process ``_completed_tasks`` cache so a
 redelivered already-completed frame is never re-dispatched. That cache is
@@ -19,7 +19,7 @@ Missing vs. corrupt are DISTINCT integrity states, handled differently:
   INFO log; nothing is degraded. There is a narrow residual redelivery risk if
   the file is LOST (not corrupt) between a completion and a restart within the
   horizon — the belt-and-suspenders closure for that is JetStream ``Msg-Id``
-  dedup at the transport (fleet-bus #125), which drops a duplicate before it
+  dedup at the transport, which drops a duplicate before it
   ever reaches this store.
 * CORRUPT / unparseable file = PROVABLE integrity loss: the durable dedup
   authority cannot be trusted for the entries it should have held. Rather than
@@ -163,7 +163,7 @@ class CompletedTaskStore:
     def save(self, completions: dict[tuple[str, str], datetime], horizon_s: float) -> None:
         """Atomically persist ``completions`` as a nested map, evicting past-horizon.
 
-        Write-on-completion is the conservative choice (issue #83): every
+        Write-on-completion is the conservative choice: every
         completion re-persists the horizon-pruned map, so a restart at any point
         reloads a correct, bounded dedup set. FORK NOTE: if write frequency
         becomes a concern this could batch or debounce, but a lost write would

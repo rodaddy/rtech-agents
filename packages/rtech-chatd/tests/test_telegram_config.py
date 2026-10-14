@@ -1,4 +1,4 @@
-"""TelegramConfig env plumbing + fail-loud guards (issue #108, inbound).
+"""TelegramConfig env plumbing + fail-loud guards (inbound).
 
 Mirrors the discipline of ``test_intake_config.py``: default construction, env
 parsing, and — the load-bearing part — every fail-loud guard the config enforces
@@ -149,8 +149,8 @@ def test_allowed_updates_missing_message_raises() -> None:
 
 
 def test_allowed_updates_missing_callback_query_raises() -> None:
-    # Omitting callback_query silently disables every interactive steer button
-    # (issue #117): the Bot API never auto-includes tap updates in getUpdates.
+    # Omitting callback_query silently disables every interactive steer button:
+    # the Bot API never auto-includes tap updates in getUpdates.
     with pytest.raises(ValueError, match="callback_query"):
         TelegramConfig(allowed_updates=("message", "message_reaction"))
 

@@ -10,10 +10,10 @@ handler) exactly as before.
 
 Two complementary batteries live here:
 
-* Type-only + cancellation guards (PR #140): assert the exact exception object is
+* Type-only + cancellation guards: assert the exact exception object is
   re-raised, that ``error_type=<Name>`` renders, and that CancelledError bypasses
   ``except Exception`` untouched on both connect and close.
-* Credentialed-URL leak guards (PR #142): pin each failure log to a sanitized
+* Credentialed-URL leak guards: pin each failure log to a sanitized
   shape, asserting none of the credential substrings (token/url/requester) survive
   in the fully rendered line and the original exception still propagates.
 """
@@ -256,7 +256,7 @@ async def test_connect_cancelled_and_close_also_cancelled_reraise_both() -> None
 
 
 # --------------------------------------------------------------------------
-# Credentialed-URL leak guards (PR #142). These drive a sentinel URL bearing
+# Credentialed-URL leak guards. These drive a sentinel URL bearing
 # token/requester substrings through each failure path and assert the FULLY
 # RENDERED log line never carries any credential substring, while the original
 # exception still propagates (or, for the inbound handler, is swallowed).

@@ -1,4 +1,4 @@
-"""Bound the supervisor's restart and context-rotation loops (issue #84).
+"""Bound the supervisor's restart and context-rotation loops.
 
 Two supervisor collaborators, injected like ``sleep``/``active_registry`` so the
 supervisor owns *when* to act and these own *whether* and *how much*:

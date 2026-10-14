@@ -1,7 +1,7 @@
 """Exercise the Telegram E2E harness without live credentials or network access.
 
 These mocked tests pin the CORRELATED-observer contract the live suite depends
-on, and fail closed on the exact regressions issue #111 corrected:
+on, and fail closed on the exact regressions this harness corrected:
 
 - a subscription installed AFTER the action (a plain post-action pub/sub can miss
   the frames the action causes) — :func:`test_observer_subscribes_before_action`;

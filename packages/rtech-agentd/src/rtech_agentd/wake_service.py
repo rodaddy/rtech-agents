@@ -1,4 +1,4 @@
-"""Mint + publish a wake TaskFrame toward an allow-listed teammate (issue #93).
+"""Mint + publish a wake TaskFrame toward an allow-listed teammate.
 
 The triage agent (Nagatha) handles an intake :class:`~rtech_frames.TaskFrame` and
 can either just ANSWER (the existing TurnFrame reply path — nothing new) or WAKE a
@@ -14,7 +14,7 @@ agent's answer back to the originating channel.
 This service is the engine-agnostic seam owned by the agentd frame-turn/supervisor
 layer. It is exposed to :class:`~rtech_agentd.claude_engine.ClaudeEngine` via the
 in-process SDK MCP wake tool (:mod:`rtech_agentd.wake_tool`), exactly as the
-``stance`` tool exposes stance capture. Design invariants (issue #93):
+``stance`` tool exposes stance capture. Design invariants:
 
 * **Allow-list, fail-loud.** Wakeable ids come from config/env
   (:data:`ENV_WAKE_ALLOWED_AGENTS`) — a comma list of ``agentd-<name>`` ids with
@@ -25,7 +25,7 @@ in-process SDK MCP wake tool (:mod:`rtech_agentd.wake_tool`), exactly as the
   waker (only Nagatha's deploy sets it), which bounds wake-chaining: a woken agent
   is not itself a waker. Additionally, a wake targeting THIS agent is refused.
 * **Minted frame correctness.** Fresh ``id`` + ``created_at`` (so the wake frame
-  passes the #83 fail-closed horizon), ``stack`` from config, ``origin`` copied
+  passes the fail-closed horizon), ``stack`` from config, ``origin`` copied
   verbatim from the triggering frame when present, ``origin_edge`` marking
   provenance (``wake:<triage-agent-id>``), and ``requester`` = the triage agent id.
   The subject is built ONLY via :func:`rtech_orchestrator.subjects.agent_task`.
@@ -91,7 +91,7 @@ class WakeConfig:
         allowed_agents: The frozen set of ``agentd-<name>`` ids this agent may
             wake. NEVER empty for a constructed :class:`WakeService` (an empty
             allow-list means the capability is not exposed at all).
-        stack: The stack-scope stamp (issue #75) minted onto every wake frame so a
+        stack: The stack-scope stamp minted onto every wake frame so a
             stack-guarded orchestrator consumes it. Blank fails closed at build.
     """
 
@@ -104,7 +104,7 @@ class WakeConfig:
         if not self.triage_agent or not self.triage_agent.strip():
             raise ValueError("triage_agent must be non-empty")
         if not self.stack or not self.stack.strip():
-            raise ValueError("stack must be non-empty (issue #75); there is no default stack id")
+            raise ValueError("stack must be non-empty; there is no default stack id")
         if not self.allowed_agents:
             raise ValueError(
                 "allowed_agents must be non-empty; an empty allow-list means the wake "
@@ -225,7 +225,7 @@ WakeOutcome = WakeResult | WakeError
 
 @dataclass
 class WakeService:
-    """Mint + publish a wake TaskFrame toward an allow-listed teammate (#93).
+    """Mint + publish a wake TaskFrame toward an allow-listed teammate.
 
     Owned by the agentd frame-turn/supervisor layer and exposed to the Claude
     engine via the in-process wake MCP tool. One instance per triage agentd; its
@@ -314,7 +314,7 @@ class WakeService:
                 origin=origin,
             )
             subject = subjects.agent_task(target)
-            # Use the PROPAGATING publish (issue #93): publish_frame swallows a
+            # Use the PROPAGATING publish: publish_frame swallows a
             # raising NATS publish and returns normally, which would let the wake
             # tool report a false success with zero publication. publish_frame_checked
             # re-raises so a real transport failure becomes a typed publish_failed.

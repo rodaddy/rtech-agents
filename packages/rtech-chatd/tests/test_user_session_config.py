@@ -1,6 +1,6 @@
 """TelegramUserConfig loader, the .example template, and the secrets gitignore.
 
-Covers the fail-loud secrets loader (issue #110): a valid round-trip with the
+Covers the fail-loud secrets loader: a valid round-trip with the
 string→int api_id coercion, every ACTION REQUIRED failure path (missing file,
 placeholder/blank api_id or api_hash), the session_string default, plus two
 rot-guards — the committed ``.example`` stays parseable with recognisable

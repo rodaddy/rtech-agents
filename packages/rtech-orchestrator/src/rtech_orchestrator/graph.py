@@ -37,7 +37,7 @@ class TaskGraph:
         """Record the agent ids this task was actually dispatched to.
 
         The dispatched set is the typed identity source for participant-scoped
-        done derivation (issue #75): ``is_done`` counts terminal turns only
+        done derivation: ``is_done`` counts terminal turns only
         from these agents. Recording is cumulative so a multi-lane dispatch may
         record per publish or once with the full set.
 
@@ -55,7 +55,7 @@ class TaskGraph:
     def record_bridged(self, participants: Collection[str]) -> None:
         """Record which dispatched participants are fronted by a bridge.
 
-        Bridged participants (PR #73 redesign) complete via orchestrator-
+        Bridged participants complete via orchestrator-
         consumed :class:`~rtech_frames.TerminalEvidence`, never via their own
         turn terminality. Cumulative, like :meth:`record_dispatch`.
 
@@ -92,8 +92,8 @@ class TaskGraph:
         """Latch the dispatch-failure state and roll back any recorded subset.
 
         Set when a dispatch publish, publish confirmation, or lane
-        subscription fails, including a PARTIAL multi-lane fan-out failure
-        (issue #75 rounds 2-3): agents the task never CONFIRMABLY reached must
+        subscription fails, including a PARTIAL multi-lane fan-out failure:
+        agents the task never CONFIRMABLY reached must
         not count toward done. Any participants recorded before the failure
         are rolled back (dispatch-confirmation contract) so the graph carries
         no identity a later turn could complete against, and the task fails

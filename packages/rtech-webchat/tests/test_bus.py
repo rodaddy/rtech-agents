@@ -1,4 +1,4 @@
-"""Test NatsFrameBus lifecycle safe-logging (issue #145 credential-leak fix)."""
+"""Test NatsFrameBus lifecycle safe-logging (credential-leak fix)."""
 
 from __future__ import annotations
 

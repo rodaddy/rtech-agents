@@ -52,7 +52,7 @@ class FakeCodexTransport:
         self._stream_end_handler: Any = None
         self._turn_seq = 0
         # The model the app-server echoes at the response TOP LEVEL on
-        # thread/start|resume (issue #132 attestation). Default matches the
+        # thread/start|resume (attestation). Default matches the
         # config the tests build so the happy path attests instead of failing
         # closed; a test that wants a mismatch/missing model overrides via
         # ``responses`` or passes ``model=None``.
@@ -123,7 +123,7 @@ class FakeCodexTransport:
 
 # The model the default fixtures agree on: ``_cfg()`` requests it and a bare
 # ``FakeCodexTransport()`` echoes it, so behavior tests that do not care about
-# attestation take the happy (attested) path instead of failing closed (#132).
+# attestation take the happy (attested) path instead of failing closed.
 _CFG_MODEL = "gpt-5.6-sol"
 
 
@@ -186,7 +186,7 @@ def test_is_safe_model_id_accepts_clean_slugs(value: str) -> None:
 def test_is_safe_model_id_rejects_padded_and_malformed(value: Any) -> None:
     # A raw model identifier with ANY leading/trailing whitespace or newline is
     # malformed and fails closed — the guard matches the RAW value exactly and
-    # never strips-then-accepts (#132: a padded value must not govern or log).
+    # never strips-then-accepts (a padded value must not govern or log).
     from rtech_agentd.codex_engine import is_safe_model_id
 
     assert is_safe_model_id(value) is False
@@ -194,7 +194,7 @@ def test_is_safe_model_id_rejects_padded_and_malformed(value: Any) -> None:
 
 def test_engine_docs_agree_on_authoritative_codex_cli_version() -> None:
     # All engine documentation must agree with the authoritative codex-cli
-    # version pinned in the protocol module (#132). No stale 0.144.6 mention may
+    # version pinned in the protocol module. No stale 0.144.6 mention may
     # survive in the engine source docstrings.
     import inspect
 
@@ -225,7 +225,7 @@ async def test_start_handshake_and_ref_capture() -> None:
 
 
 async def test_start_sets_model_launch_params() -> None:
-    # #132: the configured model must ride on thread/start with provider fallback
+    # the configured model must ride on thread/start with provider fallback
     # forbidden, so a supported model actually governs turns instead of silently
     # falling to a retired default. ``allowProviderModelFallback`` is a real
     # thread/start field on the installed codex-cli 0.144.5 app-server binary.
@@ -266,7 +266,7 @@ async def test_start_observed_model_match_is_accepted() -> None:
 
 
 async def test_start_observed_model_mismatch_fails_loud() -> None:
-    # #132 core: the server silently selected the retired tier. We FAIL CLOSED by
+    # the server silently selected the retired tier. We FAIL CLOSED by
     # RAISING — and, unlike the old design, we do NOT enqueue an EngineError. The
     # attestation teardown swaps in a fresh queue so no stale terminal can later
     # be drained as a phantom event on a recovered fresh session.
@@ -319,7 +319,7 @@ async def test_start_top_level_model_wins_over_nested_thread() -> None:
 
 
 async def test_start_missing_observed_model_fails_closed() -> None:
-    # #132 hardening: a NON-EMPTY requested model with NO echoed model can no
+    # hardening: a NON-EMPTY requested model with NO echoed model can no
     # longer be confirmed, so we FAIL CLOSED (raise) rather than let a possibly
     # swapped session run. The default fake carries no top-level model here.
     from rtech_agentd.codex_engine import CodexModelMismatchError
@@ -410,7 +410,7 @@ async def test_attestation_failure_tears_down_owned_transport() -> None:
 
 
 async def test_owned_close_failure_retains_handle_and_retries() -> None:
-    # #132 teardown durability: if the OWNED transport's close() RAISES, the child
+    # teardown durability: if the OWNED transport's close() RAISES, the child
     # was not confirmed reaped. The engine must NOT drop the handle and must NOT
     # latch closed — a subsequent close() has to RETRY the reap. Here the first
     # close fails, the handle is retained, and a second close (now succeeding)
@@ -820,7 +820,7 @@ async def test_final_text_from_item_completed_when_turn_items_empty() -> None:
     # codex-cli 0.144.5: turn/completed sends items=[] / itemsView="notLoaded",
     # so the final agentMessage text arrives ONLY via item/completed. The engine
     # must capture it from there (keyed by turnId) and use it for the TurnDone —
-    # this is the empty-content regression (#132).
+    # this is the empty-content regression.
     fake = _fake()
     engine = CodexEngine(_cfg(), transport=fake)
     await engine.start("sys", ToolsPolicy())

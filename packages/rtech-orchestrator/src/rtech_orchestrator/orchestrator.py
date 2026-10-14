@@ -45,10 +45,10 @@ class Orchestrator:
         Args:
             bus: The transport seam for publish/subscribe.
             config: The routing config carrying the explicit single-scope target
-                id. Required — there is no hardcoded default target (issue #49).
+                id. Required — there is no hardcoded default target.
             store: The graph store; defaults to an in-memory POC store.
             fleet_signals: The fleet-side completion seam for BRIDGED
-                participants (PR #73 redesign). Required whenever
+                participants. Required whenever
                 ``config.bridged_agents`` is non-empty and a task dispatches to
                 one — a bridged dispatch with no signal source fails closed.
         """
@@ -59,7 +59,7 @@ class Orchestrator:
         # task_id -> awaitable unsubscribe for that task's fleet done lane.
         self._fleet_unsubs: dict[str, Callable[[], Awaitable[None]]] = {}
         # ONE handle per task covering its turn+status reply lanes, installed
-        # atomically via ``subscribe_all`` (issue #80): a partial-subscribe
+        # atomically via ``subscribe_all``: a partial-subscribe
         # failure rolls the whole set back so an earlier lane never survives
         # live-but-untracked. The lanes themselves live for the orchestrator's
         # lifetime (unchanged from the prior sequential subscribe — a late turn
@@ -70,8 +70,7 @@ class Orchestrator:
         # Un-retirable live subscription sets whose rollback left a handle live.
         # This is a stash, not a retry queue: nothing here is retried
         # automatically. It exists so an un-retirable live lane stays referenced
-        # and observable (logged at stash time) instead of escaping untracked
-        # (issue #80).
+        # and observable (logged at stash time) instead of escaping untracked.
         self._leaked_subscriptions: dict[str, SubscriptionSet] = {}
         self._finished: set[str] = set()
         self._route_by_scope: dict[str, Callable[[TaskFrame], Awaitable[None]]] = {
@@ -92,7 +91,7 @@ class Orchestrator:
             return
         task = frame
         if task.stack != self._config.stack_id:
-            # Ingress stack guard (issue #75): a stack only consumes tasks
+            # Ingress stack guard: a stack only consumes tasks
             # addressed to it. Unscoped legacy frames ("") also fail closed.
             logger.warning(
                 "ignoring task for foreign stack",
@@ -103,7 +102,7 @@ class Orchestrator:
             return
         existing = self._store.get(task.id)
         if existing is not None:
-            # Ingress is idempotent (issue #75 round 2): the graph is claimed
+            # Ingress is idempotent: the graph is claimed
             # atomically below before any await, so a redelivery of the same
             # frame is a no-op — never a second subscription or dispatch — and
             # a same-id/different-payload frame is rejected loudly.
@@ -158,7 +157,7 @@ class Orchestrator:
         return handle
 
     async def _subscribe_lanes(self, task_id: str) -> None:
-        """Install a task's turn + status reply lanes as ONE atomic set (issue #80).
+        """Install a task's turn + status reply lanes as ONE atomic set.
 
         The two ``(subject, handler)`` entries are handed to the typed-bus
         :func:`~rtech_frames.subs.subscribe_all` primitive, which subscribes them
@@ -189,12 +188,12 @@ class Orchestrator:
         When the task names a participant, ``participants[0]`` is the target;
         otherwise the configured default single-agent id is used (unchanged
         behavior when no participant is named). The bridged fleet-done watch is
-        installed BEFORE the publish (PR #73 round 3): a fast gateway can emit
+        installed BEFORE the publish: a fast gateway can emit
         its one-shot typed ``Done`` the moment the dispatch lands, and a
         subscription installed after the publish misses it forever. A failed
         or unconfirmed publish rolls the watch back and marks the task
         dispatch-failed. The dispatch record is written only AFTER confirmed
-        server hand-off (issue #75), so done can never derive against an agent
+        server hand-off, so done can never derive against an agent
         that may never receive the task.
         """
         target = task.participants[0] if task.participants else self._config.single_agent_id
@@ -218,7 +217,7 @@ class Orchestrator:
         signal is injected here.
 
         The bridged fleet-done watch for EVERY bridged participant is installed
-        BEFORE the first publish (PR #73 round 3): any published participant's
+        BEFORE the first publish: any published participant's
         gateway can emit its one-shot typed ``Done`` immediately, so the
         subscription must exist before any dispatch lands. The batch follows
         publish -> confirm -> record (dispatch-confirmation contract): every
@@ -288,7 +287,7 @@ class Orchestrator:
             logger.warning("ignoring non-turn frame on turn lane", task_id=task_id)
             return
         if frame.task_id != task_id:
-            # Lane/payload identity must agree (issue #75 round 2): a frame
+            # Lane/payload identity must agree: a frame
             # delivered on task A's subject carrying task B's id never lands
             # in A's graph.
             logger.warning(
@@ -326,7 +325,7 @@ class Orchestrator:
     async def _watch_bridged(self, task_id: str, dispatched: frozenset[str]) -> bool:
         """Start consuming the typed fleet Done for a task's bridged participants.
 
-        Called BEFORE any dispatch publish (PR #73 round 3): the gateway's
+        Called BEFORE any dispatch publish: the gateway's
         typed ``Done`` is one-shot, and a fast completion emitted the instant
         the dispatch lands must already have a live subscription to land on.
         The bridged subset of ``dispatched`` (per ``config.bridged_agents``) is
@@ -403,7 +402,7 @@ class Orchestrator:
         """Record the dispatched participant set on the task's graph.
 
         The dispatched set is the typed identity source for participant-scoped
-        done derivation (issue #75).
+        done derivation.
         """
         graph = self._store.get(task_id)
         if graph is None:
@@ -445,7 +444,7 @@ class Orchestrator:
             logger.debug("task dispatch failed; skipping done check", task_id=task.id)
             return
         if not graph.participants:
-            # Fail closed (issue #75): without a dispatched participant set
+            # Fail closed: without a dispatched participant set
             # there is no identity to derive done against.
             logger.debug("task not dispatched yet; skipping done check", task_id=task.id)
             return
@@ -479,11 +478,11 @@ class Orchestrator:
         """Return the most recent turn from a terminally-evidenced participant.
 
         Turns from agents outside the dispatched set are never published as the
-        task's result (issue #75). Terminality is per participant kind: a
+        task's result. Terminality is per participant kind: a
         native participant's turn counts when its ``needs_from`` is empty; a
         BRIDGED participant's turns are content-only, so its latest turn counts
-        once its orchestrator-recorded ``TerminalEvidence`` exists (PR #73
-        redesign) — never on the turn's own stance fields.
+        once its orchestrator-recorded ``TerminalEvidence`` exists
+        — never on the turn's own stance fields.
         """
         evidenced = {
             event.agent_id

@@ -1,4 +1,4 @@
-"""Test the chatd presence-notify render + consumer + edge wiring (issue #147).
+"""Test the chatd presence-notify render + consumer + edge wiring.
 
 chatd is a dumb edge: it renders the typed
 :class:`~rtech_frames.frames.PresenceTransitionFrame` into a SURFACE-neutral markdown

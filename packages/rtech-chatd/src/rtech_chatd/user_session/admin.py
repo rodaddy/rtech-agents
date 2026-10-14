@@ -1,6 +1,6 @@
 """User-session admin ops for the Telegram edge: dialog discovery + forum toggle.
 
-The MTProto automation tier (issue #110). A Telegram *bot* cannot list the
+The MTProto automation tier. A Telegram *bot* cannot list the
 account's chats or turn a supergroup into a Topics/forum group — those are
 user-account privileges — so these ops run on the Telethon *user* session minted
 by :mod:`rtech_chatd.mint_session`, loaded through the same fail-loud storage

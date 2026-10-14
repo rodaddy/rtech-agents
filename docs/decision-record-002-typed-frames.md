@@ -41,7 +41,7 @@ Frame validation now happens at the package boundary before connector or agent
 code can consume a bus payload. Unknown frame types and missing required fields
 fail closed through the codec.
 
-## Amendment (steer wire, issue #18)
+## Amendment (steer wire)
 
 `SteerFrame` gains a typed `interrupt: bool = False` field. The interrupt intent
 is a frame field, never scraped from `text` — the steer wire carries no prose
@@ -52,7 +52,7 @@ unchanged. This keeps the human-in-the-loop steer wire first-class and reachable
 directly from the bus (doctrine rule 5) rather than as a deferred connector
 behavior.
 
-## Amendment (sequence-aware done derivation, issue #22)
+## Amendment (sequence-aware done derivation)
 
 Done derivation is **sequence-aware**. The original rule tracked the single
 most-recent `StatusFrame` for a task and blocked done whenever that latest
@@ -83,7 +83,7 @@ derived by the orchestrator"):
   assert done. Done stays orchestrator-derived from the typed frame graph, now
   using sequence position (which was always load-bearing on the ordered log).
 
-## Amendment (task participants, issue #57)
+## Amendment (task participants)
 
 `TaskFrame` gains a typed `participants: list[str] = []` field. It names the
 specific agent ids a multi-agent task fans out to — the UI must be able to pick
@@ -112,10 +112,10 @@ Doctrine held: no new done token or completion frame, no scraped signal —
 `participants` is a typed identity field and done stays orchestrator-derived
 from the graph.
 
-## Amendment (status authorship, PR #73 round 5)
+## Amendment (status authorship)
 
 `StatusFrame` gains a **required** typed `agent_id: str` field naming the
-status author, mirroring `TurnFrame`. Rounds 3/4 of PR #73 proved authorless
+status author, mirroring `TurnFrame`. Earlier review rounds proved authorless
 statuses unsound once native and bridged participants mix on one task: done
 derivation had to classify a later `working` status as "stale cross-connection
 echo" or "genuine reopen" with one task-wide flag, so the classification
@@ -124,8 +124,7 @@ authored the status. With authorship on the frame, staleness is derived PER
 PARTICIPANT: a non-terminal status reopens only its author, and only when it
 is later in the log than that author's own terminal-establishing event
 (terminal turn for native participants, `TerminalEvidence` for bridged ones).
-Statuses from non-participants are ignored, identity-scoped exactly like turns
-(issue #75).
+Statuses from non-participants are ignored, identity-scoped exactly like turns.
 
 This is a **breaking wire change**: `agent_id` has no default, so a v1 status
 without authorship fails closed at decode, and `SCHEMA_VERSION` bumps `1` →

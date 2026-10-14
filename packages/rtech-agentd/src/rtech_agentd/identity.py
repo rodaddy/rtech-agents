@@ -1,7 +1,7 @@
 """Resolve this agentd's unique bus identity — never a bare shared literal.
 
 Two agentds on the same fleet bus that both default to ``agent_id="agentd"`` both
-subscribe ``rtech.agent.agentd.task`` and both consume the same task (issue #49).
+subscribe ``rtech.agent.agentd.task`` and both consume the same task.
 The fix is a per-host default: absent an explicit ``RTECH_AGENT_ID``, the id is
 ``agentd-<hostname>`` so two hosts never collide by accident. An operator may
 still pin any explicit id via the env var.

@@ -1,6 +1,6 @@
 """Prove a fully typed bus-first round-trip against the LIVE fleet NATS bus.
 
-Issue #22. Boot all three bus-first roles IN-PROCESS against the live fleet NATS
+Boot all three bus-first roles IN-PROCESS against the live fleet NATS
 server, drive a task + mid-turn steer through the web-chat edge, and write an
 ordered, timestamped transcript of every frame that crossed the wire to
 ``.evidence/webchat-<ts>.json``.
@@ -74,7 +74,7 @@ ENV_KEY = "ANTHROPIC_API_KEY"
 
 AGENT_ID = "agentd"
 # Stack id shared by the in-process webchat edge and orchestrator so the
-# ingress guard (issue #75) accepts this run's own tasks.
+# ingress guard accepts this run's own tasks.
 STACK_ID = "e2e-evidence"
 TASK_ID = uuid4().hex
 BASE_URL = "http://e2e.local"
@@ -534,8 +534,8 @@ async def _run() -> int:
         result = "FAIL"
         exit_code = 1
     finally:
-        # The scripted engine completes every turn within its own send (issue
-        # #51), so there is no held-open turn to flush at teardown.
+        # The scripted engine completes every turn within its own send,
+        # so there is no held-open turn to flush at teardown.
         if sup is not None:
             try:
                 await sup.stop()

@@ -10,7 +10,7 @@ send budgets BEFORE a request goes out, so the normal path never trips a 429:
 * ~30 messages per second across all chats;
 * FloodWait penalties (a served ``retry_after``) honored per-chat or globally.
 
-Two deliberate deviations from the prior art (issue #109):
+Two deliberate deviations from the prior art:
 
 1. **The lock is never held across a sleep.** The b1x implementation slept
    while holding its asyncio lock, which serialized EVERY chat behind the
@@ -21,7 +21,7 @@ Two deliberate deviations from the prior art (issue #109):
    the composition layer (one per sender pool), with an injectable clock and
    sleeper so the unit suite drives time deterministically.
 
-FloodWait POLICY lives with the caller (#109): when a send DOES receive a 429,
+FloodWait POLICY lives with the caller: when a send DOES receive a 429,
 the sender records the penalty here (:meth:`apply_flood_wait`) and re-raises to
 the render loop — this limiter only guarantees that no FOLLOW-UP send fires
 into a known-active penalty window. It never blind-retries.
@@ -127,7 +127,7 @@ class TelegramRateLimiter:
         # FAIL-CLOSED — the evicted (earliest-expiring) chat penalty folds
         # into the global lane, so no send ever fires into a known penalty
         # window; the cost is other chats briefly sharing the shortest
-        # remaining wait (PR #122 terminal audit).
+        # remaining wait.
         while len(self._flood_until) > self._max_tracked_chats:
             chat_keys = [k for k in self._flood_until if k != _GLOBAL]
             if not chat_keys:

@@ -1,4 +1,4 @@
-"""Codec and validation coverage for the supervised-Start frames (#146).
+"""Codec and validation coverage for the supervised-Start frames.
 
 Split out of ``test_codec.py`` (750-line cap): these are the supervised-Start
 codec/validation tests added by the supervised-agent-start work. The round-trip
@@ -69,7 +69,7 @@ def test_supervised_start_frames_are_typed_and_failure_guarded() -> None:
 
 
 def test_liveness_unconfirmed_is_a_typed_terminal_failure() -> None:
-    """The v9 contract enumerates liveness_unconfirmed as a typed Failed code (#146).
+    """The v9 contract enumerates liveness_unconfirmed as a typed Failed code.
 
     A start action that returned but was not affirmatively confirmed alive fails
     closed with this typed code — never a false Online. It round-trips as a valid
@@ -119,7 +119,7 @@ _START_MODEL_FACTORIES = [
 
 @pytest.mark.parametrize(("label", "factory"), _START_MODEL_FACTORIES)
 def test_request_id_at_max_len_is_accepted_and_round_trips(label, factory) -> None:
-    """A request_id EXACTLY at MAX_REQUEST_ID_LEN is accepted and round-trips (#146)."""
+    """A request_id EXACTLY at MAX_REQUEST_ID_LEN is accepted and round-trips."""
     max_id = "a" * MAX_REQUEST_ID_LEN
     frame = factory(max_id)
 
@@ -131,7 +131,7 @@ def test_request_id_at_max_len_is_accepted_and_round_trips(label, factory) -> No
 
 @pytest.mark.parametrize(("label", "factory"), _START_MODEL_FACTORIES)
 def test_request_id_over_max_len_is_rejected(label, factory) -> None:
-    """A request_id ONE char over MAX_REQUEST_ID_LEN is rejected at construction (#146)."""
+    """A request_id ONE char over MAX_REQUEST_ID_LEN is rejected at construction."""
     over_id = "a" * (MAX_REQUEST_ID_LEN + 1)
 
     with pytest.raises(ValidationError):
@@ -161,8 +161,8 @@ def test_oversized_request_id_is_rejected_at_decode(label, factory) -> None:
 # have rejected. The generic ``encode_frame`` revalidation boundary must catch this
 # for EVERY constrained frame — no per-field/per-frame special-casing — and must
 # NEVER emit bytes for an invalid frame. These regressions prove the boundary for all
-# three supervised-Start frame types with an oversized ``request_id`` (the #146
-# terminal-audit finding) plus a nested-constraint case on a different field.
+# three supervised-Start frame types with an oversized ``request_id``
+# plus a nested-constraint case on a different field.
 @pytest.mark.parametrize(("label", "factory"), _START_MODEL_FACTORIES)
 def test_encode_rejects_model_copy_oversized_request_id(label, factory) -> None:
     """A frame copied with an over-max ``request_id`` fails encode, emitting no bytes.
@@ -216,7 +216,7 @@ def test_encode_rejects_model_copy_oversized_nested_source_id() -> None:
 
 
 def test_encode_preserves_wire_bytes_for_a_valid_frame() -> None:
-    """The revalidation boundary is byte-transparent for a valid frame (#146).
+    """The revalidation boundary is byte-transparent for a valid frame.
 
     Adding revalidation must not change the wire for a well-formed frame: a normal
     valid :class:`StartAgentFrame` encodes to the EXACT pre-fix expected bytes.

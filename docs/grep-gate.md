@@ -15,7 +15,7 @@ live on `TurnFrame` / `StatusFrame` fields, never parsed out of a prose trailer.
 Banned: `TurnSignal` (a signal masquerading as a scraped token), `trailer.scrape`
 (prose-trailer parsing).
 
-**#84 — no runtime dependency on rtech-hermes.** The fleet stack is off Hermes;
+**No runtime dependency on rtech-hermes.** The fleet stack is off Hermes;
 `packages/` must not grow a live `import rtech_hermes` / `from rtech_hermes …`.
 The scan is anchored to a line-leading `import`/`from`, so prose and docstring
 mentions (e.g. "ported from `rtech_hermes_runtime`") do not trip it, and the
@@ -29,8 +29,8 @@ axis.
 ## Single source of truth
 
 Each banned pattern lives in exactly one place in `scripts/grep-gate.sh`: the
-`GATE_PATTERN` constant (rules 2/3) and the `HERMES_IMPORT_PATTERN` constant
-(#84). CI and local runs both invoke that script; there is no second copy of a
+`GATE_PATTERN` constant (rules 2/3) and the `HERMES_IMPORT_PATTERN` constant.
+CI and local runs both invoke that script; there is no second copy of a
 pattern to drift out of sync.
 
 ## Running it

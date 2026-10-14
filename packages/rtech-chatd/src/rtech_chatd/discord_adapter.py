@@ -39,7 +39,7 @@ _TYPING_DEFAULT_BACKOFF_SECONDS = 5.0
 TokenProvider = Callable[[], str]
 
 # Invoked with the ORIGINAL (non-thread-retargeted) inbound message when a
-# deterministic intake hit fires (issue #93). The sink owns minting + publishing
+# deterministic intake hit fires. The sink owns minting + publishing
 # the triage TaskFrame; the adapter never touches the bus. Kept separate from the
 # responder queue so intake channel identity is the message's own channel.
 #
@@ -123,7 +123,7 @@ class DiscordChannelAdapter:
             time (from a config ref — never a literal, never logged).
         gate_config: Gate configuration for :func:`should_respond`.
         thread_config: Thread configuration for :func:`thread_decision`.
-        intake_config: Optional intake hit-gate config (issue #93). When None or
+        intake_config: Optional intake hit-gate config. When None or
             disabled, no intake behavior runs (existing deploys unchanged).
         intake_sink: Callback invoked with the original inbound message on an
             intake hit. Required for intake to fire; the sink mints/publishes the
@@ -172,7 +172,7 @@ class DiscordChannelAdapter:
 
         msg = _map_message(message, self_user)
 
-        # Intake hit-gate (issue #93): independent of the responder. Evaluated on
+        # Intake hit-gate: independent of the responder. Evaluated on
         # the original (pre-thread-retarget) message so the minted frame carries
         # the channel identity the question actually arrived in.
         #

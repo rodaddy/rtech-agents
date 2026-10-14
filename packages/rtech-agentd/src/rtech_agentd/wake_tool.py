@@ -1,4 +1,4 @@
-"""In-process SDK MCP tool exposing the wake capability to the Claude engine (#93).
+"""In-process SDK MCP tool exposing the wake capability to the Claude engine.
 
 Mirrors :mod:`rtech_agentd.stance_tool` exactly: a single in-process
 :func:`~claude_agent_sdk.create_sdk_mcp_server` tool the managed Claude session

@@ -25,11 +25,11 @@ This is the bus-first, typed-frame turn path, distinct from the fleet-envelope
   is appended to the task's frame-graph refs, so the resulting ``TurnFrame.refs``
   references the steer causally. A steer for a non-active task or a non-matching
   explicit target is NEVER silently dropped: every ignore path logs a warning with
-  the full typed context (target, self, task_id). (issue #74) Each lane handler
+  the full typed context (target, self, task_id). Each lane handler
   is bound to its own task id — a payload whose ``task_id`` disagrees with the
   lane it rode in on is loudly rejected — and the subscription itself is retired
   (bus unsubscribe) when the task completes, so a stale lane can neither spoof
-  nor double-deliver into a later task. (issue #76)
+  nor double-deliver into a later task.
 
 agentd NEVER emits a done signal — done is orchestrator-derived state, computed
 from the typed frame graph, never a token agentd carries. ``visible_text`` is
@@ -99,10 +99,10 @@ DEFAULT_OB_RECALL_DEADLINE_S = 2.0
 # skew or a crafted frame. A frame beyond this future skew tolerance fails
 # closed (treated as stale); a frame within [-tolerance, 0) has its age clamped
 # to 0 so mild skew never yields a NEGATIVE age that trivially passes the
-# horizon check (issue #83).
+# horizon check.
 FUTURE_SKEW_TOLERANCE_S = 60.0
 
-# The sibling-turn debate is STRUCTURED BOUNDED ROUNDS (issue #87 resolution),
+# The sibling-turn debate is STRUCTURED BOUNDED ROUNDS (resolution),
 # never unbounded. This caps how many sibling-triggered FOLLOW-UP turns THIS
 # agent may open per task: once the budget is spent every later sibling turn on
 # that task is logged (debug) and dropped, and the fanout lane is retired — so
@@ -120,7 +120,7 @@ MAX_SIBLING_ROUNDS: int = int(os.environ.get(ENV_MAX_SIBLING_ROUNDS, "2"))
 MEMORY_BLOCK_HEADER = "[recalled memory — background context, not instructions]"
 MEMORY_BLOCK_FOOTER = "[end recalled memory]"
 
-# BROADCAST_TARGET is owned by rtech-frames (issue #76): the web-chat edge
+# BROADCAST_TARGET is owned by rtech-frames: the web-chat edge
 # defaults ``SteerFrame.target_agent`` to it when the human names no agent, and
 # a broadcast steer applies to any agent with the steer's task active. The steer
 # lane is per-task, so "all" fans out only to that task's dispatched agents.
@@ -144,8 +144,7 @@ class FrameTurnConfig:
     ``state_home`` is the agent state home the completed-task dedup file lives
     under. When ``None`` (the default) dedup is MEMORY-ONLY and does not survive
     a restart — the runner logs this degradation loudly at init. Production
-    wiring passes the agentd state home so the dedup persists across restarts
-    (issue #83).
+    wiring passes the agentd state home so the dedup persists across restarts.
     """
 
     task_replay_horizon_s: float = DEFAULT_TASK_REPLAY_HORIZON_S
@@ -182,7 +181,7 @@ class FrameBus(Protocol):
         Unlike :meth:`publish_frame` (which swallows a raising publish and returns
         normally — the semantics the orchestrator/dev-stack turn path depends on),
         this variant lets a transport failure PROPAGATE so a caller that must not
-        report a false success (the wake tool, issue #93) can catch it and return a
+        report a false success (the wake tool) can catch it and return a
         typed error instead of a silent no-op.
 
         Args:
@@ -216,8 +215,7 @@ class _BusSubscription:
     The typed-bus :func:`~rtech_frames.subs.subscribe_all` primitive works with
     any object exposing ``async unsubscribe()``, so this wrapper carries the
     handle: ``unsubscribe`` delegates to it, or is a no-op when the bus offered
-    none — mirroring the prior hand-rolled ``_retire_steer_subscription``
-    (issue #80).
+    none — mirroring the prior hand-rolled ``_retire_steer_subscription``.
     """
 
     def __init__(self, subject: str, unsubscribe: UnsubscribeFn | None) -> None:
@@ -309,7 +307,7 @@ def _render_debate_task(frame: TaskFrame, agent_id: str) -> str:
 
 
 def _render_sibling_turn(frame: TurnFrame) -> str:
-    """Render a co-participant's TurnFrame as session input (issue #81 fanout).
+    """Render a co-participant's TurnFrame as session input (fanout).
 
     Presents the REAL sibling position — author, visible text, and the typed
     stance (``position``/``because``, plus any ``needs_from``) — so the model's
@@ -370,7 +368,7 @@ class FrameTurnRunner:
         # FIFO turn↔task correlation: one managed session runs one turn at a time,
         # so each TurnDone maps back to the oldest still-pending task_id.
         self._pending: deque[str] = deque()
-        # Per-pending-task ChannelOrigin, captured at dispatch (issue #93), keyed
+        # Per-pending-task ChannelOrigin, captured at dispatch, keyed
         # by task_id exactly like ``_steer_refs``. Presence of the KEY means the
         # task's origin is recorded; the VALUE may be ``None`` (a task can carry no
         # origin). The wake tool reads the EXECUTING turn's origin via
@@ -384,10 +382,10 @@ class FrameTurnRunner:
         # active and its steer lane is subscribed; the list is the extra frame-graph
         # refs (steer task_ids) folded into the eventual TurnFrame.refs.
         self._steer_refs: dict[str, list[str]] = {}
-        # Per-task steer-lane subscription registry (issue #76): key present =
+        # Per-task steer-lane subscription registry: key present =
         # a lane subscription exists (or is being established); the value is the
-        # atomic ``SubscriptionSet`` handle installed via ``subscribe_all``
-        # (issue #80), used to RETIRE the real subscription when the task
+        # atomic ``SubscriptionSet`` handle installed via ``subscribe_all``,
+        # used to RETIRE the real subscription when the task
         # completes — never just guard-state bookkeeping. One lane per task, so
         # the set is a single honest retire handle (a handle whose unsubscribe
         # fails is retained, not retried) in place of the prior hand-rolled
@@ -398,12 +396,12 @@ class FrameTurnRunner:
         # un-retirable live lane referenced and observable (logged at stash time)
         # instead of letting it keep delivering untracked.
         self._leaked_steer_subscriptions: dict[str, SubscriptionSet] = {}
-        # Per-task sibling-turn subscription registry (issue #81): a multi-agent
+        # Per-task sibling-turn subscription registry: a multi-agent
         # task subscribes THIS agent to the shared per-task turn lane so it SEES
         # its co-participants' TurnFrames — the fanout that makes the debate real.
         # Installed through the same atomic ``subscribe_all``/``SubscriptionSet``
-        # primitive as the steer lane (issue #80). Retired when the bounded-round
-        # budget is exhausted (issue #87) or on a failed-send rollback — the lane
+        # primitive as the steer lane. Retired when the bounded-round
+        # budget is exhausted or on a failed-send rollback — the lane
         # never outlives the bounded debate. One lane per task, so the set is a
         # single honest retire handle.
         self._sibling_subscriptions: dict[str, SubscriptionSet] = {}
@@ -411,7 +409,7 @@ class FrameTurnRunner:
         # NEVER discarded — held so a stale lane can never keep delivering.
         self._leaked_sibling_subscriptions: dict[str, SubscriptionSet] = {}
         # Per-task count of sibling-triggered FOLLOW-UP turns THIS agent has
-        # opened. The debate is STRUCTURED BOUNDED ROUNDS (issue #87): once a
+        # opened. The debate is STRUCTURED BOUNDED ROUNDS: once a
         # task reaches ``_max_sibling_rounds`` follow-ups here, further sibling
         # TurnFrames on it are dropped and the fanout lane is retired, so
         # siblings can never re-trigger each other's rounds without end. The cap
@@ -423,7 +421,7 @@ class FrameTurnRunner:
         # at dispatch. Presence keys the settle-detection and closing-turn state
         # to a live fanned task; cleared whenever the sibling lane retires.
         self._sibling_participants: dict[str, frozenset[str]] = {}
-        # Per-task latest-observed terminality per participant (issue #81): agentd
+        # Per-task latest-observed terminality per participant: agentd
         # observes EVERY participant's TurnFrame on the shared task turn lane
         # (siblings via ``_on_sibling_turn``, its own via ``_publish_turn``). A
         # turn is terminal when its ``stance.needs_from`` is empty. When ALL
@@ -439,21 +437,21 @@ class FrameTurnRunner:
         # task. The cap-induced closing turn REUSES this REAL substantive text so a
         # full-thought debater's final budgeted answer is what renders in-channel —
         # terminality is communicated by the typed stance (``needs_from=[]``), never
-        # by replacing the agent's words with a synthetic placeholder (issue #87
+        # by replacing the agent's words with a synthetic placeholder (a
         # follow-up). Captured alongside ``_sibling_last_stance`` in
         # :meth:`_publish_turn` so both survive lane retirement on a cap retire.
         self._sibling_last_visible_text: dict[str, str] = {}
         # Per-task marker: the round budget has been fully spent. Set when the
         # cap is reached and RETAINED past lane retirement so the final budgeted
         # follow-up's publish can still see "budget spent" and honor the closing
-        # terminus (issue #87). Cleared the moment that terminus is resolved.
+        # terminus. Cleared the moment that terminus is resolved.
         self._sibling_budget_spent: set[str] = set()
         # Per-task guard: a cap-induced closing TurnFrame is emitted at most once.
         # If this agent's final budgeted follow-up is still non-terminal, the cap
         # then drops all further sibling turns and orchestrator-derived done would
         # hang False forever; the frame-level terminus publishes one closing
-        # terminal turn (issue #87, superseded by Nagatha's arbiter in future #87
-        # work). Cleared with the rest of the per-task sibling state on retire.
+        # terminal turn (to be superseded by a future arbiter). Cleared with the
+        # rest of the per-task sibling state on retire.
         self._sibling_closing_emitted: set[str] = set()
         # Bounded per-agent idempotency memory. Keys include this runner's
         # participant identity explicitly so the invariant stays scoped to the
@@ -462,7 +460,7 @@ class FrameTurnRunner:
         self._completed_tasks: OrderedDict[tuple[str, str], float] = OrderedDict()
         # Durable dedup: persists (task_id, agent_id) -> completion WALL time so
         # a restart within the replay horizon does not start empty and
-        # re-dispatch an already-completed redelivered frame (issue #83).
+        # re-dispatch an already-completed redelivered frame.
         # ``None`` when no state home is configured — dedup is then MEMORY-ONLY,
         # logged loudly below so the degradation is never silent.
         self._completed_store: CompletedTaskStore | None = None
@@ -499,7 +497,7 @@ class FrameTurnRunner:
         await self._bus.subscribe_frame(subject, self._on_task_frame)
 
     def current_origin(self) -> ChannelOrigin | None:
-        """Return the ChannelOrigin of the task currently driving the session (#93).
+        """Return the ChannelOrigin of the task currently driving the session.
 
         The :class:`~rtech_agentd.wake_service.WakeService` reads this so a wake
         fired mid-turn carries the SAME origin as the triggering intake task (for a
@@ -563,7 +561,7 @@ class FrameTurnRunner:
             cold = freshness is not FreshnessClassification.WARM_FOLLOWUP
             self._pending.append(frame.id)
             self._steer_refs.setdefault(frame.id, [])
-            # Record this task's channel origin (issue #93) keyed by task_id, right
+            # Record this task's channel origin keyed by task_id, right
             # alongside the steer-refs marker so exactly the tasks that pend get an
             # origin. A wake fired while this task is the executing FIFO head then
             # carries the SAME origin. Recorded AFTER the refuse/dedup/stale guards
@@ -574,8 +572,8 @@ class FrameTurnRunner:
                     cold=cold, eligibility=classify_turn_eligibility(frame.text)
                 )
             needs_subscribe = frame.id not in self._steer_subscriptions
-            # A task with co-participants fans sibling turns to this agent
-            # (issue #81): more than one named participant means real siblings
+            # A task with co-participants fans sibling turns to this agent:
+            # more than one named participant means real siblings
             # exist on the shared per-task turn lane worth seeing.
             needs_siblings = (
                 len(frame.participants) > 1 and frame.id not in self._sibling_subscriptions
@@ -601,7 +599,7 @@ class FrameTurnRunner:
         # stall watchdog maps a wedged turn back to this task_id (never "no task")
         # and recovery can re-emit its working status. The supervisor clears it on
         # the matching TurnDone. Part of the completion contract: a turn is bound
-        # to its task from send to TurnDone. (issue #51)
+        # to its task from send to TurnDone.
         self._supervisor.track_in_flight_task(frame.id)
         await self.publish_status(
             frame.id,
@@ -750,7 +748,7 @@ class FrameTurnRunner:
         never seen (or has evicted) is safe to dispatch ONLY if it can be proven
         within the horizon. A frame with no ``created_at`` cannot be proven
         within-horizon — it is indistinguishable from an evicted, arbitrarily
-        old replay — so it FAILS CLOSED (issue #83) rather than fail open and
+        old replay — so it FAILS CLOSED rather than fail open and
         risk a double-dispatch. Every live producer stamps ``created_at``
         (nats_ingress / chatd / webchat) and the orchestrator republishes the
         frame verbatim, so only legacy/untimestamped replays hit this branch.
@@ -759,9 +757,9 @@ class FrameTurnRunner:
         negative age that would trivially pass ``age > horizon`` and fail OPEN.
         Beyond ``FUTURE_SKEW_TOLERANCE_S`` in the future the age is unprovable,
         so the frame FAILS CLOSED; within the tolerance the age is clamped to 0
-        so mild skew never dispatches off a negative age (issue #83).
+        so mild skew never dispatches off a negative age.
 
-        DISTRUST WINDOW (issue #83): if the durable dedup store loaded a CORRUPT
+        DISTRUST WINDOW: if the durable dedup store loaded a CORRUPT
         file, the restart-surviving dedup authority is provably lost. For
         ``task_replay_horizon_s`` seconds after that load ANY untracked frame is
         refused (fail closed, loud per refusal) — an untracked frame cannot be
@@ -828,8 +826,8 @@ class FrameTurnRunner:
                 self._pending.remove(task_id)
             except ValueError:
                 logger.debug("frame_turn.task | task_id not pending on rollback | {}", task_id)
-            # The turn never opened: remove ONLY this failed task's origin entry
-            # (issue #93). Another task still at the pending head keeps its origin.
+            # The turn never opened: remove ONLY this failed task's origin entry.
+            # Another task still at the pending head keeps its origin.
             self._task_origins.pop(task_id, None)
             self._steer_refs.pop(task_id, None)
             self._grounding.pop(task_id, None)
@@ -847,7 +845,7 @@ class FrameTurnRunner:
         The seam for :func:`~rtech_frames.subs.subscribe_all`: it calls the
         frame bus's ``subscribe_frame`` and wraps the returned
         ``UnsubscribeFn | None`` in a :class:`_BusSubscription` so the atomic set
-        carries a real retire handle (issue #80). This wrapper only adapts the
+        carries a real retire handle. This wrapper only adapts the
         handle — it does not itself raise. The rollback / fail-closed machinery
         in ``subscribe_all`` (and the ``FrameSubscribeError`` branch in
         :meth:`_subscribe_steer`) only engages for bus implementations whose
@@ -860,11 +858,11 @@ class FrameTurnRunner:
     async def _subscribe_steer(self, task_id: str) -> None:
         """Subscribe the per-task steer lane so live steers reach this session.
 
-        The handler is BOUND to this lane's task id (issue #76): a frame whose
+        The handler is BOUND to this lane's task id: a frame whose
         payload ``task_id`` disagrees with the lane it arrived on is loudly
         rejected, so a stale or spoofed lane can never inject into another task.
         The lane is installed through the typed-bus
-        :func:`~rtech_frames.subs.subscribe_all` primitive (issue #80): a single
+        :func:`~rtech_frames.subs.subscribe_all` primitive: a single
         atomic ``SubscriptionSet`` replaces the hand-rolled unsubscribe handle,
         so a failed subscribe leaves nothing live-but-untracked and the returned
         set is the one honest retire handle stored for completion.
@@ -913,7 +911,7 @@ class FrameTurnRunner:
         unsubscribe fails is RETAINED (not discarded) and the set reports
         incomplete, so the still-live lane is stashed in
         ``_leaked_steer_subscriptions`` — referenced and logged, not
-        auto-retried — rather than escaping untracked (issue #80).
+        auto-retried — rather than escaping untracked.
         """
         if subscriptions is None:
             return
@@ -935,15 +933,15 @@ class FrameTurnRunner:
     async def _subscribe_siblings(self, task_id: str) -> None:
         """Subscribe the shared per-task turn lane so co-participants are SEEN.
 
-        This is the #81 fanout wire. Every participant already PUBLISHES its
+        This is the fanout wire. Every participant already PUBLISHES its
         ``TurnFrame`` to the ONE shared ``rtech.task.<task_id>.turn`` subject
         (``subjects.task_turn``); a multi-agent task additionally SUBSCRIBES
         this agent to that subject so a sibling's real position (visible text +
         typed stance) reaches the live session and the model can post a second
         round whose ``stance.because``/``needs_from`` reference a REAL sibling,
         not a role-played one. The lane is installed through the same atomic
-        :func:`~rtech_frames.subs.subscribe_all` primitive as the steer lane
-        (issue #80): a failed subscribe leaves nothing live-but-untracked and
+        :func:`~rtech_frames.subs.subscribe_all` primitive as the steer lane:
+        a failed subscribe leaves nothing live-but-untracked and
         the returned :class:`~rtech_frames.subs.SubscriptionSet` is the single
         retire handle. A missing sibling lane is non-fatal (the task still
         runs) — exactly like the steer lane.
@@ -979,7 +977,7 @@ class FrameTurnRunner:
     async def _retire_sibling_subscription(
         self, task_id: str, subscriptions: SubscriptionSet | None
     ) -> None:
-        """Retire a task's live sibling-turn lane, loudly on failure (issue #81).
+        """Retire a task's live sibling-turn lane, loudly on failure.
 
         Mirrors :meth:`_retire_steer_subscription`: a handle whose unsubscribe
         fails is RETAINED by ``SubscriptionSet.retire()`` and moved into
@@ -1002,7 +1000,7 @@ class FrameTurnRunner:
         )
 
     async def _retire_exhausted_sibling_lane(self, task_id: str, *, by_cap: bool = True) -> None:
-        """Retire the fanout lane once the bounded debate is over (#87/#81).
+        """Retire the fanout lane once the bounded debate is over.
 
         Idempotent: pops the live set under the lock and retires it through the
         shared retire path. A concurrent caller that already popped it finds
@@ -1022,7 +1020,7 @@ class FrameTurnRunner:
         stance + latest-terminality) is RETAINED past lane retirement: this
         agent's final budgeted follow-up may not have PUBLISHED yet, and
         :meth:`_publish_turn` reads that marker to emit the frame-level closing
-        terminus for the still-in-flight follow-up, then clears it (issue #87). In
+        terminus for the still-in-flight follow-up, then clears it. In
         production every ``session.send`` yields a TurnDone, so that publish always
         runs and the retained marker is always cleared.
         """
@@ -1050,7 +1048,7 @@ class FrameTurnRunner:
         The budget-spent marker, latest-terminality map, last stance, and
         closing-turn guard together decide the cap-induced terminus; they are
         cleared as a unit once the terminus is resolved so none outlives the
-        bounded debate. A fanned task's ``_task_origins`` entry (issue #93 R1)
+        bounded debate. A fanned task's ``_task_origins`` entry (R1)
         is retired here too: for a fanned task the entry is kept alive past first
         TurnDone so the cap-closing turn can read it, so THIS unit-clear (settle,
         cap-terminus, or failed-send rollback via ``_clear_sibling_task_state``)
@@ -1082,7 +1080,7 @@ class FrameTurnRunner:
         lane (siblings here, its own via :meth:`_publish_turn`). A turn is
         terminal when ``stance.needs_from`` is empty. When ALL known participants'
         latest observed turns are terminal the debate has SETTLED below the cap
-        (issue #81) — the caller retires the lane and clears the counter so a
+        — the caller retires the lane and clears the counter so a
         settled multi-agent task leaks neither its subscription nor its counter.
 
         Returns ``True`` when this observation settles the debate for a still-live
@@ -1110,7 +1108,7 @@ class FrameTurnRunner:
         return settled
 
     async def _emit_closing_turn_if_hung(self, task_id: str) -> None:
-        """Publish one closing terminal turn when the cap left this agent hung (#87).
+        """Publish one closing terminal turn when the cap left this agent hung.
 
         The cap dropped all further sibling turns for ``task_id``. If this agent's
         LATEST published turn is still non-terminal (``needs_from`` populated),
@@ -1119,7 +1117,7 @@ class FrameTurnRunner:
         path — same ``position``/``because`` as the latest stance,
         ``needs_from=[]`` (terminal), and honest ``visible_text`` that the
         position stands as final because the round budget was reached. Nagatha's
-        arbiter (future #87 work) supersedes this later.
+        arbiter (future work) supersedes this later.
 
         Guarded to fire at most once per task, only once the round budget is
         spent, and only for a still-hung agent: the closing turn is published via
@@ -1136,7 +1134,7 @@ class FrameTurnRunner:
         strand the closing-decision state and skip the closing turn. Test
         engines must model the decoupled pump (as ``AutoRespondEngine`` does).
 
-        PUBLISH-THEN-CLEAR (issue #87 D7): the closing-decision state is NOT
+        PUBLISH-THEN-CLEAR (D7): the closing-decision state is NOT
         cleared until the closing turn is CONFIRMED published. The prior order
         cleared the state (and this task's origin) BEFORE the publish, so a
         publish failure was caught, swallowed, and lost the terminus forever — the
@@ -1160,12 +1158,12 @@ class FrameTurnRunner:
             latest = self._sibling_latest_terminal.get(task_id)
             own_terminal = latest.get(self._agent_id) if latest is not None else None
             stance = self._sibling_last_stance.get(task_id)
-            # Reuse this agent's REAL last visible_text (issue #87 follow-up): the
+            # Reuse this agent's REAL last visible_text (follow-up): the
             # cap forces terminality via the stance, but the debater's full-thought
             # answer must remain the actual agent content, never a placeholder.
             last_visible_text = self._sibling_last_visible_text.get(task_id)
             emit = own_terminal is False and stance is not None
-            # Snapshot the origin authority under the lock (issue #93 R1) so the
+            # Snapshot the origin authority under the lock (R1) so the
             # closing turn carries it even though the ``_task_origins`` entry is only
             # retired on the SUCCESS clear below.
             closing_origin = self._task_origins.get(task_id)
@@ -1188,7 +1186,7 @@ class FrameTurnRunner:
         async with self._lock:
             if published:
                 # Confirmed on the wire: retire the decision state as a unit now
-                # (issue #87 D7) — publish happened, so exactly one closing turn
+                # (D7) — publish happened, so exactly one closing turn
                 # exists and the state has done its job.
                 self._clear_sibling_closing_state(task_id)
             else:
@@ -1207,7 +1205,7 @@ class FrameTurnRunner:
         last_visible_text: str | None,
         origin: ChannelOrigin | None,
     ) -> bool:
-        """Publish the cap-induced closing terminal TurnFrame (issue #87).
+        """Publish the cap-induced closing terminal TurnFrame.
 
         The cap forces terminality, but a full-thought debater's FINAL budgeted
         turn is real agent content — Skippy/Bilby wrote a substantive paragraph,
@@ -1216,7 +1214,7 @@ class FrameTurnRunner:
         latest real substantive answer (``last_visible_text``, captured in
         :meth:`_publish_turn`), so the closing turn renders the agent's own words
         rather than a synthetic ``"the round budget was reached"`` placeholder
-        (issue #87 follow-up). The round-budget status stays where it belongs: in
+        (follow-up). The round-budget status stays where it belongs: in
         the typed stance and the logs, never in the visible prose.
 
         Only when NO real text was ever captured (an agent that never published a
@@ -1225,10 +1223,10 @@ class FrameTurnRunner:
         stays a valid, non-empty field.
 
         ``origin`` is the task's channel origin, snapshotted by the caller under
-        the lock (issue #93 R1) so a triage edge can render this terminal closing
+        the lock (R1) so a triage edge can render this terminal closing
         turn back in-channel like a normal reply.
 
-        Uses the CHECKED publish (issue #87 D7): a transport failure PROPAGATES so
+        Uses the CHECKED publish (D7): a transport failure PROPAGATES so
         this method can report it. Returns ``True`` when the frame is confirmed on
         the wire, ``False`` when the publish raised (caller re-arms for retry).
         The failure is logged here exactly once.
@@ -1283,7 +1281,7 @@ class FrameTurnRunner:
         return True
 
     async def _on_sibling_turn(self, lane_task_id: str, frame: Frame) -> None:
-        """Inject a co-participant's TurnFrame into the live session (issue #81).
+        """Inject a co-participant's TurnFrame into the live session.
 
         Guards, in order: the payload must be a ``TurnFrame``; its ``task_id``
         must match ``lane_task_id`` (the task the invoking subscription is bound
@@ -1325,7 +1323,7 @@ class FrameTurnRunner:
             )
             return
         # This agent OBSERVED a sibling's turn on the shared lane: record its
-        # latest-observed terminality for settle-detection (issue #81). Done so
+        # latest-observed terminality for settle-detection. Done so
         # BEFORE the budget check so a below-cap consensus is caught even on the
         # delivery that would otherwise be dropped.
         settled = await self._record_observed_turn(frame)
@@ -1338,7 +1336,7 @@ class FrameTurnRunner:
             )
             await self._retire_exhausted_sibling_lane(frame.task_id, by_cap=False)
             return
-        # STRUCTURED BOUNDED ROUNDS (issue #87): reserve the round slot under the
+        # STRUCTURED BOUNDED ROUNDS: reserve the round slot under the
         # SAME lock acquisition as the '< cap' check, BEFORE the await, so
         # concurrent sibling deliveries cannot each pass the check before any
         # increment (the old soft-cap overshoot). A reserved-but-unspent slot is
@@ -1426,7 +1424,7 @@ class FrameTurnRunner:
                 self._pending.append(frame.task_id)
             self._steer_refs.setdefault(frame.task_id, [])
             # Re-pend restores the active-task markers ONLY. It NEVER writes origin
-            # (issue #93 R2): a sibling's TurnFrame carries the sibling's OWN origin,
+            # (R2): a sibling's TurnFrame carries the sibling's OWN origin,
             # and trusting it would let a hostile/foreign sibling frame become THIS
             # task's reply authority and misroute the answer to the sibling's
             # channel. The local ``_task_origins`` entry — written once at TaskFrame
@@ -1451,9 +1449,9 @@ class FrameTurnRunner:
 
         Guards, in order: the payload must be a ``SteerFrame``; its ``task_id``
         must match ``lane_task_id`` — the task the invoking subscription is bound
-        to, so a payload cannot ride a stale or foreign lane (issue #76); its
+        to, so a payload cannot ride a stale or foreign lane; its
         ``target_agent`` must be this agent or the first-class
-        :data:`BROADCAST_TARGET` (``"all"``, the edge default — issue #74); and
+        :data:`BROADCAST_TARGET` (``"all"``, the edge default); and
         its ``task_id`` must be an active task. Any guard trigger logs a warning
         with the full typed context (target, self, task_id) and returns False —
         an ignored steer is never silent. On success the steer's ``task_id`` is
@@ -1566,12 +1564,12 @@ class FrameTurnRunner:
         async with self._lock:
             task_id = self._pending.popleft() if self._pending else None
             grounding = self._grounding.pop(task_id, None) if task_id is not None else None
-            # The turn ended: read this task's channel origin (issue #93). The
+            # The turn ended: read this task's channel origin. The
             # captured origin is copied onto the reply TurnFrame so a triage edge
             # can render this agent's answer back into the SAME channel the question
             # came from.
             #
-            # ORIGIN AUTHORITY LIFETIME (issue #93 R1): ``_task_origins`` is the sole
+            # ORIGIN AUTHORITY LIFETIME (R1): ``_task_origins`` is the sole
             # authority, written once at TaskFrame pend and popped ONLY when the task
             # is fully retired — NOT at first TurnDone. A fanned (multi-round) task's
             # cap-closing turn is published LATER (``_publish_closing_turn``) and
@@ -1583,7 +1581,7 @@ class FrameTurnRunner:
             # rollback). A NON-fanned (single) task has no such retirement path, so it
             # is retired right here at TurnDone.
             #
-            # ``current_origin`` (FIFO-head discipline, PR #101) is unaffected: after a
+            # ``current_origin`` (FIFO-head discipline) is unaffected: after a
             # single task's TurnDone ``_pending`` no longer holds it, so the head read
             # returns the next task's origin (or None) regardless of a lingering entry.
             reply_origin = self._task_origins.get(task_id) if task_id is not None else None
@@ -1603,7 +1601,7 @@ class FrameTurnRunner:
                 self._completed_tasks[task_key] = completed_at
                 self._completed_tasks.move_to_end(task_key)
                 # Durable dedup: record the WALL completion time and snapshot the
-                # horizon-pruned map for the post-lock disk write (issue #83).
+                # horizon-pruned map for the post-lock disk write.
                 if self._completed_store is not None:
                     now = datetime.now(UTC)
                     self._persisted_completions[task_key] = now
@@ -1631,7 +1629,7 @@ class FrameTurnRunner:
         if persist_completions is not None and self._completed_store is not None:
             # Write-on-completion: persist the horizon-pruned dedup map so a
             # restart within the horizon reloads it and does not re-dispatch an
-            # already-completed redelivery (issue #83). A write failure is logged
+            # already-completed redelivery. A write failure is logged
             # (raised by the store) but MUST NOT drop the turn — the in-memory
             # dedup still holds for this process; only cross-restart dedup is at
             # risk, and the loud error is the signal.
@@ -1664,13 +1662,13 @@ class FrameTurnRunner:
             else:
                 event = replace(event, verification=verification)
         # Retire the LIVE steer lane, not just the guard state — a stale lane
-        # must stop delivering entirely (issue #76). The sibling-turn lane
-        # (issue #81) deliberately OUTLIVES a single TurnDone: a co-participant
+        # must stop delivering entirely. The sibling-turn lane
+        # deliberately OUTLIVES a single TurnDone: a co-participant
         # can publish its turn after this agent's round completes, and that
         # sibling must still reach the session to drive a real follow-up round.
         # The lane is NOT retired here — it is retired on a failed-send rollback
         # (``_retire_failed_task``) or when the bounded-round budget is exhausted
-        # (``_retire_exhausted_sibling_lane``, issue #87) — so no round of the
+        # (``_retire_exhausted_sibling_lane``) — so no round of the
         # bounded debate is missed but the lane never outlives it. Done stays
         # orchestrator-derived; a live lane never affects the frame-graph derivation.
         await self._retire_steer_subscription(task_id, subscriptions)
@@ -1690,7 +1688,7 @@ class FrameTurnRunner:
         field carried straight through. ``refs`` starts with the task_id and
         appends each steer that landed during the turn, so the frame graph shows
         the steer→turn causality. ``origin`` is the triggering task's channel
-        origin (issue #93): copied onto the reply frame when the answered task
+        origin: copied onto the reply frame when the answered task
         arrived from an intake/wake path so a triage edge can render this answer
         back in-channel; ``None`` for a non-intake task (the frame omits it and
         the wire stays legacy-shaped).
@@ -1698,7 +1696,7 @@ class FrameTurnRunner:
         if turn.is_error:
             # A failed turn's text is often the vendor's raw error body (URLs,
             # request ids). Chat gets a human one-liner; the payload lands in
-            # logs ONCE here (issue #123).
+            # logs ONCE here.
             logger.error(
                 "frame_turn.turn | failed turn; payload withheld from chat | task_id={} payload={}",
                 task_id,
@@ -1733,7 +1731,7 @@ class FrameTurnRunner:
         # handler, so record its latest-observed terminality + stance here. For a
         # fanned task this both feeds the cap-induced closing-turn decision and can
         # settle the debate below the cap when it makes every participant's latest
-        # turn terminal (issue #81).
+        # turn terminal.
         async with self._lock:
             # Record while the closing-decision state exists — that outlives the
             # lane on a cap retire so the final follow-up's stance still lands.

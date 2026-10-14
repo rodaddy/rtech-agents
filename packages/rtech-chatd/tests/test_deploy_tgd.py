@@ -1,4 +1,4 @@
-"""Deploy-artifact consistency tests for the standalone Telegram edge (issue #112).
+"""Deploy-artifact consistency tests for the standalone Telegram edge.
 
 These assert the OFFLINE deploy artifacts agree with each other and with the
 code, and that no literal secret leaks into a committed file:
@@ -200,7 +200,7 @@ def test_rtech_tgd_entrypoint_is_callable() -> None:
 def test_readme_documents_the_tgd_edge() -> None:
     text = _read(README)
     assert "rtech-tgd.service" in text
-    # Long polling means no inbound port/webhook/domain — the issue #112 fact.
+    # Long polling means no inbound port/webhook/domain — the fact.
     assert re.search(r"no inbound port", text, re.IGNORECASE)
 
 

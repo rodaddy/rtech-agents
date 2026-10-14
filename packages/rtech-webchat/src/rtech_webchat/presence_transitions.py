@@ -1,7 +1,7 @@
-"""Derive typed presence-transition frames from PresenceRegistry deltas (issue #147).
+"""Derive typed presence-transition frames from PresenceRegistry deltas.
 
-Presence/liveness truth is owned by :class:`rtech_webchat.presence.PresenceRegistry`
-(issue #145). This module is a THIN observer over that ONE store: it does NOT add a
+Presence/liveness truth is owned by :class:`rtech_webchat.presence.PresenceRegistry`.
+This module is a THIN observer over that ONE store: it does NOT add a
 second presence store, poller, queue, database, or any enterprise machinery. On each
 evaluation tick it reads ``registry.list_agents()`` and, per agent, compares the
 current ``alive`` flag against the last DELIVERED (``committed``) state it recorded. A
@@ -27,7 +27,7 @@ therefore AT-LEAST-ONCE: a duplicate delivery is possible only under an ambiguou
 transport ack (we published but never learned the ack), so connectors MUST be
 idempotent if the bus redelivers the same typed frame.
 
-Each edge carries a STABLE typed ``transition_id`` (issue #147) minted ONCE when the
+Each edge carries a STABLE typed ``transition_id`` minted ONCE when the
 pending frame is created and RETAINED on retry (the same held ``pending_frame`` is
 re-published), so an ambiguous-ack redelivery of the SAME edge carries the SAME id.
 The consumer keys a bounded seen-id cache on it to render/send that edge exactly

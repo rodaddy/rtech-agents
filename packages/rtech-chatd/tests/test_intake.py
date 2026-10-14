@@ -1,4 +1,4 @@
-"""Functional tests for the deterministic intake hit-gate (issue #93).
+"""Functional tests for the deterministic intake hit-gate.
 
 Covers the hit matrix (member-id mention, name trigger, trigger prefix, non-hit
 chatter, bot-author humans-only floor, DM exclusion) and the channel-scope
@@ -108,7 +108,7 @@ def test_non_hit_chatter_ignored() -> None:
 def test_bot_message_ignored_under_default_allow_bots() -> None:
     cfg = _intake(member_ids=frozenset({"77"}))
     msg = _msg(is_bot=True, mentioned_ids=frozenset({"77"}))
-    # GateConfig default allow_bots is NONE — humans only (#93 baseline).
+    # GateConfig default allow_bots is NONE — humans only (baseline).
     assert intake_hit(msg, GateConfig(), cfg) is False
 
 

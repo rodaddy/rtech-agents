@@ -1,4 +1,4 @@
-# Telegram live E2E (issue #111)
+# Telegram live E2E
 
 Authorization-gated real-account canary for the practical small-group debate
 flow. It is reference-only: env vars name Vaultwarden references, never

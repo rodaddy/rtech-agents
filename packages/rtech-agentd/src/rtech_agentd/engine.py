@@ -129,7 +129,7 @@ class EngineError:
 # paths — scheme-less included), no `=`/`&`/`%`/`@`/`#` (query strings,
 # encodings, handles), and by charset omission no newlines, tabs, NUL, ANSI
 # escapes, or Unicode line/bidi controls. Anything outside this shape is
-# payload, not a sentence, and stays in logs (issue #123).
+# payload, not a sentence, and stays in logs.
 _SAFE_FAILURE_DETAIL_RE = re.compile(r"[A-Za-z0-9 _'(),:;!?-]{1,200}")
 
 # Secrets that fit the charset (e.g. a bare provider API key) are long unbroken
@@ -153,7 +153,7 @@ def _safe_failure_detail(value: str) -> bool:
 
 
 def failure_visible_text(raw: str) -> str:
-    """Return the one human-shaped line a failed turn shows in chat (issue #123).
+    """Return the one human-shaped line a failed turn shows in chat.
 
     An engine terminal error often carries the vendor's RAW error body (JSON
     with URLs, request ids, config fragments). Chat surfaces are treated as

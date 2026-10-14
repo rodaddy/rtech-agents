@@ -135,7 +135,7 @@ def test_identity_map_rejects_malformed_pair() -> None:
         parse_identity_map("agentd-nagatha")
 
 
-# ------------------------------------------- gauntlet fix regressions (PR #122)
+# ------------------------------------------- gauntlet fix regressions
 
 
 def test_identity_map_malformed_entry_withholds_both_sides() -> None:

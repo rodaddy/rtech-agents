@@ -101,7 +101,7 @@ class ReplayHub:
     — it is the connector's mirror of orchestrator-derived completion, so it
     must outlive buffer eviction. If it were torn down on eviction, a later
     core-NATS result would be missed and the completed dash-dash task would stay
-    authoritatively active forever (issue #144). It is retained until the result
+    authoritatively active forever. It is retained until the result
     actually arrives (its natural terminal) or the bus connection drops.
     """
 
@@ -226,7 +226,7 @@ class ReplayHub:
         eviction bounds SSE replay memory, but the result interest is the
         connector's completion mirror and must survive so a later core-NATS
         result is still observed and the dash-dash active record is truthfully
-        cleared (issue #144). It is torn down only when the result arrives.
+        cleared. It is torn down only when the result arrives.
         """
 
         async with self.lock:

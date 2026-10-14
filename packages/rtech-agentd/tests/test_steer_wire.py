@@ -33,7 +33,7 @@ def _make(tmp_path: Path) -> tuple[FakeEngine, FrameTurnRunner, FakeFrameBus]:
 
 def _task(task_id: str = "T-1", text: str = "run it") -> TaskFrame:
     # Live producers stamp created_at; agentd fails closed on untimestamped
-    # untracked frames (issue #83), so model the real on-wire shape here.
+    # untracked frames, so model the real on-wire shape here.
     return TaskFrame(
         id=task_id,
         origin_edge="web",

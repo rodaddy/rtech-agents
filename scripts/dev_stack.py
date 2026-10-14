@@ -7,11 +7,11 @@ NATS server and serves a chat edge until Ctrl-C:
   verbatim to every participant, and derives done from the typed frame graph.
 * **agentd(s)** -- ``Supervisor`` + ``FrameTurnRunner`` per agent, each owning
   ONE managed engine session. Default: one agent on the env-selected engine.
-  ``DEV_STACK_AGENTS`` boots several (the #109 trio smoke: nagatha on the
+  ``DEV_STACK_AGENTS`` boots several (the trio smoke: nagatha on the
   Claude engine, bilby+skippy on Codex).
 * **Edge** -- ``DEV_STACK_EDGE=webchat`` (default) serves the FastAPI web-chat
-  app exactly as before. ``DEV_STACK_EDGE=tg`` boots the Telegram edge instead
-  (issue #109): long-poll adapter + multi-identity sender + intake sink wired
+  app exactly as before. ``DEV_STACK_EDGE=tg`` boots the Telegram edge instead:
+  long-poll adapter + multi-identity sender + intake sink wired
   for the trio debate render (👀 receipt, instant unvoiced ack, per-agent
   typing, per-agent TLDR + topic/full).
 
@@ -19,7 +19,7 @@ Telegram mode env (all refs, never literal tokens; values never logged):
   RTECH_CHATD_TOKEN_REF        edge polling bot ref (default env:RTECH_CHATD_BOT_TOKEN)
   RTECH_TG_IDENTITY_MAP        agent=token_ref pairs for the per-identity pool
   RTECH_TG_ALLOWED_GROUPS      transport group allowlist (canonical ids)
-  RTECH_CHATD_INTAKE_*         intake hit-gate config (issue #93)
+  RTECH_CHATD_INTAKE_*         intake hit-gate config
   RTECH_CHATD_DEBATE_PARTICIPANTS  ordered trio for the debate fanout
   DEV_STACK_AGENTS             agent_id=engine pairs, e.g.
                                agentd-nagatha-dev=claude,agentd-bilby-dev=codex
@@ -90,11 +90,11 @@ ENV_EDGE_TOKEN_REF = "RTECH_CHATD_TOKEN_REF"
 DEFAULT_EDGE_TOKEN_REF = "env:RTECH_CHATD_BOT_TOKEN"
 
 # A per-host dev id so the local stack never collides with a deployed agentd on
-# the shared fleet bus (issue #49). The orchestrator target is set to the SAME id
+# the shared fleet bus. The orchestrator target is set to the SAME id
 # below, so the dev stack is self-contained: it answers only its own tasks.
 HOSTNAME = socket.gethostname().split(".", 1)[0] or "unknown"
 AGENT_ID = f"agentd-{HOSTNAME}-dev"
-# A per-host stack id so the orchestrator's ingress guard (issue #75) only
+# A per-host stack id so the orchestrator's ingress guard only
 # consumes tasks stamped by THIS stack's edge — never a deployed edge's.
 STACK_ID = f"{HOSTNAME}-dev"
 SYSTEM_PROMPT = "rtech-agents local dev stack"
@@ -201,8 +201,7 @@ def _agent_specs() -> list[AgentSpec]:
             ) from exc
         if any(spec.agent_id == agent_id for spec in specs):
             # Two supervisors on one agent id would share a NATS identity and
-            # a .dev-stack home, racing on the same persisted session state
-            # (PR #122 terminal audit).
+            # a .dev-stack home, racing on the same persisted session state.
             raise ValueError(f"{ENV_AGENTS} lists agent id {agent_id!r} twice")
         specs.append(
             AgentSpec(
@@ -295,14 +294,13 @@ def _build_agent_engine(spec: AgentSpec) -> EngineSession:
 
     Called for EVERY spec up front, BEFORE any NATS connection or orchestrator
     start, so a missing CLI fails fast with exit 2 and zero side effects —
-    the original single-agent contract (PR #122 gauntlet).
+    the original single-agent contract.
     """
     engine_env = dict(os.environ)
     if spec.engine_kind is not None:
         # Set BOTH selection vars: build_engine prefers E2E_ENGINE, so an
         # ambient E2E_ENGINE in the parent env would otherwise silently
-        # override every pinned spec and boot a single-engine "debate"
-        # (PR #122 terminal audit).
+        # override every pinned spec and boot a single-engine "debate".
         engine_env["E2E_ENGINE"] = spec.engine_kind
         engine_env["DEV_STACK_ENGINE"] = spec.engine_kind
     if spec.engine_model is not None:
@@ -431,9 +429,9 @@ class TelegramEdgeConfig:
 
 
 def _build_telegram_edge(config: TelegramEdgeConfig, url: str) -> TelegramEdgeRuntime:
-    """Assemble the Telegram trio edge from validated settings (issue #109 dev wiring).
+    """Assemble the Telegram trio edge from validated settings.
 
-    Mirrors ``rtech_chatd.service`` composition with the #109 identity layer:
+    Mirrors ``rtech_chatd.service`` composition with the identity layer:
     the intake sink's ack and typing hooks late-bind to the adapter through a
     cell, the sender's per-identity pool resolves token REFS at first use, and
     the edge renders debate turns identity-stamped (``identity_send=True``,

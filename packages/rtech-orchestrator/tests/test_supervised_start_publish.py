@@ -1,4 +1,4 @@
-"""Bus-first publish-failure and pending-online recovery seams (#146).
+"""Bus-first publish-failure and pending-online recovery seams.
 
 A failed state publish must still put a typed terminal receipt on the wire — never
 Starting then silence — and a pending-online claim after a publish failure never

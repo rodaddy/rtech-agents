@@ -89,7 +89,7 @@ def _task() -> TaskFrame:
 
 async def test_publish_failure_raises_typed_error() -> None:
     # A swallowed publish failure is how a never-dispatched agent got recorded
-    # as dispatched (issue #75 round 2): the failure must surface typed.
+    # as dispatched: the failure must surface typed.
     bus = _bus(_ExplodingNc())
     with pytest.raises(FramePublishError, match="rtech.agent.a1.task"):
         await bus.publish_frame("rtech.agent.a1.task", _task())

@@ -1,4 +1,4 @@
-"""Fake-bot tests for the multi-identity Telegram sender (issue #109, outbound).
+"""Fake-bot tests for the multi-identity Telegram sender (outbound).
 
 No live token, no network: a :class:`FakeBot` records every Bot API call and the
 ``bot_factory``/``default_bot_provider`` seams hand the sender fakes instead of
@@ -353,7 +353,7 @@ def test_interactive_markup_refused_on_agent_stamped_send() -> None:
 
 def test_interactive_markup_allowed_on_default_identity() -> None:
     # The polled default identity DOES receive taps, so interactive markup rides
-    # it unchanged (the unstamped send is the pre-#117 contract).
+    # it unchanged (the unstamped send is the earlier contract).
     default = FakeBot()
     sender, _ = _sender(default=default)
     markup = InlineKeyboardMarkup(inline_keyboard=[])
@@ -641,7 +641,7 @@ async def test_close_cancels_typing_and_closes_pool_sessions(
     assert nagatha.session.closed is True  # pool client session closed
 
 
-# ------------------------------------------- gauntlet fix regressions (PR #122)
+# ------------------------------------------- gauntlet fix regressions
 
 
 def test_plain_resend_flood_wait_records_penalty_and_propagates() -> None:

@@ -1,4 +1,4 @@
-"""Markdown -> Telegram-HTML rendering + 4096-safe chunking (issue #109).
+"""Markdown -> Telegram-HTML rendering + 4096-safe chunking.
 
 Telegram's Bot API offers two formatting modes; this edge uses ``HTML``, NOT
 MarkdownV2 — MarkdownV2 requires escaping ~18 metacharacters in all prose and
@@ -53,10 +53,10 @@ _INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 # Bold (**...**), matched before single-star italic consumes the stars. The
 # character classes EXCLUDE the BLOCK sentinel (\x00, a stashed fence) so an
 # emphasis span can never straddle one — that would restore a <pre> INSIDE
-# <b>/<i>, a block-in-inline nesting the Bot API rejects (PR #122 gauntlet).
+# <b>/<i>, a block-in-inline nesting the Bot API rejects.
 # The INLINE sentinel (\x01, a stashed `code` span) is deliberately allowed:
 # ``**`func`**`` -> ``<b><code>func</code></b>`` is Bot-API-legal and the
-# single most common formatting shape in technical chat (PR #122 fix-delta V2
+# single most common formatting shape in technical chat (fix-delta V2
 # caught the first fix breaking it by excluding BOTH sentinels).
 _BOLD_RE = re.compile(r"\*\*([^\x00]+?)\*\*", re.DOTALL)
 # Italic: *...* not adjacent to another star, or _..._ on word boundaries so
@@ -99,8 +99,8 @@ def _well_formed(chunk: str) -> bool:
 
     Sequential regex substitution can emit CROSSING tags from mis-nested
     markdown (``**a *b** c*`` -> ``<b>a <i>b</b> c</i>``) — the Bot API
-    rejects those with a parse-400, costing a doubled send and all styling
-    (PR #122 gauntlet). This is a cheap LIFO check: proper open/close pairing,
+    rejects those with a parse-400, costing a doubled send and all styling.
+    This is a cheap LIFO check: proper open/close pairing,
     nothing nested inside ``code``/``pre``, and no ``pre`` inside an open
     inline entity. A chunk that fails is re-rendered PLAIN by the caller.
     """
@@ -178,8 +178,7 @@ def render_telegram_html(text: str) -> str:
 
     Sentinel control chars are stripped up front: Telegram rejects them in
     message text anyway, and a crafted ``\\x00N\\x00``/``\\x01N\\x01`` in model
-    output would otherwise collide with the code-stash sentinels (PR #122
-    gauntlet).
+    output would otherwise collide with the code-stash sentinels.
     """
     text = text.replace("\x00", "").replace("\x01", "")
     stash: list[str] = []
@@ -255,8 +254,8 @@ def _plain_pieces(chunk: str) -> list[str]:
 
     Cuts never split an HTML entity (``&amp;`` etc., at most 6 chars): a piece
     ending mid-entity would trip the Bot API parser on the HTML attempt AND
-    render the severed fragment literally on the plain resend (PR #122
-    terminal audit). A cut landing inside an entity backs up to just before
+    render the severed fragment literally on the plain resend.
+    A cut landing inside an entity backs up to just before
     its ``&``.
     """
     escaped = html.escape(chunk)

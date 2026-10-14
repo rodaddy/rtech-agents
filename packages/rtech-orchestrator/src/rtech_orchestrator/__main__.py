@@ -16,14 +16,14 @@ Configuration is read from the environment:
 * ``RTECH_TARGET_AGENT_ID`` -- the agentd id ``scope=single`` tasks route to.
   ``RTECH_SINGLE_AGENT_ID`` is accepted as a back-compat alias, and
   ``RTECH_AGENT_REGISTRY`` may point at a JSON registry instead. There is NO
-  hardcoded default: an unresolved target fails loudly at startup (issue #49) so
+  hardcoded default: an unresolved target fails loudly at startup so
   the orchestrator never silently routes to a shared ``agentd`` literal.
-* ``RTECH_STACK_ID`` -- this stack's id for the ingress guard (issue #75). Only
+* ``RTECH_STACK_ID`` -- this stack's id for the ingress guard. Only
   ``TaskFrame``s whose ``stack`` field matches are consumed. No default: a
   missing stack id fails loudly at startup so two stacks on the shared bus can
   never cross-consume through a defaulted guard.
 * ``RTECH_BRIDGED_AGENTS`` -- optional comma-separated fleet ids fronted by the
-  hermes bridge (PR #73 redesign). When set, the orchestrator opens a second
+  hermes bridge. When set, the orchestrator opens a second
   fleet-namespace connection (``RTECH_FLEET_ENV``, default ``dev``) and consumes
   the typed fleet ``Done`` for those participants directly.
 

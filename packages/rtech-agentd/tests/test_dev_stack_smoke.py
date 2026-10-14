@@ -79,7 +79,7 @@ async def test_dev_stack_wiring_task_drives_working_and_turn(tmp_path: Path) -> 
             )
         )
 
-        # Completion contract (issue #51): the scripted task send completes its
+        # Completion contract: the scripted task send completes its
         # own turn — no steer flush. The supervisor pump fans the TurnDone to the
         # runner, which publishes the TurnFrame with no further prompting.
         turn_subj = subjects.task_turn(task.id)

@@ -1,4 +1,4 @@
-"""Per-agent config resolution from RTECH_AGENT_ID + committed agent.yaml (#84).
+"""Per-agent config resolution from RTECH_AGENT_ID + committed agent.yaml.
 
 Covers the entrypoint seam that resolves ``agents/<id>/agent.yaml`` from the
 agent id (found -> AgentConfig used; missing -> None fallback + loud log) and a
@@ -60,7 +60,7 @@ def test_resolve_found_config_is_used(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_resolve_by_slug_strips_agentd_prefix(tmp_path: Path, monkeypatch) -> None:
-    """RTECH_AGENT_ID 'agentd-skippy' resolves the slug dir agents/skippy (#84 D1).
+    """RTECH_AGENT_ID 'agentd-skippy' resolves the slug dir agents/skippy.
 
     Dirs are slug-named but the systemd instance id carries the 'agentd-' prefix;
     the exact-id dir does NOT exist, so resolution must fall through to the slug.
@@ -73,7 +73,7 @@ def test_resolve_by_slug_strips_agentd_prefix(tmp_path: Path, monkeypatch) -> No
 
 
 def test_resolve_exact_id_dir_wins_over_slug(tmp_path: Path, monkeypatch) -> None:
-    """When BOTH an exact-id and a slug dir exist, the exact-id dir wins (#84 D1)."""
+    """When BOTH an exact-id and a slug dir exist, the exact-id dir wins."""
     root = tmp_path / "agents"
     # slug dir carries model claude-sonnet-5; exact-id dir carries a distinct home.
     _write_manifest(root / "skippy", "agentd-skippy")
@@ -124,14 +124,14 @@ def test_engine_env_overlays_config_kind_and_model(monkeypatch) -> None:
     monkeypatch.delenv(ENV_MODEL, raising=False)
     cfg = load_agent_config(_AGENTS_ROOT / "bilby" / "agent.yaml")
     env = _engine_env_from_config(cfg)
-    # BOTH spellings are set so the manifest kind is authoritative (#84 D2).
+    # BOTH spellings are set so the manifest kind is authoritative.
     assert env[ENV_ENGINE] == cfg.engine.kind
     assert env[ENV_ENGINE_ALT] == cfg.engine.kind
     assert env[ENV_MODEL] == cfg.engine.model
 
 
 def test_manifest_kind_wins_over_stray_e2e_engine(tmp_path: Path, monkeypatch) -> None:
-    """A stray E2E_ENGINE must NOT override the manifest engine kind (#84 D2).
+    """A stray E2E_ENGINE must NOT override the manifest engine kind.
 
     _selected_kind reads E2E_ENGINE before DEV_STACK_ENGINE, so the overlay has
     to pin the primary spelling too. Verified through _selected_kind (the exact
@@ -168,10 +168,10 @@ def test_committed_trio_configs_parse_without_literal_secrets() -> None:
 
 
 def test_grep_gate_passes_no_live_hermes_import() -> None:
-    """The grep-gate (which now bans live rtech_hermes imports, #84) passes.
+    """The grep-gate (which now bans live rtech_hermes imports) passes.
 
     CI runs scripts/grep-gate.sh in its own job on every push/PR; this test pins
-    the same script locally so the #84 import ban is exercised in the suite too.
+    the same script locally so the import ban is exercised in the suite too.
     Skips cleanly when zsh/rg (the script's deps) are not on PATH.
     """
     script = _REPO_ROOT / "scripts" / "grep-gate.sh"

@@ -1,6 +1,7 @@
 # Coding standards
 
-Adapted from rtech-hermes. This repo is a from-scratch agent product. Code here
+Adapted from the author's Hermes tooling standards. This repo is a
+from-scratch agent product. Code here
 must be small, targeted, testable, and typed.
 
 ## Session start requirement

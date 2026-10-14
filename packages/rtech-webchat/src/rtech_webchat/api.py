@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 TaskScope = Literal["single", "duo", "trio"]
 DEFAULT_TASK_SCOPE: TaskScope = "single"
-# The broadcast wire token is owned by rtech-frames (issue #76): this edge only
+# The broadcast wire token is owned by rtech-frames: this edge only
 # re-exposes it as its steer default, never re-declares the literal.
 DEFAULT_STEER_TARGET = BROADCAST_TARGET
 
@@ -73,7 +73,7 @@ def _derive_scope(participants: list[str], requested: TaskScope | None) -> TaskS
         )
     try:
         # Duplicate/blank/unsafe ids are rejected at the edge (400), before the
-        # frame's own invariant would fail them server-side (issue #75 round 2).
+        # frame's own invariant would fail them server-side.
         validate_participants(participants, derived)
     except ValueError as exc:
         logger.warning("webchat.api.scope | invalid participants reason={}", exc)
@@ -195,8 +195,8 @@ def register_api_routes(app: FastAPI, state: AppState, config: WebchatConfig) ->
         # still-active dash-dash tasks, with minimal typed state derived from
         # the frame graph/orchestrator truth. Completion is orchestrator-
         # derived (result-subject arrival), so completed tasks are filtered out
-        # rather than reported; no history, archive, or private text (issue
-        # #144). The dumb edge renders truth, it never owns it.
+        # rather than reported; no history, archive, or private text.
+        # The dumb edge renders truth, it never owns it.
         logger.debug("webchat.api.dash.active | entry")
         items = state.registry.list_active_dash_items()
         logger.info("webchat.api.dash.active | rendered count={}", len(items))

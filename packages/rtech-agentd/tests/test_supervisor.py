@@ -233,7 +233,7 @@ async def test_stall_watchdog_emits_typed_blocked_status(tmp_path: Path) -> None
 async def test_watchdog_maps_stall_to_frame_turn_tracked_task(tmp_path: Path) -> None:
     """Through frame_turn: a wedged turn's stall maps to the task, never 'no task'.
 
-    Regression for the #51 mapping bug: FrameTurnRunner registers the in-flight
+    Regression for the mapping bug: FrameTurnRunner registers the in-flight
     task at send, so the watchdog emits a blocked status for THAT task_id instead
     of logging 'stall status skipped, no task' during a live turn.
     """
@@ -255,7 +255,7 @@ async def test_watchdog_maps_stall_to_frame_turn_tracked_task(tmp_path: Path) ->
     run = asyncio.create_task(sup.run())
     await runner.start()
 
-    # Stamp created_at: agentd fails closed on untimestamped untracked frames (#83).
+    # Stamp created_at: agentd fails closed on untimestamped untracked frames.
     task = TaskFrame(
         id="T-wedge",
         origin_edge="web",
@@ -308,7 +308,7 @@ async def test_status_frames_never_emit_completion_state(tmp_path: Path) -> None
 
 @pytest.mark.asyncio
 async def test_stop_publishes_shutdown_lifecycle_frame(tmp_path: Path) -> None:
-    """stop() publishes a shutdown lifecycle frame with reason + initiator (#84)."""
+    """stop() publishes a shutdown lifecycle frame with reason + initiator."""
     engine = FakeEngine()
     pub = RecordingPublisher()
     sup = _sup(engine, pub, tmp_path)
@@ -328,7 +328,7 @@ async def test_stop_publishes_shutdown_lifecycle_frame(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_crash_recovery_publishes_correlated_lifecycle_pair(tmp_path: Path) -> None:
-    """Recovery emits crash + supervisor_recovery sharing one correlation id (#84)."""
+    """Recovery emits crash + supervisor_recovery sharing one correlation id."""
     SessionRegistry(tmp_path, "session-registry.json", "tester").save("resume-ref-7")
     engine = FakeEngine()
     engine.stream_failures = 1
@@ -363,7 +363,7 @@ async def test_crash_recovery_publishes_correlated_lifecycle_pair(tmp_path: Path
 async def test_recovery_action_failure_emits_correlated_recovery_failed_crash(
     tmp_path: Path,
 ) -> None:
-    """A failed recovery action pairs the crash frame and re-raises (#84 slice B).
+    """A failed recovery action pairs the crash frame and re-raises.
 
     The pump crashes, ``_recover_dead_session`` publishes a ``crash`` frame, then
     the restart action itself raises. Instead of orphaning that crash frame, the
@@ -405,7 +405,7 @@ async def test_recovery_action_failure_emits_correlated_recovery_failed_crash(
 
 @pytest.mark.asyncio
 async def test_double_stop_publishes_exactly_one_shutdown_frame(tmp_path: Path) -> None:
-    """A second stop() is a no-op for the lifecycle publish (#84 slice B)."""
+    """A second stop() is a no-op for the lifecycle publish."""
     engine = FakeEngine()
     pub = RecordingPublisher()
     sup = _sup(engine, pub, tmp_path)
@@ -419,7 +419,7 @@ async def test_double_stop_publishes_exactly_one_shutdown_frame(tmp_path: Path) 
 
 @pytest.mark.asyncio
 async def test_stop_proceeds_when_lifecycle_publish_fails(tmp_path: Path) -> None:
-    """A failed lifecycle publish must never prevent a clean stop (#84)."""
+    """A failed lifecycle publish must never prevent a clean stop."""
 
     class FailingPublisher(RecordingPublisher):
         async def __call__(self, subject: str, envelope: object) -> None:  # type: ignore[override]

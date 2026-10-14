@@ -45,7 +45,7 @@ Pattern/Convention:
 
     To move the secret to Vaultwarden/GSM later, implement a new
     ``SecretsSource`` and select it in :func:`load_telegram_user_config` — see the
-    ``TODO(#110-secrets-backend)`` marker in
+    ``TODO(secrets-backend)`` marker in
     :mod:`rtech_chatd.user_session.config`. No caller changes.
 
 Example:
@@ -55,7 +55,7 @@ Example:
 
 See Also:
     - rtech_chatd.mint_session: the interactive generator + CLI entry point.
-    - rtech_chatd.telegram_adapter: the bot-token inbound edge (issue #108).
+    - rtech_chatd.telegram_adapter: the bot-token inbound edge.
     - rtech_chatd.config.resolve_token: the parallel *bot*-token indirection seam.
 """
 

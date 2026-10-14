@@ -125,7 +125,7 @@ _ACK_TEXT = "Steer this direction:"
 
 
 class TelegramTurnInteraction:
-    """Attach an actor-bound steer keyboard to a landed debate TLDR (issue #117).
+    """Attach an actor-bound steer keyboard to a landed debate TLDR.
 
     This is the concrete Telegram implementation of the edge's narrow
     :class:`~rtech_chatd.edge.TurnInteraction` hook. It keeps interactive markup

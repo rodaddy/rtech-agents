@@ -3,7 +3,7 @@
 The interactive Telethon login (:func:`rtech_chatd.mint_session.mint_session`) is
 NOT tested — it needs a real phone/code/2FA. Only the pure, network-free seams
 are covered: the security banner text and the ``--write`` merge that preserves
-api_id/api_hash while rewriting session_string (issue #110).
+api_id/api_hash while rewriting session_string.
 """
 
 from __future__ import annotations

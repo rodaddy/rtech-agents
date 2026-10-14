@@ -125,8 +125,8 @@ def create_app(
             # Only the subscribe call is guarded here: connect() above is not, so a
             # connect failure fails app startup outright. When connect succeeded but
             # the heartbeat subscribe fails, the edge stays reachable so Dash can
-            # still read a typed verdict — surfaced as subscription_failed (issue
-            # #145), never silently rendered as "zero agents". Log only the
+            # still read a typed verdict — surfaced as subscription_failed,
+            # never silently rendered as "zero agents". Log only the
             # exception *type*, never str(exc): a NATS subscribe failure can embed
             # the credential-bearing nats://user:pass@host URL, which must never
             # reach a log line.
@@ -138,9 +138,9 @@ def create_app(
         else:
             # Consult the bus's typed liveness at every read so a later connection
             # drop or subscription retirement re-derives subscription_failed
-            # instead of the pipeline staying healthy forever (issue #145).
+            # instead of the pipeline staying healthy forever.
             state.presence.mark_subscribed(liveness=resolved_bus.is_connected)
-        # One derivation-tick task over the EXISTING registry (issue #147): it emits a
+        # One derivation-tick task over the EXISTING registry: it emits a
         # typed PresenceTransitionFrame per genuine online<->offline edge. This is a
         # single evaluation loop, not a second presence store or poller.
         transition_task = asyncio.create_task(
@@ -176,7 +176,7 @@ def create_app(
         logger.debug("webchat.task | entry requester_len={}", len(request.requester))
         if request.scope != "single":
             # This route carries no participants and an identity-less duo/trio
-            # task can never derive done (issue #75 round 2); named
+            # task can never derive done; named
             # participants go through /api/tasks.
             logger.warning("webchat.task | rejected identity-less scope={}", request.scope)
             raise HTTPException(
@@ -327,7 +327,7 @@ async def _run_transition_ticks(
     deriver: PresenceTransitionDeriver,
     interval_seconds: float,
 ) -> None:
-    """Call ``deriver.evaluate()`` once per interval until cancelled (issue #147).
+    """Call ``deriver.evaluate()`` once per interval until cancelled.
 
     One evaluation loop over the EXISTING presence registry — the deriver holds all
     edge/dedup logic. A per-tick failure is logged sanitized and the loop continues so
@@ -613,7 +613,7 @@ HTML_PAGE = """<!doctype html>
     let selectedTaskId = "";
     let agentsAuthError = false;
     // Fail closed: until a 200 carries a recognized typed verdict, presence is
-    // "unavailable" — never the authoritative "No agents online" (issue #145).
+    // "unavailable" — never the authoritative "No agents online".
     // Initial load, an absent field (older/misbehaving edge), or an
     // unrecognized value all render presence unavailable, not healthy-empty.
     let agentsPipeline = "unavailable";
@@ -703,7 +703,7 @@ HTML_PAGE = """<!doctype html>
         return;
       }
       // subscription_failed is distinct from healthy-but-empty: the heartbeat
-      // feed is down, so the (empty) list is NOT liveness truth (issue #145).
+      // feed is down, so the (empty) list is NOT liveness truth.
       if (agentsPipeline === "subscription_failed") {
         agentsErrorEl.hidden = false;
         agentsErrorEl.textContent = "Presence feed unavailable.";
@@ -711,7 +711,7 @@ HTML_PAGE = """<!doctype html>
       }
       // Fail closed: an initial/absent/unrecognized verdict is NOT trusted as
       // healthy-empty, so the (empty) list is never rendered as the
-      // authoritative "No agents online" (issue #145). Presence is unknown until
+      // authoritative "No agents online". Presence is unknown until
       // a 200 carries a recognized typed verdict.
       if (agentsPipeline !== "healthy") {
         agentsErrorEl.hidden = false;
@@ -766,7 +766,7 @@ HTML_PAGE = """<!doctype html>
         // wire values are trusted. An absent or unrecognized field (older or
         // misbehaving edge) is "unavailable", never coerced to healthy — a 200
         // with an invalid verdict must not read as authoritative
-        // "No agents online" (issue #145).
+        // "No agents online".
         if (body.pipeline === "healthy") {
           agentsPipeline = "healthy";
         } else if (body.pipeline === "subscription_failed") {

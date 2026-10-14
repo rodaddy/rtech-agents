@@ -3,7 +3,7 @@
 A **content-only dumb edge** that bridges rtech-agents task frames to the
 **existing Hermes gateway agents** already running on the shared fleet NATS bus.
 Each fronted fleet agent (e.g. `bilby`) then appears in the rtech web-chat picker
-and answers in its own voice — without deploying agentd per box (issue #65).
+and answers in its own voice — without deploying agentd per box.
 
 The bridge translates at the boundary and carries **no control signal**: reply
 text and typed stance ride through as content `TurnFrame`s, and terminal
@@ -19,7 +19,7 @@ platform adapter** installed in its venv — **not** via `hermes_cli/gateway.py`
 (that file is only the systemd/CLI wrapper). Running env: `FLEET_ENV=dev`,
 `FLEET_AGENT_ID=bilby`, `FLEET_ROLE=worker`, `FLEET_NATS_URL=nats://127.0.0.1:4222`.
 
-Clean source lives in `Development/fleet-bus/packages/fleet-subscriber`
+Clean source lives in the fleet-bus repo at `packages/fleet-subscriber`
 (`adapter.py` / `mapping.py` / `completion.py`) — the on-host `hermes_cli` copy is
 identifier-minified; the contract was read from the clean library.
 

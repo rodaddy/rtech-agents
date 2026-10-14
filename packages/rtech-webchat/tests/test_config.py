@@ -1,4 +1,4 @@
-"""Cover the required stack id on the web-chat edge (issue #75 round 2)."""
+"""Cover the required stack id on the web-chat edge."""
 
 from __future__ import annotations
 

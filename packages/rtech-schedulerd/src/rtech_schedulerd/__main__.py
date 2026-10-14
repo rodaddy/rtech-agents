@@ -1,7 +1,7 @@
 """Run the cron scheduler as a standalone long-running service.
 
 On the k-board LXC the scheduler is its own lingering user unit beside the stack
-(#112 pattern): it connects a fleet-nats bus, bridges it to the typed
+(same pattern as the Telegram edge): it connects a fleet-nats bus, bridges it to the typed
 ``FrameBus`` seam (the shared :class:`~rtech_orchestrator.typedbus.TypedFrameBus`),
 loads the frozen schedule table, and mints TaskFrames on cron occurrences until
 SIGINT/SIGTERM.
@@ -12,7 +12,7 @@ environment:
 * ``NATS_URL`` — the fleet NATS server (default the live fleet bus).
 * ``RTECH_SCHEDULE_FILE`` — the JSON schedule table (required; fails closed).
 * ``RTECH_STACK_ID`` — this stack's id, stamped on every minted frame so a
-  stack-guarded orchestrator consumes it (issue #75). No default: a missing id
+  stack-guarded orchestrator consumes it. No default: a missing id
   fails loudly at startup.
 
 Secret env VALUES are never logged. A ``NATS_URL`` may embed credentials

@@ -15,7 +15,7 @@ RenderedPayload = dict[str, object]
 # The dashboard origin whose still-active tasks the Dash recovery endpoint
 # lists. Only tasks minted with this origin edge are eligible; web-chat and any
 # other origin are excluded, and Telegram/Discord tasks never enter this
-# connector's registry at all (issue #144).
+# connector's registry at all.
 DASH_ORIGIN_EDGE = "dash-dash"
 
 # StatusFrame carries no terminal state (``rtech_frames`` limits it to
@@ -32,7 +32,7 @@ class ActiveKingTaskItem(BaseModel):
     truth: the task id, its (dash-dash) origin edge, the derived scope, and the
     last observed typed status. It deliberately omits the private task text,
     requester, participants, and any frame history so the recovery surface
-    leaks no private payload (issue #144).
+    leaks no private payload.
     """
 
     task_id: str
@@ -111,7 +111,7 @@ class TaskRegistry:
         arrives as the result-subject publish this connector observes via
         ``record_result_arrival``, so ``result_received`` is the connector's
         mirror of orchestrator-derived completion. Completed, web-chat, and
-        every other-origin task is excluded (issue #144).
+        every other-origin task is excluded.
 
         The returned items carry no task text, requester, participants, or
         frame history: only the id, origin edge, derived scope, and last

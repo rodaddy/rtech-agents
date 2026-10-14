@@ -19,7 +19,7 @@ Reply protocol (matches the gateway's ``fleet_subscriber.send()`` exactly): the
 status lane carries zero or more ``kind="status"`` envelopes (stance-only
 structural signals and/or visible reply text), then one ``kind="done"`` envelope
 carrying the typed ``fleet_core.spec.Done``. The bridge is CONTENT-ONLY on the
-rtech side (PR #73 redesign; docs/bridged-participant-lifecycle.md): each reply
+rtech side (docs/bridged-participant-lifecycle.md): each reply
 publishes an immediate content ``TurnFrame`` (typed passthrough of text +
 gateway stance) plus a ``StatusFrame(state="working")`` for liveness. The typed
 ``Done`` is consumed here for LIFECYCLE ONLY — unsubscribe, drop state, advance
@@ -390,7 +390,7 @@ class HermesBridge:
 
         Content only: the turn's stance is the gateway's typed stance passed
         through verbatim; terminal semantics stay with the orchestrator's own
-        typed-``Done`` consumption (PR #73 redesign).
+        typed-``Done`` consumption.
         """
         frame = build_content_turn(
             fleet_id=pending.fleet_id,
@@ -502,7 +502,7 @@ class HermesBridge:
 
         ``fleet_id`` is the bridged participant the status speaks for — the
         same identity the content turns carry — so per-participant done
-        derivation classifies the status against ITS author (PR #73 round 5).
+        derivation classifies the status against ITS author.
         """
         frame = StatusFrame(task_id=task_id, agent_id=fleet_id, state=state)
         subject = rtech_subjects.task_status(task_id)

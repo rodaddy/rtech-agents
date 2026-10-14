@@ -27,7 +27,7 @@ def test_package_entrypoint_loads() -> None:
 
 
 def test_broadcast_target_is_wire_locked_and_exported() -> None:
-    """The broadcast token is owned here and its wire value is locked (#76)."""
+    """The broadcast token is owned here and its wire value is locked."""
     assert rtech_frames.BROADCAST_TARGET == "all"
     assert "BROADCAST_TARGET" in rtech_frames.__all__
 
@@ -132,7 +132,7 @@ def test_task_participants_default_empty_and_round_trips() -> None:
 
 
 def test_task_stack_round_trips_and_legacy_wire_decodes() -> None:
-    # New wire: the typed stack scope rides the frame (issue #75).
+    # New wire: the typed stack scope rides the frame.
     stamped = TaskFrame(
         id="task-1",
         origin_edge="discord",
@@ -147,7 +147,7 @@ def test_task_stack_round_trips_and_legacy_wire_decodes() -> None:
     assert isinstance(decoded, TaskFrame)
     assert decoded.stack == "mini-m4-dev"
 
-    # Legacy wire: pre-#75 bytes carry no stack key and decode as unscoped.
+    # Legacy wire: earlier bytes carry no stack key and decode as unscoped.
     legacy_payload = {
         "frame_type": "task",
         "schema_version": SCHEMA_VERSION,
@@ -164,7 +164,7 @@ def test_task_stack_round_trips_and_legacy_wire_decodes() -> None:
 
 
 def test_task_origin_round_trips_and_legacy_wire_decodes() -> None:
-    # New wire (issue #93 intake): the channel origin rides the frame.
+    # New wire (intake): the channel origin rides the frame.
     stamped = TaskFrame(
         id="intake-1",
         origin_edge="chatd-intake:nagatha",
@@ -415,7 +415,7 @@ def test_arbiter_none_omits_key_so_old_forbidding_decoder_accepts() -> None:
 
 
 def test_turn_origin_round_trips_and_legacy_wire_decodes() -> None:
-    # New wire (issue #93 reply render): the channel origin rides the reply turn.
+    # New wire (reply render): the channel origin rides the reply turn.
     stamped = TurnFrame(
         agent_id="nagatha",
         task_id="intake-1",
@@ -458,7 +458,7 @@ def test_turn_origin_none_omits_key_so_old_forbidding_decoder_accepts() -> None:
     for the TurnFrame: the origin/main decoder is ``extra="forbid"`` with no
     ``origin`` field, so an ``origin: null`` key would make it reject EVERY
     new-encoded TurnFrame. The new encoder omits the key entirely when origin is
-    None, so a legacy-shaped turn is byte-identical to the pre-#93 wire.
+    None, so a legacy-shaped turn is byte-identical to the earlier wire.
     """
     from pydantic import BaseModel, ConfigDict, Field
 
@@ -657,7 +657,7 @@ def test_steer_interrupt_defaults_false_and_round_trips() -> None:
 
 
 def test_lifecycle_frame_round_trips_with_wire_type() -> None:
-    """LifecycleFrame carries reason/initiator/correlation_id on the wire (#84)."""
+    """LifecycleFrame carries reason/initiator/correlation_id on the wire."""
     frame = LifecycleFrame(
         agent_id="agentd-bilby",
         reason="shutdown",
@@ -703,7 +703,7 @@ def test_decode_rejects_missing_required_field() -> None:
 
 
 def test_decode_rejects_v1_status_without_agent_id() -> None:
-    # Wire change (PR #73 round 5): StatusFrame gained a required agent_id in
+    # Wire change: StatusFrame gained a required agent_id in
     # schema_version 2. A v1 status (no authorship) fails closed at decode —
     # deployed stacks must re-sync on merge.
     payload = {

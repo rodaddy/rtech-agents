@@ -5,7 +5,7 @@ NOT exercised — they need a live account. Instead the pure helpers
 (``_canonical_id``, ``_classify``) are tested directly, and ``list_dialogs`` /
 ``ensure_forum`` are driven through a minimal fake client so the branching
 (skip-non-group, already-a-forum no-op, flip-when-off) is covered without a
-socket (issue #110).
+socket.
 """
 
 from __future__ import annotations

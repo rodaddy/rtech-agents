@@ -1,4 +1,4 @@
-"""Local pytest fixtures for the ``test_supervised_start*`` suite (#146).
+"""Local pytest fixtures for the ``test_supervised_start*`` suite.
 
 The external-supervisor Start-only lifecycle coverage is split across four
 sibling modules. Rather than import shared doubles with a plain relative import

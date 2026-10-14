@@ -128,7 +128,7 @@ class FakeFrameBus:
 
     Records every publish as ``(subject, frame)`` and stores EVERY handler
     subscribed to a subject — live NATS delivers to all subscriptions on a
-    subject, and collapsing them to one masked duplicate-callback bugs (#76).
+    subject, and collapsing them to one masked duplicate-callback bugs.
     :meth:`subscribe_frame` returns an unsubscribe handle mirroring the live
     bus; :meth:`deliver` invokes all still-subscribed handlers.
     """
@@ -144,7 +144,7 @@ class FakeFrameBus:
     async def publish_frame_checked(self, subject: str, frame: Frame) -> None:
         """Record a published ``(subject, frame)`` pair, propagating on failure.
 
-        The checked twin of :meth:`publish_frame` (issue #93). The base fake never
+        The checked twin of :meth:`publish_frame`. The base fake never
         raises, so this behaves identically; a test that needs a raising checked
         publish overrides this method (as the wake-service publish-failure test
         does) so the wake tool's typed ``publish_failed`` path is exercised.

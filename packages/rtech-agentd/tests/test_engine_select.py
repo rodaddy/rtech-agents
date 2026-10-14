@@ -60,7 +60,7 @@ def test_build_engine_codex_cli_auth_path(monkeypatch: pytest.MonkeyPatch) -> No
 
 
 def test_default_codex_model_is_not_the_retired_tier() -> None:
-    """The safe default must be a supported tier, never retired gpt-5-codex (#132).
+    """The safe default must be a supported tier, never retired gpt-5-codex.
 
     gpt-5-codex is not supported on a ChatGPT-account app-server and 400s every
     turn, so a fallback landing on it is itself broken. The default is the
@@ -96,7 +96,7 @@ def test_build_engine_codex_blank_model_resolves_to_default(
 ) -> None:
     """A blank/whitespace E2E_MODEL must NOT reach the engine as an empty model.
 
-    An empty configured model silently disables model attestation (#132 — the
+    An empty configured model silently disables model attestation (the
     start/resume check no-ops when no model is requested), so a blank override is
     normalized back to the supported default and enforcement always governs.
     """
@@ -145,7 +145,7 @@ def test_build_engine_codex_missing_cli_fails(monkeypatch: pytest.MonkeyPatch) -
 def test_attach_wake_on_non_claude_engine_fails_actionably(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """_attach_wake with a wake service + a non-Claude engine fails loud (#93).
+    """_attach_wake with a wake service + a non-Claude engine fails loud.
 
     Wake is Claude-engine-only in this slice; a triage deploy that set the
     allow-list on a codex engine must fail closed with an actionable message

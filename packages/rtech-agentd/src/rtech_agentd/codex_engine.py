@@ -13,7 +13,7 @@ managed-session state machine on top:
   the resolved model at the response top level (``ThreadStartResponse.model`` /
   ``ThreadResumeResponse.model``), which :meth:`_verify_observed_model` attests
   against the requested one, FAILING CLOSED with :class:`CodexModelMismatchError`
-  on a missing / blank / malformed / mismatched observation (issue #132: a silent
+  on a missing / blank / malformed / mismatched observation (a silent
   fall to the retired ``gpt-5-codex`` made every ChatGPT-account turn 400).
   :meth:`_attest_or_teardown` reaps the owned child on attestation failure so no
   orphan process leaks. Only VALIDATED model NAME strings are logged; no
@@ -33,7 +33,7 @@ Typed stance rides on a per-turn ``outputSchema`` (see
 :mod:`rtech_agentd.codex_stance`): the final ``agentMessage`` is strict JSON the
 adapter parses into a :class:`~rtech_frames.Stance` — never scraped from prose.
 
-WAKE (issue #93) is deliberately NOT wired here. The triage answer-or-wake
+WAKE is deliberately NOT wired here. The triage answer-or-wake
 capability is exposed to the model through an in-process SDK MCP tool
 (:mod:`rtech_agentd.wake_tool`), which is a Claude-Agent-SDK construct; the
 codex app-server has no equivalent in this adapter yet. This is a conservative,
@@ -97,7 +97,7 @@ _READER_STOPPED: object = object()
 # log/exception as a model id: a drifted/hostile field could otherwise smuggle a
 # huge blob, a newline (log injection), or control characters into our logs. A
 # value that is not this shape is treated as malformed and fails closed on a
-# nonempty request (issue #132).
+# nonempty request.
 #
 # The match is EXACT on the RAW value — we do NOT strip first. A raw identifier
 # with ANY leading/trailing whitespace or newline (``" gpt-5.6-sol"``,
@@ -158,7 +158,7 @@ class CodexModelMismatchError(Exception):
 
     ``thread/start``/``thread/resume`` echo the model the app-server actually
     resolved (``ThreadStartResponse.model``). When a configured, supported model
-    is silently swapped for a provider default (the issue #132 failure mode:
+    is silently swapped for a provider default (the failure mode:
     ``gpt-5.6-sol`` requested, retired ``gpt-5-codex`` selected → every turn
     400s), we FAIL LOUD here instead of letting broken turns run. Only model
     NAME strings ride in the message — never auth/session/token data.
@@ -243,7 +243,7 @@ class CodexEngine:
             # Set the model on thread/start (the app-server honors it and every
             # turn inherits it — verified against codex-cli 0.144.5). Forbid the
             # provider from silently substituting a default for an unavailable
-            # requested model: a swap must FAIL LOUD (issue #132), not 400 later.
+            # requested model: a swap must FAIL LOUD, not 400 later.
             params["model"] = self._config.model
             params["allowProviderModelFallback"] = False
         try:
@@ -302,7 +302,7 @@ class CodexEngine:
         NON-EMPTY model was requested, the observation must be a safe model
         identifier that matches it; a missing, blank, malformed, or mismatched
         observation FAILS CLOSED with :class:`CodexModelMismatchError` rather than
-        letting a possibly-swapped session run (issue #132: a silent fall to the
+        letting a possibly-swapped session run (a silent fall to the
         retired ``gpt-5-codex`` 400s every ChatGPT-account turn).
 
         No consumer drains ``events()`` before ``start``/``resume`` returns (the
@@ -328,7 +328,7 @@ class CodexEngine:
             message = (
                 f"codex app-server did not echo a valid model at thread/{phase} "
                 f"(got {type(observed).__name__}); {requested!r} was requested and "
-                f"cannot be confirmed (fail closed, issue #132)"
+                f"cannot be confirmed (fail closed)"
             )
             logger.error("codex_engine.{} | model unattested | {}", phase, message)
             raise CodexModelMismatchError(message)
@@ -347,7 +347,7 @@ class CodexEngine:
         message = (
             f"codex app-server selected model {observed_id!r} but {requested!r} was "
             f"requested at thread/{phase}; the configured model is not governing "
-            f"this session (fail closed, issue #132)"
+            f"this session (fail closed)"
         )
         logger.error("codex_engine.{} | model mismatch | {}", phase, message)
         raise CodexModelMismatchError(message)
@@ -702,7 +702,7 @@ class CodexEngine:
         # neither be trusted as a substantive terminal turn nor leaked as raw JSON.
         # It fails SAFE through the SAME typed failure path a ``status=="failed"``
         # turn takes: ``TurnDone(is_error=True)`` carries the failed stance, and the
-        # frame-turn layer renders the human one-liner (issue #123) and logs the
+        # frame-turn layer renders the human one-liner and logs the
         # raw payload once at that publish boundary. This never publishes a false normal substantive
         # terminal TurnFrame, and the failed stance is terminal so a single-scope
         # task does not silently hang. Valid stances and plain prose are unchanged.

@@ -6,7 +6,7 @@ Importing it pulls in discord.py (via :mod:`rtech_chatd.discord_adapter`), so th
 pure-core package :mod:`rtech_chatd` does NOT re-export these symbols — keeping
 the promise that importing the core never drags in discord.py.
 
-Security floor (issue #78): the bot token is resolved from a ``*_ref``
+Security floor: the bot token is resolved from a ``*_ref``
 indirection ONLY, never a literal and never logged; a blank inbox, blank stack,
 or ``allow_bots=all`` fails closed BEFORE any connection is opened.
 """
@@ -69,7 +69,7 @@ class ChatdServiceConfig:
     """Hold the fully-resolved runnable-service configuration.
 
     ``edge`` carries the transport/token-ref settings; ``stack`` is the required
-    stack stamp (issue #75); ``participants`` is the typed participant set whose
+    stack stamp; ``participants`` is the typed participant set whose
     count derives the task scope; ``allow_bots``/``require_mention`` are the gate
     policy. Every invariant fails closed in :meth:`__post_init__` so a
     misconfigured service never reaches a live connection.
@@ -86,7 +86,7 @@ class ChatdServiceConfig:
         if not self.stack or not self.stack.strip():
             raise ValueError(
                 "stack must be non-empty: chatd stamps every TaskFrame with its "
-                f"stack id (issue #75); set {ENV_STACK_ID} — there is no default"
+                f"stack id; set {ENV_STACK_ID} — there is no default"
             )
         if self.edge.inbox_channel is None or not self.edge.inbox_channel.strip():
             raise ValueError(
@@ -104,7 +104,7 @@ class ChatdServiceConfig:
         """Build the service config from environment variables (refs only).
 
         Raises:
-            ValueError: If ``RTECH_STACK_ID`` is unset/blank (issue #75), or
+            ValueError: If ``RTECH_STACK_ID`` is unset/blank, or
                 ``RTECH_CHATD_ALLOW_BOTS`` is ``all`` (fail closed, never
                 silently downgraded), or any invariant in
                 :meth:`__post_init__` fails.
@@ -114,7 +114,7 @@ class ChatdServiceConfig:
         if not stack:
             raise ValueError(
                 f"{ENV_STACK_ID} must be set to this deployment's stack id "
-                "(issue #75); the edge never defaults to a shared literal"
+                "; the edge never defaults to a shared literal"
             )
         edge = ChatdConfig.from_env()
         raw_participants = os.getenv(ENV_PARTICIPANTS, "")
@@ -251,7 +251,7 @@ async def run_service(config: ChatdServiceConfig) -> None:
     token = resolve_required_token(config)
     gate_config = config.gate_config()
     bus = NatsFrameBus(config.edge.nats_url)
-    # The intake sink (issue #93) reuses the SAME bus publisher and the SAME gate
+    # The intake sink reuses the SAME bus publisher and the SAME gate
     # config the responder path uses, so its responder-yield decision is identical
     # to what the responder itself computes. Only built when intake is enabled;
     # existing deploys pass no sink and see no intake behavior.
@@ -293,13 +293,13 @@ async def run_service(config: ChatdServiceConfig) -> None:
         attributed=True,
         origin_edge=config.edge.origin_edge,
         home_target=config.edge.home_send_target(),
-        # Same opt-in as the intake sink (issue #93): only a triage edge renders
+        # Same opt-in as the intake sink: only a triage edge renders
         # EXTERNAL task answers (intake/wake) back into the asking channel.
         # Existing deploys leave intake off and stay byte-identical.
         intake_enabled=config.intake.enabled,
         debate_lanes=debate_lanes_from_pairs(config.intake.debate_lanes),
         debate_chat_lanes=debate_chat_lanes_from_triples(config.intake.debate_chat_lanes),
-        # Presence notifications (issue #147) land on the operator home channel —
+        # Presence notifications land on the operator home channel —
         # the SAME cross-platform/cron delivery target — so no new channel is
         # introduced. Absent home channel => no notify target => the edge simply
         # does not subscribe presence transitions (byte-identical to before).

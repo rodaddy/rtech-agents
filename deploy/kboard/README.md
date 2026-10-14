@@ -1,11 +1,16 @@
 # Deploy: rtech-agents on the k-board LXC (single host)
 
+> "k-board" is the author's deploy host: an LXC container that already runs an
+> unrelated app (`k-board-api`, `caddy`, `postgres`). `bilby` is the user that
+> owns the install there. This runbook is a worked example for that one host;
+> substitute your own host, user and secret-store paths.
+
 Operator runbook for standing up the bus-first stack (orchestrator + agentd +
 web-chat edge) as **additive, non-disruptive**, **rootless** systemd **user**
 services on the EXISTING k-board LXC. That box already runs `k-board-api` +
 `caddy` + `postgres`; this deploy must not touch them.
 
-**Rootless mandate (issue #55, global run-as rule).** Everything here runs AS
+**Rootless mandate (global run-as rule).** Everything here runs AS
 `bilby` — zero root, zero sudo. The tree is bilby-owned at `~bilby/rtech-agents`,
 units are systemd **user** units under `~/.config/systemd/user/`, and
 `install.sh` refuses to run as root. The one step that may need admin privilege
@@ -31,7 +36,7 @@ These are repo artifacts. Nothing here mutates the host until an operator runs
 - All units: `uv run --frozen`, `Restart=on-failure`, `After=network-online.target`,
   `WantedBy=default.target`.
 
-### Clean engine env (issue #55)
+### Clean engine env
 
 `bilby`'s `~/.cc-env` exports stale 4-6-era `ANTHROPIC_*` pins that route the SDK
 engine through a LiteLLM proxy — the root cause of the real-engine failure. Every
@@ -81,12 +86,12 @@ sh deploy/kboard/install.sh "$SRC" [/path/to/fleet-bus] [/path/to/open-brain]
 `install.sh` is idempotent and rootless: it refuses to run as root, rsyncs the
 tree to `~/rtech-agents` (excluding `.git`, `.venv`, caches, and any existing
 `.env`), **stages the editable path deps to `~/fleet-bus` and `~/open-brain`**
-(the frozen `uv.lock` resolves them relative to the install root — runbook gap,
-issue #49), runs `uv sync --frozen`, seeds `.env` from `.env.example` only if
+(the frozen `uv.lock` resolves them relative to the install root — a
+runbook gap fixed here), runs `uv sync --frozen`, seeds `.env` from `.env.example` only if
 absent, installs the three **user** units, and `systemctl --user enable --now`s
 them. The agentd unit is started as `rtech-agentd@agentd-bilby` — the instance
 name becomes `RTECH_AGENT_ID`, a UNIQUE id on the shared fleet bus (never a bare
-shared `agentd`, which collided across two agentds in issue #49).
+shared `agentd`, which collided across two agentds).
 
 ### Linger (persistence across logout/reboot)
 
@@ -102,7 +107,7 @@ still starts the units now but WARNS that they will not persist. An admin (or a
 NOPASSWD entry) must run `loginctl enable-linger bilby` **once**. Nothing
 in this deploy escalates on its own.
 
-### Agent identity (issue #49)
+### Agent identity
 
 - `RTECH_AGENT_ID=agentd-bilby` — this agentd's unique bus id. Absent an explicit
   value the standalone runner defaults to `agentd-<hostname>`, never bare
@@ -116,7 +121,7 @@ in this deploy escalates on its own.
 
 ```sh
 # .env was seeded from .env.example. Fill the edge API key from Vaultwarden:
-#   Vaultwarden ref: rtech-agents/kboard/RTECH_AGENTS_API_KEY
+#   Vaultwarden ref: <your-secret-store-path>/RTECH_AGENTS_API_KEY
 $EDITOR ~/rtech-agents/.env            # set RTECH_AGENTS_API_KEY, adjust host/port
 systemctl --user restart rtech-webchat.service
 ```
@@ -187,7 +192,7 @@ systemctl --user daemon-reload
 rm -rf ~/rtech-agents ~/fleet-bus ~/open-brain
 ```
 
-## Decommission the OLD root install (issue #55)
+## Decommission the OLD root install
 
 The superseded #7 install was performed AS ROOT with **system** units in
 `/etc/systemd/system` and a tree at `/opt/rtech-agents` owned by a `rtech`
@@ -243,7 +248,7 @@ cp ~/rtech-agents/deploy/kboard/rtech-chatd.service ~/.config/systemd/user/
 
 Fill the `RTECH_CHATD_*` block plus `RTECH_STACK_ID` in `~/rtech-agents/.env`
 (the bot token VALUE comes from Vaultwarden — ref
-`rtech-agents/kboard/RTECH_CHATD_BOT_TOKEN`; only the `*_ref` lives in `.env`,
+`<your-secret-store-path>/RTECH_CHATD_BOT_TOKEN`; only the `*_ref` lives in `.env`,
 never the literal). At minimum set `RTECH_STACK_ID`, `RTECH_CHATD_INBOX_CHANNEL`,
 and `RTECH_CHATD_BOT_TOKEN`. Then enable it:
 
@@ -282,7 +287,7 @@ rm -f ~/.config/systemd/user/rtech-chatd.service
 systemctl --user daemon-reload
 ```
 
-## tgd Telegram edge (opt-in, issue #112)
+## tgd Telegram edge (opt-in)
 
 `rtech-tgd.service` is the standalone **Telegram** chat surface: a **dumb edge**
 that long-polls ONE allow-listed supergroup, mints a typed `TaskFrame` from each
@@ -353,7 +358,7 @@ message and does NOT connect:
 - `chatd.tgd: configured bot token not provisioned (ref withheld)` when a
   configured env ref resolves empty; neither ref nor token value is logged.
 
-### Schema / version diagnostics (atomic-ship, issue #112)
+### Schema / version diagnostics (atomic-ship)
 
 The Telegram trio-debate path is the SAME bus contract as the Discord one and
 carries the SAME atomic-ship requirement: it needs the orchestrator + agentd
@@ -382,7 +387,7 @@ rm -f ~/.config/systemd/user/rtech-tgd.service
 systemctl --user daemon-reload
 ```
 
-## Wake (triage) capability (issue #93)
+## Wake (triage) capability
 
 A triage agentd (Nagatha) can **wake** an allow-listed teammate — mint a fresh
 `TaskFrame` on the teammate's task subject, carrying the original
@@ -401,7 +406,7 @@ carries does not yet route the woken agent's answer back to the originating
 channel. The origin is carried for when that reply path is wired; until then the
 woken agent runs and publishes its turn, but its answer is not rendered back.
 
-## Trio-intake debate: orchestrator must ship atomically (issue #93)
+## Trio-intake debate: orchestrator must ship atomically
 
 The trio-intake debate path (chatd fans an intake hit to a duo/trio `TaskFrame`
 carrying `ChannelOrigin.debate`, and renders per-agent channel TLDRs plus full

@@ -21,7 +21,7 @@ runner-owned copy keeps the deploy path free of any ``scripts/`` import. Run it:
 * ``RTECH_STATE_HOME`` -- the managed session's state dir (session registry,
   engine home). Defaults to ``state/agentd-home`` relative to the working
   directory (the unit's ``WorkingDirectory=%h/rtech-agents`` under the rootless
-  deploy), never a root-only ``/opt`` path (issue #55).
+  deploy), never a root-only ``/opt`` path.
 
 Secret env VALUES are never logged. The bus URL is host:port only, not a secret.
 """
@@ -58,7 +58,7 @@ from .persona_glue import build_system_prompt
 from .supervisor import CircuitOpenError, Supervisor, SupervisorConfig
 from .wake_service import OriginProvider, WakeConfig, WakeService
 
-# Env var naming this stack's id (issue #75). Owned by the orchestrator config; a
+# Env var naming this stack's id. Owned by the orchestrator config; a
 # minted wake TaskFrame must be stack-scoped, so agentd reads the same var when a
 # triage agent is configured as a waker.
 ENV_STACK_ID = "RTECH_STACK_ID"
@@ -75,11 +75,11 @@ SYSTEM_PROMPT = "rtech-agents managed agent"
 # Where the managed session's state (session registry, engine home) lives. Under
 # the rootless deploy the units set WorkingDirectory=%h/rtech-agents, so the
 # default resolves to ~/rtech-agents/state/agentd-home -- a user-owned path, not
-# the old root-only /opt tree (issue #55). Override with RTECH_STATE_HOME for a
+# the old root-only /opt tree. Override with RTECH_STATE_HOME for a
 # non-default layout.
 ENV_STATE_HOME = "RTECH_STATE_HOME"
 DEFAULT_STATE_HOME = "state/agentd-home"
-# Root under which per-agent homes live: agents/<RTECH_AGENT_ID>/agent.yaml (#84).
+# Root under which per-agent homes live: agents/<RTECH_AGENT_ID>/agent.yaml.
 # Env-tunable so the deploy can point at an install-root agents tree; the default
 # is relative to the unit's WorkingDirectory (resolved absolute at load).
 ENV_AGENTS_ROOT = "RTECH_AGENTS_ROOT"
@@ -121,7 +121,7 @@ STALL_TIMEOUT_S = 90.0
 
 
 def _resolve_manifest_path(root: Path, agent_id: str) -> Path | None:
-    """Resolve the on-disk ``agent.yaml`` for ``agent_id`` under ``root`` (#84).
+    """Resolve the on-disk ``agent.yaml`` for ``agent_id`` under ``root``.
 
     Resolution order (first hit wins), loudly logged:
 
@@ -153,7 +153,7 @@ def _resolve_manifest_path(root: Path, agent_id: str) -> Path | None:
 
 
 def _resolve_agent_config(agent_id: str) -> AgentConfig | None:
-    """Resolve this agent's ``agent.yaml`` from ``RTECH_AGENT_ID`` (#84).
+    """Resolve this agent's ``agent.yaml`` from ``RTECH_AGENT_ID``.
 
     Convention: manifests live under ``<RTECH_AGENTS_ROOT>`` (root env-tunable,
     default ``./agents`` under the unit's WorkingDirectory). Directories are
@@ -197,7 +197,7 @@ def _resolve_agent_config(agent_id: str) -> AgentConfig | None:
 
 
 def _engine_env_from_config(config: AgentConfig) -> dict[str, str]:
-    """Overlay ``build_engine``'s env with this agent's engine selection (#84).
+    """Overlay ``build_engine``'s env with this agent's engine selection.
 
     ``build_engine`` reads the engine kind/model/base from the environment, so we
     thread ``config.engine`` by overlaying those exact keys ON TOP of the process
@@ -228,7 +228,7 @@ def _engine_env_from_config(config: AgentConfig) -> dict[str, str]:
 
 
 def _resolve_system_prompt(config: AgentConfig | None) -> str:
-    """Compose the system prompt from the agent's persona, or fall back (#84).
+    """Compose the system prompt from the agent's persona, or fall back.
 
     With a config, the prompt is composed from the persona at ``config.home``
     (SOUL/USER/KERNEL) via :func:`build_system_prompt`. Any persona failure
@@ -309,7 +309,7 @@ class TypedFrameBus:
     async def publish_frame_checked(self, subject: str, frame: Frame) -> None:
         """Encode and publish a typed frame, RE-RAISING on transport failure.
 
-        The propagating twin of :meth:`publish_frame` (issue #93): the wake tool
+        The propagating twin of :meth:`publish_frame`: the wake tool
         must not record a false success on a raising NATS publish, so this variant
         does NOT swallow — the exception propagates to the wake service, which
         returns a typed ``publish_failed`` error.
@@ -330,7 +330,7 @@ class TypedFrameBus:
 
         Returns:
             An awaitable retiring this NATS subscription (the frame-turn runner
-            calls it when a task's steer lane ends — issue #76), or ``None``
+            calls it when a task's steer lane ends), or ``None``
             when the subscribe itself failed.
         """
 
@@ -371,7 +371,7 @@ class _StopSignal:
     """Records which signal requested shutdown, for the lifecycle initiator.
 
     The signal handler stamps ``name`` (e.g. ``"SIGTERM"``) so the shutdown
-    lifecycle frame (#84) can name its initiator ``"signal:<name>"``.
+    lifecycle frame can name its initiator ``"signal:<name>"``.
     """
 
     name: str | None = None
@@ -400,12 +400,12 @@ def _build_wake_service(
     bus: FrameBus,
     origin_provider: OriginProvider,
 ) -> WakeService | None:
-    """Build the wake service for a triage (waker) agent, or ``None`` (issue #93).
+    """Build the wake service for a triage (waker) agent, or ``None``.
 
     ``WakeConfig.from_env`` returns ``None`` when ``RTECH_WAKE_ALLOWED_AGENTS`` is
     unset/empty — that is the signal this agent is NOT a waker and the wake tool
     must not be exposed. When the allow-list IS set, the stack id is REQUIRED
-    (a wake frame must be stack-scoped, issue #75); a missing stack while wake is
+    (a wake frame must be stack-scoped); a missing stack while wake is
     requested fails closed loudly rather than minting undeliverable wakes.
 
     Args:
@@ -425,7 +425,7 @@ def _build_wake_service(
 
 
 def _attach_wake(engine: EngineSession, wake_service: WakeService | None) -> None:
-    """Attach the wake service to a Claude engine; fail loud on codex (issue #93).
+    """Attach the wake service to a Claude engine; fail loud on codex.
 
     Wake is a Claude-engine-only capability in this slice (conservative; the codex
     tool plumbing is deliberately deferred and additive later — see
@@ -451,7 +451,7 @@ def _attach_wake(engine: EngineSession, wake_service: WakeService | None) -> Non
         raise EngineSelectionError(
             "wake capability is Claude-engine-only in this slice, but the selected "
             f"engine is {type(engine).__name__}. Unset RTECH_WAKE_ALLOWED_AGENTS on "
-            "this non-Claude triage deploy, or select the claude engine (issue #93)."
+            "this non-Claude triage deploy, or select the claude engine."
         )
     engine.set_wake_service(wake_service)
 
@@ -462,7 +462,7 @@ async def _run() -> int:
     agent_id = resolve_agent_id().agent_id
     logger.info("agentd.run | starting | nats_url={} agent_id={}", url, agent_id)
 
-    # Resolve the per-agent source-owned config (#84). Missing -> env-only
+    # Resolve the per-agent source-owned config. Missing -> env-only
     # fallback (loudly logged), so nothing that ships today breaks.
     config = _resolve_agent_config(agent_id)
     engine_env = _engine_env_from_config(config) if config is not None else None
@@ -474,7 +474,7 @@ async def _run() -> int:
         return 2
     logger.info("agentd.run | engine selected kind={}", engine_kind)
 
-    # The wake service (issue #93) is wired after the runner exists (it needs the
+    # The wake service is wired after the runner exists (it needs the
     # runner's active-origin provider), then attached to BOTH the initial engine
     # and any rotation-fresh engine. Held in a one-slot list so the factory closure
     # below reads the value set later without a forward-reference dance.
@@ -485,8 +485,8 @@ async def _run() -> int:
 
         Uses the SAME config-derived env overlay as the initial build so a
         rotation swap keeps the manifest's engine kind/model, not a stray
-        process-env selection (#84). A wake-enabled triage agent re-attaches its
-        wake service so the rotated session keeps the ``wake_agent`` tool (#93).
+        process-env selection. A wake-enabled triage agent re-attaches its
+        wake service so the rotated session keeps the ``wake_agent`` tool.
         """
         fresh, _kind = build_engine(engine_env)
         _attach_wake(fresh, wake_holder[0])
@@ -521,7 +521,7 @@ async def _run() -> int:
             publisher=bus_conn.publish,
             system_prompt=system_prompt,
             # ToolsPolicy is left at the empty default: AgentConfig has no tools
-            # field today, so there is nothing to thread from config yet (#84).
+            # field today, so there is nothing to thread from config yet.
             tools_policy=ToolsPolicy(),
             engine_factory=_engine_factory,
         )
@@ -538,7 +538,7 @@ async def _run() -> int:
             ),
             memory=memory,
         )
-        # Wake capability (issue #93): only a triage agent whose deploy sets
+        # Wake capability: only a triage agent whose deploy sets
         # RTECH_WAKE_ALLOWED_AGENTS becomes a waker. The service reads the runner's
         # active-origin so a wake carries the triggering task's channel origin, and
         # is attached to the initial engine BEFORE start() so the tool registers.
@@ -549,7 +549,7 @@ async def _run() -> int:
         )
         _attach_wake(engine, wake_holder[0])
         if wake_holder[0] is not None:
-            # Wiring-level confirmation this agentd came up AS A WAKER (issue #93).
+            # Wiring-level confirmation this agentd came up AS A WAKER.
             # Guarded on a non-None service so THIS line stays silent for a non-waker
             # agent; when RTECH_WAKE_ALLOWED_AGENTS is absent WakeConfig.from_env still
             # logs its own "wake capability NOT exposed" info line (pre-existing).

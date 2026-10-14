@@ -134,7 +134,7 @@ def should_respond(
         logger.debug("gates.should_respond | drop=self")
         return False
 
-    # 2. Bot-author filter (BEFORE the human allowlist — Hermes #4466).
+    # 2. Bot-author filter (BEFORE the human allowlist).
     if msg.is_bot:
         if cfg.allow_bots is AllowBots.NONE:
             logger.debug("gates.should_respond | drop=bot allow_bots=none")
@@ -269,7 +269,7 @@ def intake_hit(
 ) -> bool:
     """Decide whether ``msg`` is an intake HIT to dispatch to the triage agent.
 
-    Intake is the always-on listener of issue #93. It is DETERMINISTIC: no LLM
+    Intake is the always-on intake listener. It is DETERMINISTIC: no LLM
     classification of raw channel chatter. Unlike :func:`should_respond`, a hit
     does NOT require an @mention of THIS bot — it fires on a mention of any
     configured trio member or a configured trigger — and it can widen beyond the
@@ -310,7 +310,7 @@ def intake_hit(
         logger.debug("gates.intake_hit | drop=self")
         return False
 
-    # Humans-only floor — identical bot policy to the responder (#93 keeps the
+    # Humans-only floor — identical bot policy to the responder (keeps the
     # DISCORD_ALLOW_BOTS baseline). Intake never relaxes it.
     if msg.is_bot:
         if gate_cfg.allow_bots is AllowBots.NONE:

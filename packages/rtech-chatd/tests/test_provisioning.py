@@ -5,7 +5,7 @@ No live account is touched. A single :class:`_FakeClient` routes every RPC the
 provisioning boundary issues (``CreateChannelRequest``, ``ToggleForumRequest``,
 ``InviteToChannelRequest``, ``EditAdminRequest``, ``ExportChatInviteRequest``,
 ``get_participants``, ``send_message``, and ``iter_dialogs``) so
-the recipe's branching is proven end-to-end without a socket (issue #110):
+the recipe's branching is proven end-to-end without a socket:
 
 * idempotent rerun — an existing owned megagroup by title is REUSED, not recreated;
 * canonical ``-100…`` id is what the result exposes;

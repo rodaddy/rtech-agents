@@ -22,7 +22,7 @@ FrameHandler = Callable[[bytes], Awaitable[None]]
 
 @pytest.fixture(autouse=True)
 def _stack_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Provide the REQUIRED stack id (issue #75): explicit dev id, test harness only."""
+    """Provide the REQUIRED stack id: explicit dev id, test harness only."""
 
     monkeypatch.setenv("RTECH_STACK_ID", "dev")
 
@@ -51,7 +51,7 @@ class FakeFrameBus:
     connected: bool = True
 
     def is_connected(self) -> bool:
-        """Report the fake transport's current connection state (issue #145).
+        """Report the fake transport's current connection state.
 
         The presence read consults this at every poll, so a test can flip it to
         ``False`` after subscribe to simulate a later connection drop.
@@ -395,7 +395,7 @@ def test_post_steer_mints_steer_frame_with_interrupt() -> None:
 
 
 def test_steer_default_target_is_the_frames_owned_broadcast_constant() -> None:
-    """The edge default rides the rtech-frames wire token, never its own literal (#76)."""
+    """The edge default rides the rtech-frames wire token, never its own literal."""
     from rtech_frames import BROADCAST_TARGET
     from rtech_webchat.api import DEFAULT_STEER_TARGET
 
@@ -536,7 +536,7 @@ def test_api_agents_drops_stale_seq_heartbeat() -> None:
 
 
 def test_api_agents_healthy_empty_pipeline_with_zero_agents() -> None:
-    """A reachable edge whose heartbeat feed is up reports healthy + empty (issue #145).
+    """A reachable edge whose heartbeat feed is up reports healthy + empty.
 
     This is the case Dash must NOT read as a broken pipeline: the subscription is
     established, so an empty agent list is authoritative (genuinely zero agents).
@@ -553,7 +553,7 @@ def test_api_agents_healthy_empty_pipeline_with_zero_agents() -> None:
 
 
 def test_api_agents_reports_subscription_failed_when_heartbeat_feed_down() -> None:
-    """A heartbeat subscription that fails is surfaced as subscription_failed (issue #145).
+    """A heartbeat subscription that fails is surfaced as subscription_failed.
 
     The edge stays reachable (HTTP 200) so Dash reads a typed verdict rather than
     a proxy failure; the empty list is explicitly NOT liveness truth here.
@@ -575,7 +575,7 @@ def test_api_agents_reports_subscription_failed_when_heartbeat_feed_down() -> No
 
 
 def test_api_agents_keeps_stale_agent_offline_on_healthy_pipeline() -> None:
-    """Known stale agents remain present and marked Offline on a healthy feed (issue #145).
+    """Known stale agents remain present and marked Offline on a healthy feed.
 
     A stale agent must not vanish: it stays in the list with ``alive=False`` while
     the pipeline is still ``healthy``, so Dash renders it Offline rather than gone.
@@ -603,7 +603,7 @@ def test_api_agents_keeps_stale_agent_offline_on_healthy_pipeline() -> None:
 
 
 def test_api_agents_flips_to_subscription_failed_on_later_connection_loss() -> None:
-    """A subscription proven healthy once re-derives failed if the feed later dies (issue #145).
+    """A subscription proven healthy once re-derives failed if the feed later dies.
 
     The bug was a one-shot verdict: mark_subscribed set healthy forever, so a
     severed heartbeat connection kept answering ``healthy`` (empty == zero agents)
@@ -633,7 +633,7 @@ def test_api_agents_flips_to_subscription_failed_on_later_connection_loss() -> N
 
 
 def test_api_agents_recovers_to_healthy_when_connection_returns() -> None:
-    """A reconnect re-derives healthy: the verdict tracks live transport (issue #145).
+    """A reconnect re-derives healthy: the verdict tracks live transport.
 
     Recovery is genuinely supported because the read re-evaluates the liveness
     probe every time; the pipeline is not latched failed once it flips.
@@ -653,7 +653,7 @@ def test_api_agents_recovers_to_healthy_when_connection_returns() -> None:
 
 
 def test_subscribe_failure_logs_type_only_never_credential_url() -> None:
-    """A failed heartbeat subscribe logs safe context + exception type, never str(exc) (issue #145).
+    """A failed heartbeat subscribe logs safe context + exception type, never str(exc).
 
     A NATS subscribe failure can carry the credential-bearing
     ``nats://user:pass@host`` URL in its message; that text must never reach a log
@@ -854,8 +854,7 @@ def test_replay_eviction_unsubscribes_old_task_buffer() -> None:
         }
     ]
     # ...but its result interest is retained: it is the completion mirror and
-    # must survive eviction so a later core-NATS result is still observed
-    # (issue #144).
+    # must survive eviction so a later core-NATS result is still observed.
     first_result_subscriptions = [
         subscription
         for subscription in bus.subscriptions
@@ -1236,7 +1235,7 @@ def test_v3_page_carries_keyed_fetch_and_destination_logic() -> None:
 
 
 def test_v3_page_fails_closed_on_untrusted_pipeline_verdict() -> None:
-    """The picker fails closed on an initial/absent/unrecognized verdict (issue #145).
+    """The picker fails closed on an initial/absent/unrecognized verdict.
 
     A 200 whose typed pipeline is missing or unrecognized must NOT be coerced to
     healthy: the empty roster would then read as the authoritative "No agents
@@ -1273,7 +1272,7 @@ def test_v3_page_preserves_auth_error_and_healthy_empty_paths() -> None:
     """The fail-closed verdict does not disturb the auth-error or healthy-empty paths.
 
     A 401 stays an auth error, and a genuine healthy pipeline with zero agents
-    still renders the authoritative "No agents online." (issue #145).
+    still renders the authoritative "No agents online.".
     """
 
     bus = FakeFrameBus()

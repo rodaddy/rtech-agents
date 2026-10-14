@@ -1,6 +1,6 @@
 """Assemble the runnable chatd **Telegram** long-poll edge service.
 
-This is the production entrypoint for a STANDALONE Telegram edge (issue #112):
+This is the production entrypoint for a STANDALONE Telegram edge:
 the long-poll adapter + multi-identity sender + intake sink wired to the NATS
 frame bus and the existing dumb-edge lifecycle. It composes ONLY the Telegram
 surface — it never builds a Discord adapter, an orchestrator, or an agentd. The
@@ -13,9 +13,9 @@ production root) and reuses the SAME identity-layer assembly the dev stack wires
 in ``scripts/dev_stack.py`` — there is a single Telegram protocol implementation,
 not a second divergent one. The multi-identity sender, intake sink ack/typing
 hooks, and identity-stamped debate render (``identity_send=True``,
-``attributed=False``) are preserved from the PR #122 baseline.
+``attributed=False``) are preserved from the baseline.
 
-Security floor (issue #78 / #112): the edge bot token and every per-identity
+Security floor: the edge bot token and every per-identity
 token arrive as ``*_ref`` indirections ONLY, never literals and never logged; a
 missing bot ref, missing/invalid group allowlist, or invalid identity map fails
 closed BEFORE any connection is opened. Long polling means there is NO inbound
@@ -92,10 +92,10 @@ class LifecycleBus(Protocol):
 ENV_STACK_ID = "RTECH_STACK_ID"
 ENV_NATS_URL = "RTECH_CHATD_NATS_URL"
 ENV_EDGE_TOKEN_REF = "RTECH_CHATD_TOKEN_REF"
-# Presence-notify wiring (issue #147). Both are non-secret operator knobs (a public
+# Presence-notify wiring. Both are non-secret operator knobs (a public
 # chat id and a public base URL), so — like the group allowlist — they are plain
 # values, never ``*_ref`` indirections. UNSET/blank => no presence notify (the edge
-# does not subscribe presence transitions), byte-identical to a pre-#147 deploy.
+# does not subscribe presence transitions), byte-identical to a earlier deploy.
 ENV_PRESENCE_NOTIFY_CHAT = "RTECH_TG_PRESENCE_NOTIFY_CHAT"
 ENV_DASH_BASE_URL = "RTECH_CHATD_DASH_BASE_URL"
 DEFAULT_EDGE_TOKEN_REF = "env:RTECH_CHATD_BOT_TOKEN"
@@ -119,7 +119,7 @@ class TgdServiceConfig:
     a mistakenly configured literal token never lands in an error or log line.
 
     Attributes:
-        stack: Required stack stamp (issue #75); the edge stamps every minted
+        stack: Required stack stamp; the edge stamps every minted
             TaskFrame with it and the orchestrator consumes only matching tasks.
         nats_url: NATS coordination URL (``nats://`` only).
         edge_token_ref: Indirection ref naming WHERE the polling bot token lives.
@@ -130,7 +130,7 @@ class TgdServiceConfig:
             standalone deploy must scope its blast radius, never accept every
             group (the dev stack tolerates an empty allowlist; production does
             not).
-        intake: Intake hit-gate config (issue #93); the debate roster and
+        intake: Intake hit-gate config; the debate roster and
             triage agent fail closed in :class:`IntakeConfig` when enabled.
         require_mention: Guild-channel mention requirement for the gate.
     """
@@ -142,7 +142,7 @@ class TgdServiceConfig:
     identity_refs: dict[str, str] = field(default_factory=dict)
     intake: IntakeConfig = field(default_factory=IntakeConfig)
     require_mention: bool = True
-    # Presence-notify operator chat id (issue #147), or None when unset (no presence
+    # Presence-notify operator chat id, or None when unset (no presence
     # notify). A public signed-integer chat id, NOT a secret — a plain value like the
     # group allowlist, never a ``*_ref``. A set-but-malformed value fails closed.
     presence_notify_chat: str | None = None
@@ -154,7 +154,7 @@ class TgdServiceConfig:
         if not self.stack or not self.stack.strip():
             raise ValueError(
                 "stack must be non-empty: the Telegram edge stamps every TaskFrame "
-                f"with its stack id (issue #75); set {ENV_STACK_ID} — there is no default"
+                f"with its stack id; set {ENV_STACK_ID} — there is no default"
             )
         if not self.nats_url.startswith("nats://"):
             raise ValueError(f"nats_url must be a nats:// URL, got {self.nats_url!r}")
@@ -201,7 +201,7 @@ class TgdServiceConfig:
         """Build the Telegram-edge service config from the environment (refs only).
 
         Vars (all refs/ids — never a literal token):
-            RTECH_STACK_ID: REQUIRED stack stamp (issue #75); no default.
+            RTECH_STACK_ID: REQUIRED stack stamp; no default.
             RTECH_CHATD_NATS_URL: NATS URL (default the live fleet bus).
             RTECH_CHATD_TOKEN_REF: polling-bot token ref (default
                 ``env:RTECH_CHATD_BOT_TOKEN``); a literal fails closed.
@@ -212,7 +212,7 @@ class TgdServiceConfig:
             RTECH_TG_POLL_TIMEOUT_S: getUpdates long-poll hold (see config).
             RTECH_CHATD_INTAKE_* / RTECH_CHATD_DEBATE_*: intake + debate roster.
             RTECH_TG_PRESENCE_NOTIFY_CHAT: operator chat id for presence
-                notifications (issue #147); UNSET disables them. A signed-integer
+                notifications; UNSET disables them. A signed-integer
                 chat id — a set-but-malformed value fails closed.
             RTECH_CHATD_DASH_BASE_URL: public Dash live-page base for the
                 notification link; empty renders the notification without a link.
@@ -226,7 +226,7 @@ class TgdServiceConfig:
         if not stack:
             raise ValueError(
                 f"{ENV_STACK_ID} must be set to this deployment's stack id "
-                "(issue #75); the Telegram edge never defaults to a shared literal"
+                "; the Telegram edge never defaults to a shared literal"
             )
         return cls(
             stack=stack,
@@ -262,7 +262,7 @@ def build_telegram_components(config: TgdServiceConfig) -> TelegramEdgeComponent
     This is the SINGLE Telegram assembly used by both this production entrypoint
     and ``scripts/dev_stack.py`` — the dev stack delegates here so there is one
     protocol implementation, not two divergent ones. The identity layer is
-    preserved from the PR #122 baseline: the intake sink's ack/typing hooks
+    preserved from the baseline: the intake sink's ack/typing hooks
     late-bind to the adapter through a cell, the sender's per-identity pool
     resolves token REFS at first use, and the edge renders debate turns
     identity-stamped (``identity_send=True``, ``attributed=False`` — the posting
@@ -307,7 +307,7 @@ def assemble_telegram_edge(
     this function only wires them. It opens no network — the bus is unconnected
     and the adapter builds its ``Bot`` lazily at :meth:`start`.
 
-    Interactive steer layer (issue #117): when intake is enabled, ONE shared
+    Interactive steer layer: when intake is enabled, ONE shared
     :class:`~rtech_chatd.telegram_callback.TelegramCallbackRegistry` backs both the
     inbound :class:`~rtech_chatd.callback_sink.TelegramCallbackSink` (wired into
     the adapter — it authorizes and consumes taps into typed steers) and the
@@ -348,7 +348,7 @@ def assemble_telegram_edge(
     # the buttons it attaches): a capability issued by the interaction must be the
     # SAME record the sink later reserves/commits, so they cannot own separate
     # registries. Only wired when intake is enabled — the interactive steer layer
-    # rides the debate render, which only a triage/intake edge runs (issue #117).
+    # rides the debate render, which only a triage/intake edge runs.
     callback_sink: TelegramCallbackSink | None = None
     turn_interaction: TelegramTurnInteraction | None = None
     if intake.enabled:
@@ -395,10 +395,10 @@ def assemble_telegram_edge(
         sender=sender,
     )
     adapter_cell.append(adapter)
-    # Presence notifications (issue #147) land in the configured operator chat as a
+    # Presence notifications land in the configured operator chat as a
     # plain chat-id target — no thread, no per-identity voice (the default polled
     # bot posts them). Unset => None target => the edge does not subscribe presence
-    # transitions (byte-identical to a pre-#147 deploy).
+    # transitions (byte-identical to a earlier deploy).
     presence_notify_target = (
         SendTarget(channel_id=presence_notify_chat) if presence_notify_chat is not None else None
     )

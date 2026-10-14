@@ -1,4 +1,4 @@
-"""Mint a Telethon user-session ``StringSession`` interactively (issue #110).
+"""Mint a Telethon user-session ``StringSession`` interactively.
 
 This is the in-app generator for a Telegram *user* session — the CLI entry point
 ``python -m rtech_chatd.mint_session`` (also installed as ``rtech-tg-session``).
@@ -53,7 +53,7 @@ Example:
 
 See Also:
     - rtech_chatd.user_session.config: the storage seam + fail-loud loader.
-    - rtech_chatd.telegram_adapter: the bot-token inbound edge (issue #108).
+    - rtech_chatd.telegram_adapter: the bot-token inbound edge.
 """
 
 from __future__ import annotations

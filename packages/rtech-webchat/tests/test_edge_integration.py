@@ -5,7 +5,7 @@ surface through :class:`fastapi.testclient.TestClient` and an in-memory
 :class:`FakeFrameBus`. Typed NATS frames remain the source of truth — the edge
 only mints, transports, and closes; ``done`` stays orchestrator-derived (the
 stream closes on the bus result frame, it never emits a ``done`` frame). This is
-the edge-integration coverage issue #143 asks for, layered over the unit-level
+the edge-integration coverage, layered over the unit-level
 assertions already in ``test_app.py`` by exercising the actual streaming SSE
 route over HTTP rather than the ``_stream_task_frames`` generator directly.
 """
@@ -46,7 +46,7 @@ API_KEY = "edge-secret-token"
 
 @pytest.fixture(autouse=True)
 def _stack_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Provide the REQUIRED stack id (issue #75); dev harness only."""
+    """Provide the REQUIRED stack id; dev harness only."""
 
     monkeypatch.setenv("RTECH_STACK_ID", "dev")
 
@@ -357,7 +357,7 @@ def test_post_steer_defaults_to_broadcast_target() -> None:
 def test_api_agents_returns_typed_presence_rows() -> None:
     """A heartbeat surfaces a typed presence row and a healthy pipeline verdict.
 
-    The successful lifespan subscribe marks the pipeline ``healthy`` (issue #145),
+    The successful lifespan subscribe marks the pipeline ``healthy``,
     so Dash reads a non-empty list as authoritative liveness. The body carries
     exactly the typed rows plus the typed ``pipeline`` field — no extra keys.
     """
@@ -387,7 +387,7 @@ def test_api_agents_keyed_edge_reports_subscription_failed_over_http() -> None:
     Unit coverage in ``test_app.py`` proves the verdict on the open edge; this
     layers the bearer-gated dash-dash origin edge on top: a failed subscribe still
     answers HTTP 200 with a valid bearer, so Dash reads the typed
-    ``subscription_failed`` verdict (issue #145) rather than a proxy failure or a
+    ``subscription_failed`` verdict rather than a proxy failure or a
     silent "zero agents" — the empty list is explicitly NOT liveness truth here.
     """
 

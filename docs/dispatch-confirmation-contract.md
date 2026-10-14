@@ -1,6 +1,6 @@
 # Dispatch-Confirmation Contract
 
-Issue #75 / PR #77 redesign (stop-rule on round-2 H1). This contract governs
+This contract governs
 when the orchestrator may record a participant as dispatched. It is the typed
 identity source for participant-scoped done derivation, so it must reflect
 reality: **dispatch is recorded ONLY after a confirmed hand-off to the server.**
@@ -85,8 +85,8 @@ The durable end-state is JetStream: each dispatch lane publish becomes a
 JetStream publish whose per-message **PubAck** is awaited before recording —
 at-least-once delivery to a durable consumer, with the stream deduplicating on
 `Nats-Msg-Id = <task_id>/<participant>` so the retry rule above stays safe.
-That Msg-Id layer remains future belt-and-suspenders work tracked in fleet-bus
-#125; the implemented consumer invariant is the current retry-safety boundary.
+That Msg-Id layer remains future belt-and-suspenders work in fleet-bus;
+the implemented consumer invariant is the current retry-safety boundary.
 
 The seam is already shaped for it: `confirm_publishes()` is the confirmation
 boundary. A JetStream-backed `FrameBus` awaits the PubAck inside
