@@ -140,7 +140,7 @@ class _FakeClient:
         ("-1001111111111", -1001111111111),  # marked id string -> int
         ("5000000001", 5000000001),
         (" -100 ", -100),  # trimmed
-        ("@Bilby_example_bot", "@Bilby_example_bot"),  # handle untouched
+        ("@Birk_example_bot", "@Birk_example_bot"),  # handle untouched
         (-1001111111111, -1001111111111),  # already int
     ],
 )
@@ -240,14 +240,14 @@ async def test_create_supergroup_returns_marked_id_and_adds_members() -> None:
     result = await create_supergroup(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        members=["@Bilby_example_bot", "@Skippy_example_bot", "@Nagatha_example_bot"],
+        members=["@Birk_example_bot", "@Sprocket_example_bot", "@Nimbus_example_bot"],
     )
     assert result.chat_id == "-1000000424242"  # get_peer_id marking
     assert result.title == "Trio Debate"
     assert result.added == [
-        "@Bilby_example_bot",
-        "@Skippy_example_bot",
-        "@Nagatha_example_bot",
+        "@Birk_example_bot",
+        "@Sprocket_example_bot",
+        "@Nimbus_example_bot",
     ]
     assert result.failed == {}
     assert len(client.invited) == 3
@@ -263,9 +263,9 @@ async def test_create_supergroup_records_failed_members_without_aborting() -> No
     result = await create_supergroup(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        members=["@Bilby_example_bot", "@ghost_bot"],
+        members=["@Birk_example_bot", "@ghost_bot"],
     )
-    assert result.added == ["@Bilby_example_bot"]
+    assert result.added == ["@Birk_example_bot"]
     assert "@ghost_bot" in result.failed
     # The good member still got added despite the bad one failing.
     assert len(client.invited) == 1
@@ -293,11 +293,11 @@ async def test_promote_admins_all_ok() -> None:
     results = await promote_admins(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Bilby_example_bot", "@Skippy_example_bot", "5000000001"],
+        ["@Birk_example_bot", "@Sprocket_example_bot", "5000000001"],
     )
     assert results == {
-        "@Bilby_example_bot": "ok",
-        "@Skippy_example_bot": "ok",
+        "@Birk_example_bot": "ok",
+        "@Sprocket_example_bot": "ok",
         "5000000001": "ok",
     }
     assert len(client.promoted) == 3
@@ -308,9 +308,9 @@ async def test_promote_admins_records_failures_without_aborting() -> None:
     results = await promote_admins(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Bilby_example_bot", "@ghost_bot"],
+        ["@Birk_example_bot", "@ghost_bot"],
     )
-    assert results["@Bilby_example_bot"] == "ok"
+    assert results["@Birk_example_bot"] == "ok"
     assert results["@ghost_bot"] != "ok"
     # The good member was still promoted despite the bad one failing.
     assert len(client.promoted) == 1

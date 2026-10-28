@@ -39,7 +39,7 @@ async def test_online_publish_failure_publishes_terminal_receipt_bus_first(
     assert result.state == "Failed"
     assert result.failure == "state_publish_failed"
     assert result.request_id == "req-1"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     # Bus-first: Starting AND the terminal state_publish_failed receipt are on the
     # wire — never Starting then silence.
     assert [(f.state, f.failure) for f in publisher.frames] == [
@@ -47,7 +47,7 @@ async def test_online_publish_failure_publishes_terminal_receipt_bus_first(
         ("Failed", "state_publish_failed"),
     ]
     # Ownership survives the publish failure for a probe-gated retry.
-    assert supervisor._pending_online == {"agentd-bilby"}  # noqa: SLF001
+    assert supervisor._pending_online == {"agentd-birk"}  # noqa: SLF001
 
 
 @pytest.mark.asyncio
@@ -75,8 +75,8 @@ async def test_online_publish_failure_recovers_when_probe_confirms_alive(
     # leaving pending ownership recorded.
     first = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert first.failure == "state_publish_failed"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
-    assert supervisor._pending_online == {"agentd-bilby"}  # noqa: SLF001
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
+    assert supervisor._pending_online == {"agentd-birk"}  # noqa: SLF001
 
     # The probe still confirms the process is alive; the retry short-circuits at
     # _already_online and re-publishes Online with no re-start.
@@ -84,7 +84,7 @@ async def test_online_publish_failure_recovers_when_probe_confirms_alive(
     second = await supervisor.start_agent(kit.request(request_id="req-2"))
     assert second.state == "Online"
     assert second.request_id == "req-2"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
 
 
 @pytest.mark.asyncio
@@ -111,7 +111,7 @@ async def test_pending_online_does_not_override_probe_down_after_crash(
 
     first = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert first.failure == "state_publish_failed"
-    assert supervisor._pending_online == {"agentd-bilby"}  # noqa: SLF001
+    assert supervisor._pending_online == {"agentd-birk"}  # noqa: SLF001
 
     # Process has crashed; probe now stays DOWN. The retry drops the stale claim
     # and does a REAL reconciliation start, re-confirmed alive afterward.
@@ -127,7 +127,7 @@ async def test_pending_online_does_not_override_probe_down_after_crash(
     assert second.request_id == "req-2"
     # A REAL reconciliation start happened — the stale pending claim did not
     # short-circuit into a synthesized Online.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert supervisor._pending_online == set()  # noqa: SLF001
 
 
@@ -155,7 +155,7 @@ async def test_pending_online_does_not_override_absent_probe(
 
     first = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert first.failure == "state_publish_failed"
-    assert supervisor._pending_online == {"agentd-bilby"}  # noqa: SLF001
+    assert supervisor._pending_online == {"agentd-birk"}  # noqa: SLF001
 
     # Swap in a probe that never confirms alive → the pending claim is unverifiable
     # and the post-start confirmation fails → liveness_unconfirmed, no false Online.
@@ -166,7 +166,7 @@ async def test_pending_online_does_not_override_absent_probe(
     assert second.state == "Failed"
     assert second.failure == "liveness_unconfirmed"
     # The stale pending claim was dropped and a real reconciliation start attempted.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby", "agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk", "agentd-birk"]
     assert supervisor._pending_online == set()  # noqa: SLF001
 
 
@@ -225,14 +225,14 @@ async def test_online_terminal_receipt_secondary_publish_failure_returns_truthfu
 
     assert result.state == "Failed"
     assert result.failure == "state_publish_failed"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     # Bounded: exactly one terminal Failed publish was attempted (no recursion).
     failed_attempts = [f for f in publisher.attempts if f.state == "Failed"]
     assert len(failed_attempts) == 1
     # Nothing durably landed on the bus for this attempt beyond Starting.
     assert [f.state for f in publisher.frames] == ["Starting"]
     # Ownership survives so a later probe-gated retry can still recover.
-    assert supervisor._pending_online == {"agentd-bilby"}  # noqa: SLF001
+    assert supervisor._pending_online == {"agentd-birk"}  # noqa: SLF001
 
 
 @pytest.mark.asyncio

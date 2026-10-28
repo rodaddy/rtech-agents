@@ -93,9 +93,9 @@ def safe_display_name(agent_id: str) -> str:
     """Clean a persona slug into a safe, title-cased human display name.
 
     The slug is normally the NATS-subject-safe token (``[A-Za-z0-9_-]+``, e.g.
-    ``skippy``, ``nagatha-2``, ``foo_bar``). ``-``/``_`` become spaces, each word is
-    title-cased, and surrounding whitespace is stripped: ``skippy`` -> ``Skippy``,
-    ``nagatha-2`` -> ``Nagatha 2``, ``foo_bar`` -> ``Foo Bar``.
+    ``sprocket``, ``nimbus-2``, ``foo_bar``). ``-``/``_`` become spaces, each word is
+    title-cased, and surrounding whitespace is stripped: ``sprocket`` -> ``Sprocket``,
+    ``nimbus-2`` -> ``Nimbus 2``, ``foo_bar`` -> ``Foo Bar``.
 
     DEFENSIVE: any character OUTSIDE the safe display vocabulary (letters, digits,
     space, ``.``, ``-``, ``_``) is dropped, so the output ALWAYS passes the frame's

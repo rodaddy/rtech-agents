@@ -128,8 +128,8 @@ def _resolve_manifest_path(root: Path, agent_id: str) -> Path | None:
     1. ``<root>/<agent_id>/agent.yaml`` — an exact-id directory (wins when both
        an exact-id and a slug dir exist).
     2. ``<root>/<slug>/agent.yaml`` where ``slug`` strips a leading ``agentd-``
-       prefix — the committed convention (dirs are slug-named ``agents/skippy``
-       while the systemd instance id is ``agentd-skippy``).
+       prefix — the committed convention (dirs are slug-named ``agents/sprocket``
+       while the systemd instance id is ``agentd-sprocket``).
 
     Returns:
         The resolved manifest path, or ``None`` when neither candidate exists.
@@ -157,8 +157,8 @@ def _resolve_agent_config(agent_id: str) -> AgentConfig | None:
 
     Convention: manifests live under ``<RTECH_AGENTS_ROOT>`` (root env-tunable,
     default ``./agents`` under the unit's WorkingDirectory). Directories are
-    SLUG-named (``agents/skippy``) while the systemd instance id is the full
-    ``agentd-skippy``; resolution therefore tries the exact id first, then the
+    SLUG-named (``agents/sprocket``) while the systemd instance id is the full
+    ``agentd-sprocket``; resolution therefore tries the exact id first, then the
     slug with a leading ``agentd-`` stripped (see :func:`_resolve_manifest_path`).
     A MISSING yaml is NOT an error — the entrypoint falls back to env-only
     behavior so nothing that ships today breaks; the fallback is logged loudly.
@@ -433,7 +433,7 @@ def _attach_wake(engine: EngineSession, wake_service: WakeService | None) -> Non
     for any engine. When wake IS requested but the selected engine is not a
     :class:`~rtech_agentd.claude_engine.ClaudeEngine`, we FAIL LOUD rather than
     silently drop the capability: a triage deploy that set the allow-list expects
-    a live wake tool, and a silent drop would look like Nagatha simply choosing
+    a live wake tool, and a silent drop would look like Nimbus simply choosing
     never to wake anyone.
 
     Args:

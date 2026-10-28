@@ -162,8 +162,8 @@ def test_attach_wake_on_non_claude_engine_fails_actionably(
 
     wake_service = WakeService(
         config=WakeConfig(
-            triage_agent="agentd-nagatha",
-            allowed_agents=frozenset({"agentd-bilby"}),
+            triage_agent="agentd-nimbus",
+            allowed_agents=frozenset({"agentd-birk"}),
             stack="dev-stack",
         ),
         bus=object(),  # type: ignore[arg-type]

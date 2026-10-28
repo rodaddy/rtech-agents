@@ -1166,7 +1166,7 @@ def test_task_registry_exposes_participants_for_destination() -> None:
             json={
                 "text": "Pair on this.",
                 "requester": "rico",
-                "participants": ["agentd-bilby", "agentd-mini"],
+                "participants": ["agentd-birk", "agentd-mini"],
             },
         )
         listed = client.get("/tasks")
@@ -1174,7 +1174,7 @@ def test_task_registry_exposes_participants_for_destination() -> None:
     assert minted.status_code == 200
     assert listed.status_code == 200
     item = listed.json()[0]
-    assert item["participants"] == ["agentd-bilby", "agentd-mini"]
+    assert item["participants"] == ["agentd-birk", "agentd-mini"]
     assert item["scope"] == "duo"
 
 

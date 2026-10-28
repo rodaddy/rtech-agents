@@ -59,7 +59,7 @@ def test_parse_accepts_empty_needs_from() -> None:
 
 def test_free_text_needs_from_is_blocked_at_the_parse_boundary() -> None:
     # Observed live (2026-07-17): the model put full SENTENCES in needs_from
-    # ("Bilby should identify..."). This is a malformed STANCE-SHAPED response:
+    # ("Birk should identify..."). This is a malformed STANCE-SHAPED response:
     # the field cannot be coerced (an empty needs_from would invent a false
     # TERMINAL claim ``is_done`` derives from) and the position cannot be trusted
     # as a substantive terminal turn. The parse-validity boundary classifies it
@@ -69,7 +69,7 @@ def test_free_text_needs_from_is_blocked_at_the_parse_boundary() -> None:
         {
             "position": "Dash should own control",
             "because": "one authoritative home",
-            "needs_from": ["Bilby should identify unique Discord value."],
+            "needs_from": ["Birk should identify unique Discord value."],
             "reply": "My position: Dash should own the operation.",
         }
     )
@@ -96,14 +96,14 @@ def test_valid_needs_from_preserves_non_terminal_stance() -> None:
         {
             "position": "Dash should own control",
             "because": "one authoritative home",
-            "needs_from": ["agentd-bilby", "agentd-skippy"],
+            "needs_from": ["agentd-birk", "agentd-sprocket"],
             "reply": "My position: Dash should own the operation.",
         }
     )
     stance, _verification, reply = parse_stance_output(raw)
     assert reply == "My position: Dash should own the operation."
     assert stance.position == "Dash should own control"
-    assert stance.needs_from == ["agentd-bilby", "agentd-skippy"]
+    assert stance.needs_from == ["agentd-birk", "agentd-sprocket"]
 
 
 def test_stance_shaped_blob_that_fails_to_parse_is_blocked() -> None:

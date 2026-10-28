@@ -131,7 +131,7 @@ def inbound_to_intake_task_frame(
         task_id: Caller-supplied unique task id.
         stack: Required stack-scope stamp; blank fails closed.
         triage_agent: The configured triage agent id (the deployed
-            ``agentd-<name>``, e.g. ``agentd-nagatha``); folded into
+            ``agentd-<name>``, e.g. ``agentd-nimbus``); folded into
             ``origin_edge`` so downstream logs/subjects name the destination.
         origin_edge: Edge label prefix (default ``chatd-intake``).
         scope: Task scope (default ``single`` — one triage turn).

@@ -16,26 +16,26 @@ from rtech_orchestrator.config import (
 
 def test_target_env_wins() -> None:
     """RTECH_TARGET_AGENT_ID is the primary source."""
-    assert resolve_target_agent_id(env={"RTECH_TARGET_AGENT_ID": "agentd-bilby"}) == "agentd-bilby"
+    assert resolve_target_agent_id(env={"RTECH_TARGET_AGENT_ID": "agentd-birk"}) == "agentd-birk"
 
 
 def test_single_agent_id_is_backcompat_alias() -> None:
     """RTECH_SINGLE_AGENT_ID still resolves when the primary var is absent."""
-    resolved = resolve_target_agent_id(env={"RTECH_SINGLE_AGENT_ID": "agentd-nagatha"})
-    assert resolved == "agentd-nagatha"
+    resolved = resolve_target_agent_id(env={"RTECH_SINGLE_AGENT_ID": "agentd-nimbus"})
+    assert resolved == "agentd-nimbus"
 
 
 def test_target_env_beats_alias() -> None:
     """The primary var wins over the back-compat alias when both are set."""
-    env = {"RTECH_TARGET_AGENT_ID": "agentd-bilby", "RTECH_SINGLE_AGENT_ID": "agentd-old"}
-    assert resolve_target_agent_id(env=env) == "agentd-bilby"
+    env = {"RTECH_TARGET_AGENT_ID": "agentd-birk", "RTECH_SINGLE_AGENT_ID": "agentd-old"}
+    assert resolve_target_agent_id(env=env) == "agentd-birk"
 
 
 def test_registry_resolves_single_entry(tmp_path: Path) -> None:
     """A JSON registry supplies the target when no env var is set."""
     reg = tmp_path / "agents.json"
-    reg.write_text(json.dumps({"single": "agentd-bilby"}), encoding="utf-8")
-    assert resolve_target_agent_id(env={"RTECH_AGENT_REGISTRY": str(reg)}) == "agentd-bilby"
+    reg.write_text(json.dumps({"single": "agentd-birk"}), encoding="utf-8")
+    assert resolve_target_agent_id(env={"RTECH_AGENT_REGISTRY": str(reg)}) == "agentd-birk"
 
 
 def test_unset_fails_loudly() -> None:
@@ -91,8 +91,8 @@ def test_bridged_agents_default_empty() -> None:
 def test_bridged_agents_parse_and_strip() -> None:
     from rtech_orchestrator import resolve_bridged_agents
 
-    resolved = resolve_bridged_agents({"RTECH_BRIDGED_AGENTS": " bilby , skippy "})
-    assert resolved == frozenset({"bilby", "skippy"})
+    resolved = resolve_bridged_agents({"RTECH_BRIDGED_AGENTS": " birk , sprocket "})
+    assert resolved == frozenset({"birk", "sprocket"})
 
 
 def test_bridged_agents_blank_fragment_rejected() -> None:
@@ -100,4 +100,4 @@ def test_bridged_agents_blank_fragment_rejected() -> None:
     from rtech_orchestrator import resolve_bridged_agents
 
     with pytest.raises(ValueError, match="blank id fragments"):
-        resolve_bridged_agents({"RTECH_BRIDGED_AGENTS": "bilby,,skippy"})
+        resolve_bridged_agents({"RTECH_BRIDGED_AGENTS": "birk,,sprocket"})

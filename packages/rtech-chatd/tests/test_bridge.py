@@ -87,12 +87,12 @@ def test_intake_mint_stamps_created_at_and_channel_identity() -> None:
         msg,
         task_id="intake-1",
         stack="dev",
-        triage_agent="nagatha",
+        triage_agent="nimbus",
     )
 
     assert isinstance(frame, TaskFrame)
     assert frame.id == "intake-1"
-    assert frame.origin_edge == f"{DEFAULT_INTAKE_ORIGIN_EDGE}:nagatha"
+    assert frame.origin_edge == f"{DEFAULT_INTAKE_ORIGIN_EDGE}:nimbus"
     assert frame.requester == "asker42"
     assert frame.text == "what is the deploy status"
     assert frame.scope == "single"
@@ -113,21 +113,21 @@ def test_intake_mint_stamps_created_at_and_channel_identity() -> None:
 def test_intake_debate_mint_stamps_arbiter_among_participants() -> None:
     # A debate mint stamps the arbiter role authority (the triage agent), which
     # must be one of the participants — TaskFrame validates that invariant.
-    trio = ["agentd-nagatha", "agentd-bilby", "agentd-iris"]
+    trio = ["agentd-nimbus", "agentd-birk", "agentd-iris"]
     frame = inbound_to_intake_task_frame(
         _inbound(guild_id="g", message_id="m"),
         task_id="deb-1",
         stack="dev",
-        triage_agent="agentd-nagatha",
+        triage_agent="agentd-nimbus",
         scope="trio",
         participants=trio,
         debate=True,
-        arbiter="agentd-nagatha",
+        arbiter="agentd-nimbus",
     )
     assert isinstance(frame, TaskFrame)
     assert frame.scope == "trio"
     assert frame.participants == trio
-    assert frame.arbiter == "agentd-nagatha"
+    assert frame.arbiter == "agentd-nimbus"
     assert frame.arbiter in frame.participants
     assert frame.origin is not None
     assert frame.origin.debate is True
@@ -139,7 +139,7 @@ def test_intake_mint_rejects_blank_stack() -> None:
             _inbound(guild_id="g", message_id="m"),
             task_id="intake-x",
             stack="  ",
-            triage_agent="nagatha",
+            triage_agent="nimbus",
         )
 
 
@@ -148,7 +148,7 @@ def test_intake_reply_target_returns_source_channel() -> None:
         _inbound(channel_id="chanZ", thread_id=None, message_id="msgZ", guild_id="g"),
         task_id="intake-3",
         stack="dev",
-        triage_agent="nagatha",
+        triage_agent="nimbus",
     )
     target = intake_reply_target(frame)
     assert target is not None
@@ -371,18 +371,18 @@ def test_inbound_rejects_blank_stack() -> None:
 def test_tldr_named_default_prefixes_agent() -> None:
     # Single-bot surfaces: the name prefix IS the attribution (earlier shape).
     frame = TurnFrame(
-        agent_id="agentd-nagatha",
+        agent_id="agentd-nimbus",
         task_id="t1",
         visible_text="long prose",
         stance=Stance(position="ship", because="green"),
     )
-    assert turn_frame_to_tldr(frame) == "**agentd-nagatha** — ship: green"
+    assert turn_frame_to_tldr(frame) == "**agentd-nimbus** — ship: green"
 
 
 def test_tldr_unnamed_drops_prefix_for_identity_send() -> None:
     # the posting bot IS the attribution — no ventriloquism prefix.
     frame = TurnFrame(
-        agent_id="agentd-nagatha",
+        agent_id="agentd-nimbus",
         task_id="t1",
         visible_text="long prose",
         stance=Stance(position="ship", because="green"),

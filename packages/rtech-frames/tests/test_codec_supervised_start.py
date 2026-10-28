@@ -33,9 +33,9 @@ from rtech_frames.frames import (
 @pytest.mark.parametrize(
     "frame",
     [
-        StartAgentFrame(request_id="start-1", agent_id="agentd-bilby", requester_id="operator-1"),
+        StartAgentFrame(request_id="start-1", agent_id="agentd-birk", requester_id="operator-1"),
         StartAllAgentsFrame(request_id="start-all-1", requester_id="operator-1"),
-        SupervisedAgentStateFrame(request_id="start-1", agent_id="agentd-bilby", state="Online"),
+        SupervisedAgentStateFrame(request_id="start-1", agent_id="agentd-birk", state="Online"),
     ],
 )
 def test_supervised_start_frame_round_trip(
@@ -51,21 +51,21 @@ def test_supervised_start_frames_are_typed_and_failure_guarded() -> None:
     """Start control carries no command/config and failures stay enumerated."""
     request = StartAgentFrame(
         request_id="start-1",
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         requester_id="operator-1",
     )
     assert json.loads(encode_frame(request).decode("utf-8"))["frame_type"] == "start_agent"
 
     failed = SupervisedAgentStateFrame(
         request_id="start-1",
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         state="Failed",
         failure="guard_rejected",
     )
     assert decode_frame(encode_frame(failed)) == failed
 
     with pytest.raises(ValueError, match="requires a typed failure code"):
-        SupervisedAgentStateFrame(request_id="start-1", agent_id="agentd-bilby", state="Failed")
+        SupervisedAgentStateFrame(request_id="start-1", agent_id="agentd-birk", state="Failed")
 
 
 def test_liveness_unconfirmed_is_a_typed_terminal_failure() -> None:
@@ -77,7 +77,7 @@ def test_liveness_unconfirmed_is_a_typed_terminal_failure() -> None:
     """
     unconfirmed = SupervisedAgentStateFrame(
         request_id="start-1",
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         state="Failed",
         failure="liveness_unconfirmed",
     )
@@ -86,7 +86,7 @@ def test_liveness_unconfirmed_is_a_typed_terminal_failure() -> None:
     with pytest.raises(ValueError, match="only failed supervised state may carry a failure code"):
         SupervisedAgentStateFrame(
             request_id="start-1",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             state="Online",
             failure="liveness_unconfirmed",
         )
@@ -101,7 +101,7 @@ _START_MODEL_FACTORIES = [
     (
         "StartAgentFrame",
         lambda request_id: StartAgentFrame(
-            request_id=request_id, agent_id="agentd-bilby", requester_id="operator-1"
+            request_id=request_id, agent_id="agentd-birk", requester_id="operator-1"
         ),
     ),
     (
@@ -111,7 +111,7 @@ _START_MODEL_FACTORIES = [
     (
         "SupervisedAgentStateFrame",
         lambda request_id: SupervisedAgentStateFrame(
-            request_id=request_id, agent_id="agentd-bilby", state="Online"
+            request_id=request_id, agent_id="agentd-birk", state="Online"
         ),
     ),
 ]
@@ -198,7 +198,7 @@ def test_encode_rejects_model_copy_oversized_nested_source_id() -> None:
         status="grounded", claim_kind="factual", ob_checked=True, sources=[good_source]
     )
     turn = TurnFrame(
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         task_id="task-1",
         visible_text="answer",
         stance=Stance(position="agree", because="checked"),
@@ -221,11 +221,9 @@ def test_encode_preserves_wire_bytes_for_a_valid_frame() -> None:
     Adding revalidation must not change the wire for a well-formed frame: a normal
     valid :class:`StartAgentFrame` encodes to the EXACT pre-fix expected bytes.
     """
-    valid = StartAgentFrame(
-        request_id="start-1", agent_id="agentd-bilby", requester_id="operator-1"
-    )
+    valid = StartAgentFrame(request_id="start-1", agent_id="agentd-birk", requester_id="operator-1")
     expected = (
-        b'{"agent_id":"agentd-bilby","frame_type":"start_agent",'
+        b'{"agent_id":"agentd-birk","frame_type":"start_agent",'
         b'"request_id":"start-1","requester_id":"operator-1","schema_version":"9"}'
     )
 

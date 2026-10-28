@@ -30,10 +30,10 @@ async def test_start_known_agent_publishes_starting_then_online(
     assert result.state == "Online"
     assert [frame.state for frame in publisher.frames] == ["Starting", "Online"]
     assert publisher.subjects == [
-        subjects.agent_supervised_state("agentd-bilby"),
-        subjects.agent_supervised_state("agentd-bilby"),
+        subjects.agent_supervised_state("agentd-birk"),
+        subjects.agent_supervised_state("agentd-birk"),
     ]
-    assert starter.started == [KnownAgent("agentd-bilby", "rtech-agentd@agentd-bilby")]
+    assert starter.started == [KnownAgent("agentd-birk", "rtech-agentd@agentd-birk")]
 
 
 @pytest.mark.asyncio
@@ -47,8 +47,8 @@ async def test_bulk_start_uses_only_server_side_known_agents(
         StartAllAgentsFrame(request_id="bulk-1", requester_id="operator-1")
     )
 
-    assert [frame.agent_id for frame in result] == ["agentd-bilby", "agentd-skippy"]
-    assert sorted(agent.agent_id for agent in starter.started) == ["agentd-bilby", "agentd-skippy"]
+    assert [frame.agent_id for frame in result] == ["agentd-birk", "agentd-sprocket"]
+    assert sorted(agent.agent_id for agent in starter.started) == ["agentd-birk", "agentd-sprocket"]
     assert sorted(frame.state for frame in publisher.frames) == [
         "Online",
         "Online",
@@ -93,7 +93,7 @@ async def test_duplicate_same_request_id_does_not_flood_receipts(
     )
 
     assert first == duplicate
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     # One shared receipt for the identical request id: no duplicate flood.
     assert [frame.state for frame in publisher.frames] == ["Starting", "Online"]
 
@@ -122,7 +122,7 @@ async def test_distinct_request_ids_each_get_their_own_terminal_receipt(
     )
 
     # Exactly one real start.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     # Each waiter got its OWN terminal Online receipt correlated to its request id.
     assert a.state == "Online" and a.request_id == "req-a"
     assert b.state == "Online" and b.request_id == "req-b"
@@ -149,29 +149,31 @@ async def test_bulk_racing_single_starts_each_agent_once_with_own_receipts(
         authorizer=kit.Authorizer(), guard=kit.Guard(), starter=starter
     )
 
-    bulk, single_bilby, single_skippy = await asyncio.gather(
+    bulk, single_birk, single_sprocket = await asyncio.gather(
         supervisor.start_all(StartAllAgentsFrame(request_id="bulk-1", requester_id="op")),
-        supervisor.start_agent(kit.request(request_id="single-1", agent_id="agentd-bilby")),
-        supervisor.start_agent(kit.request(request_id="single-2", agent_id="agentd-skippy")),
+        supervisor.start_agent(kit.request(request_id="single-1", agent_id="agentd-birk")),
+        supervisor.start_agent(kit.request(request_id="single-2", agent_id="agentd-sprocket")),
     )
 
     assert sorted(agent.agent_id for agent in starter.started) == [
-        "agentd-bilby",
-        "agentd-skippy",
+        "agentd-birk",
+        "agentd-sprocket",
     ]
     # Each distinct request id got its own correlated terminal for its agent.
     bulk_by_agent = {f.agent_id: f for f in bulk}
-    assert bulk_by_agent["agentd-bilby"].request_id == "bulk-1"
-    assert bulk_by_agent["agentd-skippy"].request_id == "bulk-1"
-    assert single_bilby.request_id == "single-1" and single_bilby.agent_id == "agentd-bilby"
-    assert single_skippy.request_id == "single-2" and single_skippy.agent_id == "agentd-skippy"
+    assert bulk_by_agent["agentd-birk"].request_id == "bulk-1"
+    assert bulk_by_agent["agentd-sprocket"].request_id == "bulk-1"
+    assert single_birk.request_id == "single-1" and single_birk.agent_id == "agentd-birk"
+    assert (
+        single_sprocket.request_id == "single-2" and single_sprocket.agent_id == "agentd-sprocket"
+    )
     # Every distinct (request_id, agent) pair has its own Online terminal on the bus.
     online = {(f.request_id, f.agent_id) for f in publisher.frames if f.state == "Online"}
     assert online == {
-        ("bulk-1", "agentd-bilby"),
-        ("bulk-1", "agentd-skippy"),
-        ("single-1", "agentd-bilby"),
-        ("single-2", "agentd-skippy"),
+        ("bulk-1", "agentd-birk"),
+        ("bulk-1", "agentd-sprocket"),
+        ("single-1", "agentd-birk"),
+        ("single-2", "agentd-sprocket"),
     }
 
 
@@ -186,7 +188,7 @@ async def test_inflight_cache_is_pruned_after_each_start(
     )
 
     await supervisor.start_agent(kit.request(request_id="req-1"))
-    await supervisor.start_agent(kit.request(request_id="req-2", agent_id="agentd-skippy"))
+    await supervisor.start_agent(kit.request(request_id="req-2", agent_id="agentd-sprocket"))
 
     for _ in range(4):
         await asyncio.sleep(0)
@@ -216,7 +218,7 @@ async def test_failed_start_is_not_cached_so_retry_reattempts(
     starter.fail = False
     second = await supervisor.start_agent(kit.request(request_id="req-2"))
     assert second.state == "Online"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby", "agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk", "agentd-birk"]
 
 
 @pytest.mark.asyncio
@@ -251,7 +253,7 @@ async def test_cancelling_one_waiter_does_not_cancel_the_shared_start(
     assert result.state == "Online"
     assert result.request_id == "req-2"
     # Exactly one real process start was shared by both pairs.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
 
     # Let the cancelled pair's shielded task, its terminal publish, and every
     # done-callback fully drain before counting receipts.
@@ -261,11 +263,11 @@ async def test_cancelling_one_waiter_does_not_cancel_the_shared_start(
     # Exactly one terminal bus receipt per pair — the cancelled pair AND the
     # survivor each land ONE Online terminal, with no duplicates.
     terminals = [(f.request_id, f.agent_id) for f in publisher.frames if f.state == "Online"]
-    assert sorted(terminals) == [("req-1", "agentd-bilby"), ("req-2", "agentd-bilby")]
+    assert sorted(terminals) == [("req-1", "agentd-birk"), ("req-2", "agentd-birk")]
     assert len(terminals) == len(set(terminals))
     # Each pair also got exactly one Starting breadcrumb — no duplicate flood.
     startings = [(f.request_id, f.agent_id) for f in publisher.frames if f.state == "Starting"]
-    assert sorted(startings) == [("req-1", "agentd-bilby"), ("req-2", "agentd-bilby")]
+    assert sorted(startings) == [("req-1", "agentd-birk"), ("req-2", "agentd-birk")]
     # All bounded maps are pruned once the terminal outcomes drain.
     assert supervisor._inflight == {}  # noqa: SLF001
     assert supervisor._inflight_requests == {}  # noqa: SLF001

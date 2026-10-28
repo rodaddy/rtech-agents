@@ -821,7 +821,7 @@ def _external_turn_bytes(
     *,
     origin: ChannelOrigin | None,
     needs_from: list[str] | None = None,
-    agent_id: str = "nagatha",
+    agent_id: str = "nimbus",
     position: str = "answered",
     because: str = "checked",
     verification: VerificationReport | None = None,
@@ -852,7 +852,7 @@ def _external_seen_key(
     visible_text: str,
     *,
     origin: ChannelOrigin | None,
-    agent_id: str = "nagatha",
+    agent_id: str = "nimbus",
     position: str = "answered",
     because: str = "checked",
 ) -> tuple[str, ...]:
@@ -1056,11 +1056,11 @@ async def test_external_two_agents_same_text_both_post() -> None:
     origin = ChannelOrigin(channel_id="chan-Q", message_id="msg-Q")
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("ext-multi", "agreed", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("ext-multi", "agreed", origin=origin, agent_id="nimbus"),
     )
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("ext-multi", "agreed", origin=origin, agent_id="bilby"),
+        _external_turn_bytes("ext-multi", "agreed", origin=origin, agent_id="birk"),
     )
 
     assert len(adapter.sent) == 2
@@ -1084,14 +1084,14 @@ async def test_debate_same_agent_changed_final_renders_distinctly() -> None:
     origin = _debate_origin()
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-rw", "first wording", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("deb-rw", "first wording", origin=origin, agent_id="nimbus"),
     )
     assert len(adapter.sent) == 2  # first turn: TLDR + full
     # Same (task, agent), DIFFERENT text: a distinct terminal turn, so it renders
     # its own TLDR + full (the digest key no longer collapses distinct content).
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-rw", "reworded final", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("deb-rw", "reworded final", origin=origin, agent_id="nimbus"),
     )
     assert len(adapter.sent) == 4  # second distinct turn: another TLDR + full
     # The full text of the second turn is the reworded content (not the first's).
@@ -1127,8 +1127,8 @@ async def test_debate_three_participants_render_tldr_and_per_agent_threads() -> 
 
     origin = _debate_origin()
     for agent, pos, why, full in (
-        ("nagatha", "ship", "the pipeline is green", "Full reasoning from nagatha."),
-        ("bilby", "hold", "coverage dipped", "Full reasoning from bilby."),
+        ("nimbus", "ship", "the pipeline is green", "Full reasoning from nimbus."),
+        ("birk", "hold", "coverage dipped", "Full reasoning from birk."),
         ("iris", "ship", "risk is bounded", "Full reasoning from iris."),
     ):
         await bus.emit(
@@ -1144,12 +1144,12 @@ async def test_debate_three_participants_render_tldr_and_per_agent_threads() -> 
     # so the exact (anchor, name) pairing proves per-agent anchoring — a
     # cross-keyed anchor write would break this even if the id SETS matched.
     assert adapter.thread_calls == [
-        ("chan-Q", "sent-1", "nagatha — full thought"),
-        ("chan-Q", "sent-3", "bilby — full thought"),
+        ("chan-Q", "sent-1", "nimbus — full thought"),
+        ("chan-Q", "sent-3", "birk — full thought"),
         ("chan-Q", "sent-5", "iris — full thought"),
     ]
-    assert adapter.sent[0][1].startswith("**nagatha**")  # sent-1 IS nagatha's TLDR
-    assert adapter.sent[2][1].startswith("**bilby**")  # sent-3 IS bilby's TLDR
+    assert adapter.sent[0][1].startswith("**nimbus**")  # sent-1 IS nimbus's TLDR
+    assert adapter.sent[2][1].startswith("**birk**")  # sent-3 IS birk's TLDR
     assert adapter.sent[4][1].startswith("**iris**")  # sent-5 IS iris's TLDR
     # 3 participants -> 6 dispatches (a channel TLDR + an in-thread full each).
     assert len(adapter.sent) == 6
@@ -1159,15 +1159,15 @@ async def test_debate_three_participants_render_tldr_and_per_agent_threads() -> 
     assert len(thread_posts) == 3
     # TLDRs are short, stance-derived, agent-prefixed, and PLAIN (no reply ref).
     tldr_texts = {txt for _, txt in channel_posts}
-    assert "**nagatha** — ship: the pipeline is green" in tldr_texts
-    assert "**bilby** — hold: coverage dipped" in tldr_texts
+    assert "**nimbus** — ship: the pipeline is green" in tldr_texts
+    assert "**birk** — hold: coverage dipped" in tldr_texts
     assert all(t.reply_to is None for t, _ in channel_posts)
     # Each full landed in its OWN thread (three distinct thread ids), each thread
     # anchored on that agent's TLDR message.
     assert len({t.thread_id for t, _ in thread_posts}) == 3
     assert {txt for _, txt in thread_posts} == {
-        "Full reasoning from nagatha.",
-        "Full reasoning from bilby.",
+        "Full reasoning from nimbus.",
+        "Full reasoning from birk.",
         "Full reasoning from iris.",
     }
 
@@ -1201,7 +1201,7 @@ async def test_debate_verification_metadata_renders_only_in_full_thought() -> No
             "deb-evidence",
             "Full verification-aware reasoning.",
             origin=_debate_origin(),
-            agent_id="nagatha",
+            agent_id="nimbus",
             position="ship",
             because="the source supports the change",
             verification=verification,
@@ -1234,11 +1234,11 @@ async def test_debate_cap_closing_turn_renders_one_closing_post() -> None:
     origin = _debate_origin()
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-2", "n final", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("deb-2", "n final", origin=origin, agent_id="nimbus"),
     )
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-2", "b final", origin=origin, agent_id="bilby"),
+        _external_turn_bytes("deb-2", "b final", origin=origin, agent_id="birk"),
     )
     channel_before = [t for t, _ in adapter.sent if t.thread_id is None]
     assert len(channel_before) == 2
@@ -1249,7 +1249,7 @@ async def test_debate_cap_closing_turn_renders_one_closing_post() -> None:
             "deb-2",
             "This position stands as final: budget reached.",
             origin=origin,
-            agent_id="nagatha-closing",
+            agent_id="nimbus-closing",
             position="ship",
             because="round budget reached",
         ),
@@ -1269,7 +1269,7 @@ async def test_debate_non_terminal_round_posts_nothing() -> None:
     await bus.emit(
         TURN_WILDCARD,
         _external_turn_bytes(
-            "deb-3", "round one", origin=origin, agent_id="nagatha", needs_from=["bilby"]
+            "deb-3", "round one", origin=origin, agent_id="nimbus", needs_from=["birk"]
         ),
     )
     assert adapter.sent == []
@@ -1289,7 +1289,7 @@ async def test_debate_terminates_bounded_channel_posts() -> None:
     await edge.run_inbound()
 
     origin = _debate_origin()
-    participants = ("nagatha", "bilby", "iris")
+    participants = ("nimbus", "birk", "iris")
     # Each participant's final, plus a redelivery of each (must collapse).
     for agent in participants:
         payload = _external_turn_bytes("deb-4", f"{agent} final", origin=origin, agent_id=agent)
@@ -1298,7 +1298,7 @@ async def test_debate_terminates_bounded_channel_posts() -> None:
     # One closing turn.
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-4", "final stands", origin=origin, agent_id="nagatha-closing"),
+        _external_turn_bytes("deb-4", "final stands", origin=origin, agent_id="nimbus-closing"),
     )
     channel_posts = [t for t, _ in adapter.sent if t.thread_id is None]
     # N participants + at most 1 closing == 4, never more.
@@ -1314,14 +1314,14 @@ async def test_debate_thread_create_failure_degrades_full_to_channel() -> None:
     per (task, agent) so it is not retried on redelivery — while a DIFFERENT
     agent still gets its own create attempt (UX v2: one thread per agent).
     """
-    # Seed a None so the FIRST create_thread call (nagatha's) fails.
+    # Seed a None so the FIRST create_thread call (nimbus's) fails.
     adapter = FakeAdapter(inbound=[], thread_ids=[None])
     bus = FakeFrameBus()
     edge = _intake_edge(adapter, bus)
     await edge.run_inbound()
 
     origin = _debate_origin()
-    payload = _external_turn_bytes("deb-5", "full body", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("deb-5", "full body", origin=origin, agent_id="nimbus")
     await bus.emit(TURN_WILDCARD, payload)
     # TLDR + full, both to the parent channel (thread create failed).
     assert len(adapter.sent) == 2
@@ -1337,14 +1337,14 @@ async def test_debate_thread_create_failure_degrades_full_to_channel() -> None:
     assert len(adapter.sent) == 2
 
     # A SECOND participant gets its OWN create attempt (per-agent threads); the
-    # default fake create succeeds, so bilby's full lands in bilby's thread.
+    # default fake create succeeds, so birk's full lands in birk's thread.
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("deb-5", "more body", origin=origin, agent_id="bilby"),
+        _external_turn_bytes("deb-5", "more body", origin=origin, agent_id="birk"),
     )
     assert len(adapter.thread_calls) == 2
-    bilby_thread_posts = [txt for t, txt in adapter.sent if t.thread_id is not None]
-    assert bilby_thread_posts == ["more body"]
+    birk_thread_posts = [txt for t, txt in adapter.sent if t.thread_id is not None]
+    assert birk_thread_posts == ["more body"]
 
 
 async def test_non_debate_same_agent_changed_terminal_renders_distinctly() -> None:
@@ -1365,20 +1365,20 @@ async def test_non_debate_same_agent_changed_terminal_renders_distinctly() -> No
     # First terminal answer 'main' lands.
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("mainmain-1", "main", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("mainmain-1", "main", origin=origin, agent_id="nimbus"),
     )
     assert [txt for _, txt in adapter.sent] == ["main"]
     # Same (task, agent), CHANGED text 'mainmain': a distinct terminal turn, so it
     # renders (the digest differs from the first).
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("mainmain-1", "mainmain", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("mainmain-1", "mainmain", origin=origin, agent_id="nimbus"),
     )
     assert [txt for _, txt in adapter.sent] == ["main", "mainmain"]
     # A BYTE-IDENTICAL redelivery of the first collapses (shares its digest key).
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("mainmain-1", "main", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("mainmain-1", "main", origin=origin, agent_id="nimbus"),
     )
     assert [txt for _, txt in adapter.sent] == ["main", "mainmain"]
 
@@ -1395,13 +1395,13 @@ async def test_non_debate_exact_duplicate_collapses_to_one() -> None:
     await edge.run_inbound()
 
     origin = ChannelOrigin(channel_id="chan-Q", message_id="msg-Q")  # debate=False
-    payload = _external_turn_bytes("dup-1", "same answer", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("dup-1", "same answer", origin=origin, agent_id="nimbus")
     await bus.emit(TURN_WILDCARD, payload)
     await bus.emit(TURN_WILDCARD, payload)
     await bus.emit(TURN_WILDCARD, payload)
     assert [txt for _, txt in adapter.sent] == ["same answer"]
     # The shared key carries a single completed record.
-    key = _external_seen_key("dup-1", "same answer", origin=origin, agent_id="nagatha")
+    key = _external_seen_key("dup-1", "same answer", origin=origin, agent_id="nimbus")
     assert edge._external_seen[key].pieces == {"full"}
 
 
@@ -1413,7 +1413,7 @@ async def test_debate_exact_duplicate_collapses_to_one() -> None:
     await edge.run_inbound()
 
     origin = _debate_origin()
-    payload = _external_turn_bytes("deb-dup", "final answer", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("deb-dup", "final answer", origin=origin, agent_id="nimbus")
     await bus.emit(TURN_WILDCARD, payload)
     assert len(adapter.sent) == 2  # TLDR + full
     await bus.emit(TURN_WILDCARD, payload)
@@ -1438,14 +1438,14 @@ async def test_non_debate_guard_suppression_releases_external_dedup_reservation(
     origin = ChannelOrigin(channel_id="chan-Q", message_id="msg-Q")
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("suppressed-1", "suppressed", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("suppressed-1", "suppressed", origin=origin, agent_id="nimbus"),
     )
     assert adapter.sent == []
     assert edge._external_seen == {}
 
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("suppressed-1", "valid", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("suppressed-1", "valid", origin=origin, agent_id="nimbus"),
     )
     assert [text for _, text in adapter.sent] == ["valid"]
 
@@ -1459,14 +1459,14 @@ async def test_changed_terminal_frame_keys_distinctly_from_original() -> None:
     the original's progress record; a byte-identical turn maps to the SAME key.
     """
     origin = _debate_origin()
-    first = _external_seen_key("k-1", "main", origin=origin, agent_id="nagatha")
-    changed = _external_seen_key("k-1", "mainmain", origin=origin, agent_id="nagatha")
-    same = _external_seen_key("k-1", "main", origin=origin, agent_id="nagatha")
+    first = _external_seen_key("k-1", "main", origin=origin, agent_id="nimbus")
+    changed = _external_seen_key("k-1", "mainmain", origin=origin, agent_id="nimbus")
+    same = _external_seen_key("k-1", "main", origin=origin, agent_id="nimbus")
     assert first != changed  # changed content → distinct key → renders distinctly
     assert first == same  # byte-identical → shared key → collapses
     # task_id stays key[0] (eviction cleanup) and agent_id stays key[1].
     assert first[0] == "k-1"
-    assert first[1] == "nagatha"
+    assert first[1] == "nimbus"
 
 
 async def test_non_debate_send_failure_redelivery_retries() -> None:
@@ -1500,7 +1500,7 @@ async def test_non_debate_send_failure_redelivery_retries() -> None:
     # seen-set stays empty so a redelivery can retry.
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nimbus"),
     )
     assert adapter.sent == []
     assert edge._external_seen == {}
@@ -1508,7 +1508,7 @@ async def test_non_debate_send_failure_redelivery_retries() -> None:
     # Redelivery: the send now lands (retry semantics preserved).
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nimbus"),
     )
     assert [txt for _, txt in adapter.sent] == ["main"]
 
@@ -1516,7 +1516,7 @@ async def test_non_debate_send_failure_redelivery_retries() -> None:
     # under this turn's shared digest key.
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("nd-retry", "main", origin=origin, agent_id="nimbus"),
     )
     assert [txt for _, txt in adapter.sent] == ["main"]
 
@@ -1557,8 +1557,8 @@ async def test_chunked_full_redelivery_resumes_monotonically_and_clears_cursor()
     edge = _intake_edge(adapter, bus)
     await edge.run_inbound()
     origin = ChannelOrigin(channel_id="chan-Q", message_id="msg-Q")
-    payload = _external_turn_bytes("chunk-retry", "full body", origin=origin, agent_id="nagatha")
-    key = _external_seen_key("chunk-retry", "full body", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("chunk-retry", "full body", origin=origin, agent_id="nimbus")
+    key = _external_seen_key("chunk-retry", "full body", origin=origin, agent_id="nimbus")
 
     await bus.emit(TURN_WILDCARD, payload)
     progress = edge._external_seen[key]
@@ -1596,11 +1596,11 @@ async def test_chunked_full_first_chunk_failure_retains_zero_cursor() -> None:
     edge = _intake_edge(adapter, bus)
     await edge.run_inbound()
     origin = ChannelOrigin(channel_id="chan-Q", message_id="msg-Q")
-    key = _external_seen_key("chunk-zero", "full body", origin=origin, agent_id="nagatha")
+    key = _external_seen_key("chunk-zero", "full body", origin=origin, agent_id="nimbus")
 
     await bus.emit(
         TURN_WILDCARD,
-        _external_turn_bytes("chunk-zero", "full body", origin=origin, agent_id="nagatha"),
+        _external_turn_bytes("chunk-zero", "full body", origin=origin, agent_id="nimbus"),
     )
 
     progress = edge._external_seen[key]
@@ -1635,7 +1635,7 @@ async def test_debate_full_send_failure_redelivery_reposts_only_full() -> None:
     await edge.run_inbound()
 
     origin = _debate_origin()
-    payload = _external_turn_bytes("deb-pf", "full body", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("deb-pf", "full body", origin=origin, agent_id="nimbus")
 
     # First delivery: TLDR lands (parent channel), full (thread) raises.
     await bus.emit(TURN_WILDCARD, payload)
@@ -1679,7 +1679,7 @@ async def test_debate_full_failure_then_thread_unusable_falls_back_to_channel() 
     await edge.run_inbound()
 
     origin = _debate_origin()
-    payload = _external_turn_bytes("deb-tf", "full body", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("deb-tf", "full body", origin=origin, agent_id="nimbus")
 
     # First delivery: TLDR lands, thread full raises -> full stays unmarked.
     await bus.emit(TURN_WILDCARD, payload)
@@ -1689,7 +1689,7 @@ async def test_debate_full_failure_then_thread_unusable_falls_back_to_channel() 
     # A second delivery still fails the thread send. To model the last-resort
     # parent fallback we now make the thread unavailable (create returns None):
     # the full degrades to the parent channel and lands.
-    edge._debate_threads[("deb-tf", "nagatha")] = None  # unusable -> parent fallback
+    edge._debate_threads[("deb-tf", "nimbus")] = None  # unusable -> parent fallback
     await bus.emit(TURN_WILDCARD, payload)
     # TLDR posted exactly once; the full text landed in the parent channel.
     assert [txt for _, txt in adapter.sent].count(tldr_text) == 1
@@ -1759,11 +1759,11 @@ async def test_debate_concurrent_agents_each_get_own_thread() -> None:
     await asyncio.gather(
         bus.emit(
             TURN_WILDCARD,
-            _external_turn_bytes("deb-race", "nagatha full", origin=origin, agent_id="nagatha"),
+            _external_turn_bytes("deb-race", "nimbus full", origin=origin, agent_id="nimbus"),
         ),
         bus.emit(
             TURN_WILDCARD,
-            _external_turn_bytes("deb-race", "bilby full", origin=origin, agent_id="bilby"),
+            _external_turn_bytes("deb-race", "birk full", origin=origin, agent_id="birk"),
         ),
     )
     assert len(adapter.thread_calls) == 2
@@ -1776,7 +1776,7 @@ async def test_debate_concurrent_agents_each_get_own_thread() -> None:
         assert anchored_target.thread_id is None  # anchored on a channel TLDR
         assert anchored_text.startswith(f"**{agent}**")
     thread_posts = [(t.thread_id, txt) for t, txt in adapter.sent if t.thread_id is not None]
-    assert {txt for _, txt in thread_posts} == {"nagatha full", "bilby full"}
+    assert {txt for _, txt in thread_posts} == {"nimbus full", "birk full"}
     assert len({tid for tid, _ in thread_posts}) == 2
 
 
@@ -1811,19 +1811,19 @@ async def test_debate_concurrent_same_agent_deliveries_create_one_thread() -> No
     await edge.run_inbound()
 
     origin = _debate_origin()
-    payload = _external_turn_bytes("deb-dup", "nagatha full", origin=origin, agent_id="nagatha")
+    payload = _external_turn_bytes("deb-dup", "nimbus full", origin=origin, agent_id="nimbus")
     await asyncio.gather(bus.emit(TURN_WILDCARD, payload), bus.emit(TURN_WILDCARD, payload))
     assert len(adapter.thread_calls) == 1
     assert len(adapter.sent) == 2  # one TLDR + one full
     # The full text landed IN the created thread (not degraded to the channel),
     # and the thread is anchored on the TLDR message that actually landed.
     tldr_anchor = adapter.thread_calls[0][1]
-    full_sends = [(t, txt) for t, txt in adapter.sent if txt == "nagatha full"]
+    full_sends = [(t, txt) for t, txt in adapter.sent if txt == "nimbus full"]
     assert full_sends == [
-        (SendTarget(channel_id="chan-Q", thread_id=f"thread-for-{tldr_anchor}"), "nagatha full")
+        (SendTarget(channel_id="chan-Q", thread_id=f"thread-for-{tldr_anchor}"), "nimbus full")
     ]
     # The cache holds a REAL thread id for this key — never a poisoned None.
-    assert edge._debate_threads[("deb-dup", "nagatha")] == f"thread-for-{tldr_anchor}"
+    assert edge._debate_threads[("deb-dup", "nimbus")] == f"thread-for-{tldr_anchor}"
 
 
 async def test_debate_fifth_distinct_agent_tldr_suppressed_full_still_routes() -> None:
@@ -1840,7 +1840,7 @@ async def test_debate_fifth_distinct_agent_tldr_suppressed_full_still_routes() -
     await edge.run_inbound()
 
     origin = _debate_origin()
-    agents = ["nagatha", "bilby", "iris", "closing"]
+    agents = ["nimbus", "birk", "iris", "closing"]
     for agent in agents:
         await bus.emit(
             TURN_WILDCARD,
@@ -1888,9 +1888,9 @@ async def test_identity_send_debate_stamps_agent_and_drops_name_prefix() -> None
         TURN_WILDCARD,
         _external_turn_bytes(
             "deb-id",
-            "Full reasoning from nagatha.",
+            "Full reasoning from nimbus.",
             origin=origin,
-            agent_id="agentd-nagatha",
+            agent_id="agentd-nimbus",
             position="ship",
             because="the pipeline is green",
         ),
@@ -1900,17 +1900,17 @@ async def test_identity_send_debate_stamps_agent_and_drops_name_prefix() -> None
     tldr_target, tldr_text = adapter.sent[0]
     full_target, full_text = adapter.sent[1]
     # Both pieces voiced as the turn's author.
-    assert tldr_target.as_agent == "agentd-nagatha"
-    assert full_target.as_agent == "agentd-nagatha"
+    assert tldr_target.as_agent == "agentd-nimbus"
+    assert full_target.as_agent == "agentd-nimbus"
     # TLDR is stance-derived and UNNAMED (no ventriloquism prefix).
     assert tldr_text == "ship: the pipeline is green"
-    assert full_text == "Full reasoning from nagatha."
+    assert full_text == "Full reasoning from nimbus."
     # The agent's typing indicator was stopped at terminal render, keyed to the
     # same voiced identity in the origin channel.
     stops = [(t, on) for t, on in adapter.typing_calls if on is False]
     assert len(stops) == 1
     assert stops[0][0].channel_id == "chan-Q"
-    assert stops[0][0].as_agent == "agentd-nagatha"
+    assert stops[0][0].as_agent == "agentd-nimbus"
 
 
 async def test_identity_send_off_keeps_named_tldr_and_unstamped_targets() -> None:
@@ -1927,7 +1927,7 @@ async def test_identity_send_off_keeps_named_tldr_and_unstamped_targets() -> Non
             "deb-off",
             "Full reasoning.",
             origin=origin,
-            agent_id="agentd-nagatha",
+            agent_id="agentd-nimbus",
             position="ship",
             because="green",
         ),
@@ -1937,7 +1937,7 @@ async def test_identity_send_off_keeps_named_tldr_and_unstamped_targets() -> Non
     tldr_target, tldr_text = adapter.sent[0]
     assert tldr_target.as_agent is None
     assert adapter.sent[1][0].as_agent is None
-    assert tldr_text == "**agentd-nagatha** — ship: green"
+    assert tldr_text == "**agentd-nimbus** — ship: green"
     # No typing stop is issued on the default path.
     assert adapter.typing_calls == []
 
@@ -1975,7 +1975,7 @@ async def test_turn_interaction_hook_failure_never_logs_raw_exception_text() -> 
         turn_interaction=_LeakingTurnInteraction(),  # type: ignore[arg-type]
     )
     frame = TurnFrame(
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         task_id="task-9",
         visible_text="Full reasoning.",
         stance=Stance(position="ship", because="green"),
@@ -1998,4 +1998,4 @@ async def test_turn_interaction_hook_failure_never_logs_raw_exception_text() -> 
     assert "nats://" not in joined
     assert "RuntimeError" in joined
     assert "task-9" in joined
-    assert "agentd-bilby" in joined
+    assert "agentd-birk" in joined

@@ -239,8 +239,8 @@ def _bad_request(message: str) -> TelegramBadRequest:
 
 def _sender(
     *,
-    nagatha: FakeBot | None = None,
-    bilby: FakeBot | None = None,
+    nimbus: FakeBot | None = None,
+    birk: FakeBot | None = None,
     default: FakeBot | None = None,
     limiter: TelegramRateLimiter | None = None,
 ) -> tuple[TelegramSender, dict[str, FakeBot]]:
@@ -250,8 +250,8 @@ def _sender(
     assert WHICH identity's token produced the client that sent a message.
     """
     built: dict[str, FakeBot] = {}
-    n_bot = nagatha or FakeBot()
-    b_bot = bilby or FakeBot()
+    n_bot = nimbus or FakeBot()
+    b_bot = birk or FakeBot()
     d_bot = default or FakeBot()
 
     def factory(token: str) -> FakeBot:
@@ -262,8 +262,8 @@ def _sender(
 
     sender = TelegramSender(
         identity_token_providers={
-            "agentd-nagatha": lambda: "tok-n",
-            "agentd-bilby": lambda: "tok-b",
+            "agentd-nimbus": lambda: "tok-n",
+            "agentd-birk": lambda: "tok-b",
         },
         rate_limiter=limiter or _fake_limiter(),
         bot_factory=factory,  # type: ignore[arg-type]
@@ -276,12 +276,12 @@ def _sender(
 
 
 def test_send_as_agent_uses_that_agents_bot() -> None:
-    nagatha = FakeBot()
-    sender, built = _sender(nagatha=nagatha)
-    target = SendTarget(channel_id="555", as_agent="agentd-nagatha")
+    nimbus = FakeBot()
+    sender, built = _sender(nimbus=nimbus)
+    target = SendTarget(channel_id="555", as_agent="agentd-nimbus")
     asyncio.run(sender.send(target, "hi", []))
-    assert "tok-n" in built  # nagatha's token built the client
-    assert len(nagatha.send_message_calls) == 1
+    assert "tok-n" in built  # nimbus's token built the client
+    assert len(nimbus.send_message_calls) == 1
 
 
 def test_send_as_agent_none_uses_default_bot() -> None:
@@ -294,13 +294,13 @@ def test_send_as_agent_none_uses_default_bot() -> None:
 
 
 def test_send_unknown_agent_raises_and_sends_nothing() -> None:
-    nagatha = FakeBot()
+    nimbus = FakeBot()
     default = FakeBot()
-    sender, _ = _sender(nagatha=nagatha, default=default)
+    sender, _ = _sender(nimbus=nimbus, default=default)
     target = SendTarget(channel_id="555", as_agent="agentd-ghost")
     with pytest.raises(UnknownAgentIdentityError):
         asyncio.run(sender.send(target, "hi", []))
-    assert nagatha.send_message_calls == []
+    assert nimbus.send_message_calls == []
     assert default.send_message_calls == []  # nothing sent under any identity
 
 
@@ -340,14 +340,14 @@ def test_interactive_markup_refused_on_agent_stamped_send() -> None:
     # An agent-identity bot runs no getUpdates poll loop, so a button under it
     # could never deliver its tap. The sender refuses loud and sends nothing —
     # no dead button ever reaches a human.
-    nagatha = FakeBot()
+    nimbus = FakeBot()
     default = FakeBot()
-    sender, _ = _sender(nagatha=nagatha, default=default)
+    sender, _ = _sender(nimbus=nimbus, default=default)
     markup = InlineKeyboardMarkup(inline_keyboard=[])
-    target = SendTarget(channel_id="555", as_agent="agentd-nagatha")
+    target = SendTarget(channel_id="555", as_agent="agentd-nimbus")
     with pytest.raises(InteractiveMarkupIdentityError):
         asyncio.run(sender.send(target, "decide", [], reply_markup=markup))
-    assert nagatha.send_message_calls == []
+    assert nimbus.send_message_calls == []
     assert default.send_message_calls == []
 
 
@@ -626,11 +626,11 @@ async def test_close_cancels_typing_and_closes_pool_sessions(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(telegram_sender, "TYPING_REFRESH_INTERVAL_S", 0.01)
-    nagatha = FakeBot()
+    nimbus = FakeBot()
     default = FakeBot()
-    sender, _ = _sender(nagatha=nagatha, default=default)
-    # Build the nagatha pool client via a send, and start a typing loop.
-    await sender.send(SendTarget(channel_id="555", as_agent="agentd-nagatha"), "hi", [])
+    sender, _ = _sender(nimbus=nimbus, default=default)
+    # Build the nimbus pool client via a send, and start a typing loop.
+    await sender.send(SendTarget(channel_id="555", as_agent="agentd-nimbus"), "hi", [])
     await sender.typing(SendTarget(channel_id="555"), True)
     await asyncio.sleep(0.005)
     assert sender._typing_tasks
@@ -638,7 +638,7 @@ async def test_close_cancels_typing_and_closes_pool_sessions(
     await sender.close()
     await asyncio.sleep(0)
     assert sender._typing_tasks == {}  # typing loops cancelled
-    assert nagatha.session.closed is True  # pool client session closed
+    assert nimbus.session.closed is True  # pool client session closed
 
 
 # ------------------------------------------- gauntlet fix regressions

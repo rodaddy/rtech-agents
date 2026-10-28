@@ -1,6 +1,6 @@
 """WakeService: allow-list enforcement, minted-frame correctness, containment.
 
-The triage agent (Nagatha) can WAKE an allow-listed teammate: mint + publish a
+The triage agent (Nimbus) can WAKE an allow-listed teammate: mint + publish a
 fresh TaskFrame carrying the triggering task's ChannelOrigin, and get back the
 minted task_id. These tests pin the locked design:
 
@@ -28,9 +28,9 @@ from rtech_orchestrator import subjects
 
 from .fakes import FakeFrameBus
 
-_TRIAGE = "agentd-nagatha"
-_BILBY = "agentd-bilby"
-_SKIPPY = "agentd-skippy"
+_TRIAGE = "agentd-nimbus"
+_BIRK = "agentd-birk"
+_SPROCKET = "agentd-sprocket"
 _STACK = "dev-stack"
 _FIXED_NOW = datetime(2026, 7, 15, 12, 0, 0, tzinfo=UTC)
 
@@ -46,7 +46,7 @@ _ORIGIN = ChannelOrigin(
 def _service(
     bus: FakeFrameBus,
     *,
-    allowed: frozenset[str] = frozenset({_BILBY, _SKIPPY}),
+    allowed: frozenset[str] = frozenset({_BIRK, _SPROCKET}),
     origin: ChannelOrigin | None = _ORIGIN,
     ids: list[str] | None = None,
 ) -> WakeService:
@@ -64,15 +64,15 @@ async def test_allowed_wake_publishes_and_returns_task_id() -> None:
     bus = FakeFrameBus()
     svc = _service(bus)
 
-    outcome = await svc.wake(_BILBY, "what's the k-board status?", "bilby owns the k-board")
+    outcome = await svc.wake(_BIRK, "what's the k-board status?", "birk owns the k-board")
 
     assert isinstance(outcome, WakeResult)
-    assert outcome.agent_id == _BILBY
+    assert outcome.agent_id == _BIRK
     assert outcome.task_id == "wake-task-1"
     published = bus.by_type(TaskFrame)
     assert len(published) == 1
     subject, frame = published[0]
-    assert subject == subjects.agent_task(_BILBY)
+    assert subject == subjects.agent_task(_BIRK)
     assert isinstance(frame, TaskFrame)
 
 
@@ -80,7 +80,7 @@ async def test_minted_frame_correctness() -> None:
     bus = FakeFrameBus()
     svc = _service(bus)
 
-    await svc.wake(_BILBY, "answer this", "reason")
+    await svc.wake(_BIRK, "answer this", "reason")
 
     _subject, frame = bus.by_type(TaskFrame)[0]
     assert isinstance(frame, TaskFrame)
@@ -92,7 +92,7 @@ async def test_minted_frame_correctness() -> None:
     assert frame.requester == _TRIAGE
     assert frame.stack == _STACK
     assert frame.scope == "single"
-    assert frame.participants == [_BILBY]
+    assert frame.participants == [_BIRK]
     assert frame.text == "answer this"
     # Origin carried VERBATIM so a FUTURE wired reply path can route in-channel;
     # today the reply is inert on main (chatd renders only task_ids it minted).
@@ -103,7 +103,7 @@ async def test_origin_absent_when_triggering_task_had_none() -> None:
     bus = FakeFrameBus()
     svc = _service(bus, origin=None)
 
-    await svc.wake(_BILBY, "q", "r")
+    await svc.wake(_BIRK, "q", "r")
 
     _subject, frame = bus.by_type(TaskFrame)[0]
     assert isinstance(frame, TaskFrame)
@@ -112,9 +112,9 @@ async def test_origin_absent_when_triggering_task_had_none() -> None:
 
 async def test_disallowed_agent_returns_typed_error_no_publish() -> None:
     bus = FakeFrameBus()
-    svc = _service(bus, allowed=frozenset({_BILBY}))
+    svc = _service(bus, allowed=frozenset({_BIRK}))
 
-    outcome = await svc.wake(_SKIPPY, "q", "r")
+    outcome = await svc.wake(_SPROCKET, "q", "r")
 
     assert isinstance(outcome, WakeError)
     assert outcome.reason == "not_allowed"
@@ -154,7 +154,7 @@ async def test_publish_failure_contained_as_typed_error() -> None:
     svc = _service(bus)
 
     # Must NOT raise — a publish failure is contained as a typed error.
-    outcome = await svc.wake(_BILBY, "q", "r")
+    outcome = await svc.wake(_BIRK, "q", "r")
 
     assert isinstance(outcome, WakeError)
     assert outcome.reason == "publish_failed"
@@ -181,7 +181,7 @@ async def test_swallowing_publish_would_not_mask_a_raise() -> None:
     bus = _SwallowButCheckedRaisesBus()
     svc = _service(bus)
 
-    outcome = await svc.wake(_BILBY, "q", "r")
+    outcome = await svc.wake(_BIRK, "q", "r")
 
     assert isinstance(outcome, WakeError)
     assert outcome.reason == "publish_failed"
@@ -212,18 +212,18 @@ async def test_from_env_parses_and_strips_self() -> None:
     cfg = WakeConfig.from_env(
         triage_agent=_TRIAGE,
         stack=_STACK,
-        env={ENV_WAKE_ALLOWED_AGENTS: f"{_BILBY}, {_SKIPPY} ,{_TRIAGE},{_BILBY}"},
+        env={ENV_WAKE_ALLOWED_AGENTS: f"{_BIRK}, {_SPROCKET} ,{_TRIAGE},{_BIRK}"},
     )
     assert cfg is not None
     # Self dropped, blanks stripped, de-duped.
-    assert cfg.allowed_agents == frozenset({_BILBY, _SKIPPY})
+    assert cfg.allowed_agents == frozenset({_BIRK, _SPROCKET})
     assert cfg.stack == _STACK
     assert cfg.triage_agent == _TRIAGE
 
 
 async def test_config_rejects_blank_stack() -> None:
     with pytest.raises(ValueError, match="stack must be non-empty"):
-        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BILBY}), stack="  ")
+        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BIRK}), stack="  ")
 
 
 async def test_config_rejects_empty_allow_list() -> None:
@@ -241,7 +241,7 @@ async def test_config_rejects_subject_unsafe_allow_list_id() -> None:
     # TaskFrame construction (mid-turn) and target a wrong subject — so it fails
     # CLOSED at config build instead.
     with pytest.raises(ValueError, match="not a safe NATS subject token"):
-        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({"agentd.bilby"}), stack=_STACK)
+        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({"agentd.birk"}), stack=_STACK)
 
 
 async def test_from_env_rejects_subject_unsafe_id() -> None:
@@ -254,17 +254,17 @@ async def test_from_env_rejects_subject_unsafe_id() -> None:
 async def test_config_accepts_agentd_convention_id() -> None:
     # A deployed-convention id (``agentd-<name>``) passes both the wire-safety
     # check AND the convention regex.
-    cfg = WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BILBY}), stack=_STACK)
-    assert cfg.allowed_agents == frozenset({_BILBY})
+    cfg = WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BIRK}), stack=_STACK)
+    assert cfg.allowed_agents == frozenset({_BIRK})
 
 
 async def test_config_rejects_non_agentd_convention_id() -> None:
-    # ``bilby`` is subject-safe but not ``agentd-<name>``: it would target a subject
+    # ``birk`` is subject-safe but not ``agentd-<name>``: it would target a subject
     # no deployed agentd subscribes, so it must fail CLOSED at build with the env
     # var, the required convention, and an example named in the message.
     with pytest.raises(ValueError) as excinfo:
-        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({"bilby"}), stack=_STACK)
+        WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({"birk"}), stack=_STACK)
     message = str(excinfo.value)
     assert ENV_WAKE_ALLOWED_AGENTS in message
     assert "agentd-" in message
-    assert "agentd-bilby" in message
+    assert "agentd-birk" in message

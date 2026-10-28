@@ -217,7 +217,7 @@ def test_foreign_terminal_turn_never_counts() -> None:
     # task's turn lane. Identity-blind counting derived done from it; the
     # participant-scoped derivation must not.
     task = _task("single")
-    graph: list[TurnFrame | StatusFrame] = [_terminal_turn("agentd-bilby")]
+    graph: list[TurnFrame | StatusFrame] = [_terminal_turn("agentd-birk")]
 
     assert is_done(task, graph) is False
 
@@ -228,7 +228,7 @@ def test_done_waits_for_dispatched_participant() -> None:
     task = _task("single")
     graph: list[TurnFrame | StatusFrame] = [
         _status("working"),
-        _terminal_turn("agentd-bilby"),
+        _terminal_turn("agentd-birk"),
     ]
     assert is_done(task, graph) is False
 
@@ -240,7 +240,7 @@ def test_duo_foreign_turn_does_not_substitute_for_participant() -> None:
     task = _task("duo")
     graph: list[TurnFrame | StatusFrame] = [
         _terminal_turn("codex-a"),
-        _terminal_turn("agentd-bilby"),
+        _terminal_turn("agentd-birk"),
     ]
 
     assert is_done(task, graph) is False
@@ -345,21 +345,21 @@ def _evidence(agent_id: str, task_id: str = "task-1") -> TerminalEvidence:
 def test_bridged_turn_terminality_is_ignored() -> None:
     # A bridged participant's turn is CONTENT only: even a structurally
     # terminal-looking stance (empty needs_from, passthrough) never completes.
-    task = _task("single", participants=["bilby"])
-    graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [_terminal_turn("bilby")]
+    task = _task("single", participants=["birk"])
+    graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [_terminal_turn("birk")]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 def test_bridged_completes_only_on_terminal_evidence() -> None:
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _status("working", agent_id="bilby"),
-        _terminal_turn("bilby"),
-        _evidence("bilby"),
+        _status("working", agent_id="birk"),
+        _terminal_turn("birk"),
+        _evidence("birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_evidence_for_non_bridged_agent_never_counts() -> None:
@@ -372,56 +372,56 @@ def test_evidence_for_non_bridged_agent_never_counts() -> None:
 
 
 def test_evidence_for_other_task_is_ignored() -> None:
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _evidence("bilby", task_id="task-9"),
+        _evidence("birk", task_id="task-9"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 def test_bridged_not_subset_of_participants_fails_closed() -> None:
     task = _task("single")
-    graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [_evidence("bilby")]
+    graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [_evidence("birk")]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 def test_mixed_duo_native_turn_plus_bridged_evidence() -> None:
-    task = _task("duo", participants=["codex-a", "bilby"])
+    task = _task("duo", participants=["codex-a", "birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
         _terminal_turn("codex-a"),
-        _terminal_turn("bilby"),  # content only — must not complete the duo
+        _terminal_turn("birk"),  # content only — must not complete the duo
     ]
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
-    graph.append(_evidence("bilby"))
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    graph.append(_evidence("birk"))
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_blocked_status_after_evidence_blocks_done() -> None:
     # Sequence-aware supersession applies to evidence exactly like turns: the
     # bridge's blocked shed/expiry status after completion keeps the task
     # un-done, visibly.
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _terminal_turn("bilby"),
-        _evidence("bilby"),
-        _status("blocked", agent_id="bilby"),
+        _terminal_turn("birk"),
+        _evidence("birk"),
+        _status("blocked", agent_id="birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 def test_working_status_before_evidence_is_superseded() -> None:
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _status("working", agent_id="bilby"),
-        _terminal_turn("bilby"),
-        _evidence("bilby"),
+        _status("working", agent_id="birk"),
+        _terminal_turn("birk"),
+        _evidence("birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_working_status_after_evidence_completion_does_not_block() -> None:
@@ -430,55 +430,55 @@ def test_working_status_after_evidence_completion_does_not_block() -> None:
     # fleet connection — a working status landing after the evidence in the
     # merged log is a stale cross-connection echo, never a blocker. Otherwise
     # it would contradict the already-published result.
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _terminal_turn("bilby"),
-        _evidence("bilby"),
-        _status("working", agent_id="bilby"),
+        _terminal_turn("birk"),
+        _evidence("birk"),
+        _status("working", agent_id="birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_evidence_then_working_then_turn_completes() -> None:
     # Worst cross-connection ordering: a fast typed Done outruns BOTH halves
     # of the bridge's turn/working pair. The stale working echo must not
     # deadlock the task once the content turn lands.
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _evidence("bilby"),
-        _status("working", agent_id="bilby"),
-        _terminal_turn("bilby"),
+        _evidence("birk"),
+        _status("working", agent_id="birk"),
+        _terminal_turn("birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_input_required_after_evidence_still_blocks() -> None:
     # Escalations are not liveness echoes: blocked/input_required after an
     # evidence-established completion keep the task un-done, fail-closed.
-    task = _task("single", participants=["bilby"])
+    task = _task("single", participants=["birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _terminal_turn("bilby"),
-        _evidence("bilby"),
-        _status("input_required", agent_id="bilby"),
+        _terminal_turn("birk"),
+        _evidence("birk"),
+        _status("input_required", agent_id="birk"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 def test_mixed_duo_turn_established_completion_still_blocked_by_working() -> None:
     # A native participant's terminality is TURN-established: its own statuses
     # share its connection, so a later working it authored reopens it — the
     # full status-after-terminal block applies per participant.
-    task = _task("duo", participants=["codex-a", "bilby"])
+    task = _task("duo", participants=["codex-a", "birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _evidence("bilby"),
+        _evidence("birk"),
         _terminal_turn("codex-a"),
         _status("working", agent_id="codex-a"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
 
 # --- per-participant status authorship ------------------------
@@ -491,18 +491,18 @@ def test_round4_native_terminal_then_evidence_then_native_working_blocks() -> No
     # the genuinely later NATIVE working was ignored. Keyed by author, the
     # native participant is turn-established and its own later working reopens
     # it.
-    task = _task("duo", participants=["codex-a", "bilby"])
+    task = _task("duo", participants=["codex-a", "birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
         _terminal_turn("codex-a"),
-        _evidence("bilby"),
+        _evidence("birk"),
         _status("working", agent_id="codex-a"),
     ]
 
-    assert is_done(task, graph, bridged={"bilby"}) is False
+    assert is_done(task, graph, bridged={"birk"}) is False
 
     # The reopened participant completes again on its next terminal turn.
     graph.append(_terminal_turn("codex-a"))
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_round4_evidence_then_native_terminal_then_late_bridge_working_completes() -> None:
@@ -514,15 +514,15 @@ def test_round4_evidence_then_native_terminal_then_late_bridge_working_completes
     # the result. Keyed by author, the bridged participant is
     # evidence-established and its own working echo never blocks — derivation
     # is order-independent across the echo's arrival.
-    task = _task("duo", participants=["codex-a", "bilby"])
+    task = _task("duo", participants=["codex-a", "birk"])
     graph: list[TurnFrame | StatusFrame | TerminalEvidence] = [
-        _evidence("bilby"),
+        _evidence("birk"),
         _terminal_turn("codex-a"),
     ]
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    assert is_done(task, graph, bridged={"birk"}) is True
 
-    graph.append(_status("working", agent_id="bilby"))
-    assert is_done(task, graph, bridged={"bilby"}) is True
+    graph.append(_status("working", agent_id="birk"))
+    assert is_done(task, graph, bridged={"birk"}) is True
 
 
 def test_status_from_non_participant_never_blocks() -> None:
@@ -531,7 +531,7 @@ def test_status_from_non_participant_never_blocks() -> None:
     task = _task("single")
     graph: list[TurnFrame | StatusFrame] = [
         _terminal_turn("codex-a"),
-        _status("blocked", agent_id="agentd-bilby"),
+        _status("blocked", agent_id="agentd-birk"),
     ]
 
     assert is_done(task, graph) is True

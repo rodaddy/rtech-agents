@@ -32,11 +32,11 @@ def _set_telegram_debate_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DEV_STACK_EDGE", "tg")
     monkeypatch.setenv("RTECH_CHATD_TOKEN_REF", "env:TG_EDGE_TOKEN")
     monkeypatch.setenv("RTECH_CHATD_INTAKE_ENABLED", "1")
-    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nagatha")
-    monkeypatch.setenv("RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nagatha,agentd-bilby")
+    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nimbus")
+    monkeypatch.setenv("RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nimbus,agentd-birk")
     monkeypatch.setenv(
         "RTECH_TG_IDENTITY_MAP",
-        "agentd-nagatha=env:TG_NAGATHA,agentd-bilby=env:TG_BILBY",
+        "agentd-nimbus=env:TG_NIMBUS,agentd-birk=env:TG_BIRK",
     )
 
 
@@ -46,7 +46,7 @@ def test_telegram_preflight_rejects_unmapped_debate_participant(
     """Every debate voice needs a Telegram identity before runtime construction."""
 
     _set_telegram_debate_env(monkeypatch)
-    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nagatha=env:TG_NAGATHA")
+    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nimbus=env:TG_NIMBUS")
     dev_stack = _load_dev_stack()
 
     with pytest.raises(ValueError, match="RTECH_TG_IDENTITY_MAP"):
@@ -59,7 +59,7 @@ def test_invalid_telegram_preflight_has_no_nats_or_agent_side_effects(
     """Bad Telegram config exits before reachability, bus, or supervisor startup."""
 
     _set_telegram_debate_env(monkeypatch)
-    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nagatha=env:TG_NAGATHA")
+    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nimbus=env:TG_NIMBUS")
     dev_stack = _load_dev_stack()
     calls: list[str] = []
 
@@ -110,10 +110,10 @@ def test_valid_telegram_preflight_preserves_identity_mapping(
 
     config = dev_stack.TelegramEdgeConfig.from_env()  # type: ignore[attr-defined]
 
-    assert config.intake_config.debate_participants == ("agentd-nagatha", "agentd-bilby")
+    assert config.intake_config.debate_participants == ("agentd-nimbus", "agentd-birk")
     assert config.identity_refs == {
-        "agentd-nagatha": "env:TG_NAGATHA",
-        "agentd-bilby": "env:TG_BILBY",
+        "agentd-nimbus": "env:TG_NIMBUS",
+        "agentd-birk": "env:TG_BIRK",
     }
 
 
@@ -142,21 +142,21 @@ def test_agent_specs_explicit_roster_isolates_per_agent_homes(
 ) -> None:
     """An explicit roster isolates every agent under ``.dev-stack/<id>`` (finding #4)."""
 
-    monkeypatch.setenv("DEV_STACK_AGENTS", "agentd-nagatha-dev=claude,agentd-bilby-dev=codex")
+    monkeypatch.setenv("DEV_STACK_AGENTS", "agentd-nimbus-dev=claude,agentd-birk-dev=codex")
     dev_stack = _load_dev_stack()
 
     specs = dev_stack._agent_specs()  # type: ignore[attr-defined]
 
-    assert [s.agent_id for s in specs] == ["agentd-nagatha-dev", "agentd-bilby-dev"]
+    assert [s.agent_id for s in specs] == ["agentd-nimbus-dev", "agentd-birk-dev"]
     home_root = dev_stack.HOME_ROOT  # type: ignore[attr-defined]
-    assert specs[0].home == home_root / "agentd-nagatha-dev"
-    assert specs[1].home == home_root / "agentd-bilby-dev"
+    assert specs[0].home == home_root / "agentd-nimbus-dev"
+    assert specs[1].home == home_root / "agentd-birk-dev"
     # Isolated homes never collide with the legacy single-agent home.
     legacy = dev_stack.LEGACY_HOME_DIR  # type: ignore[attr-defined]
     assert all(s.home != legacy for s in specs)
 
 
-@pytest.mark.parametrize("bad_id", ["agentd.nagatha", "agentd-*", "agentd>x", "agentd nagatha"])
+@pytest.mark.parametrize("bad_id", ["agentd.nimbus", "agentd-*", "agentd>x", "agentd nimbus"])
 def test_agent_specs_rejects_unsafe_subject_ids(
     monkeypatch: pytest.MonkeyPatch,
     bad_id: str,

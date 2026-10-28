@@ -23,7 +23,7 @@ def _kwargs(**overrides: object) -> dict[str, object]:
 
 def test_valid_shapes_accepted() -> None:
     TaskFrame(**_kwargs())  # single, default routing
-    TaskFrame(**_kwargs(participants=["agentd-bilby"]))
+    TaskFrame(**_kwargs(participants=["agentd-birk"]))
     TaskFrame(**_kwargs(scope="duo", participants=["codex-a", "opus-b"]))
     TaskFrame(**_kwargs(scope="trio", participants=["codex-a", "opus-b", "opus_c"]))
 

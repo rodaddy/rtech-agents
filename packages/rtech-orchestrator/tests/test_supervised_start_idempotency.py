@@ -46,7 +46,7 @@ async def test_sequential_redelivery_of_online_pair_publishes_one_terminal(
     assert first.state == "Online"
     # The cached terminal is returned verbatim — no re-start, no second receipt.
     assert second is first
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     online = [f for f in publisher.frames if f.state == "Online"]
     assert len(online) == 1
     starting = [f for f in publisher.frames if f.state == "Starting"]
@@ -78,7 +78,7 @@ async def test_sequential_redelivery_of_failure_pair_publishes_one_terminal(
     the same pair returns the ONE cached terminal and never republishes.
     """
     kit = supervised_start_kit
-    agent_id = "agentd-bilby"
+    agent_id = "agentd-birk"
     authorizer: object | None = kit.Authorizer()
     guard = kit.Guard()
     starter = kit.Starter()
@@ -150,7 +150,7 @@ async def test_sequential_redelivery_of_state_publish_failed_publishes_one_termi
     # Exactly one terminal Failed publish attempt for this pair across redelivery.
     failed_attempts = [f for f in publisher.attempts if f.state == "Failed"]
     assert len(failed_attempts) == 1
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
 
 
 @pytest.mark.asyncio
@@ -178,7 +178,7 @@ async def test_concurrent_and_sequential_redelivery_share_one_terminal(
     third = await supervisor.start_agent(kit.request(request_id="req-1"))
 
     assert first == duplicate == third
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert len([f for f in publisher.frames if f.state == "Online"]) == 1
 
 
@@ -237,7 +237,7 @@ async def test_cache_is_principal_bound_and_never_grants_cross_principal_authori
     # B was actually re-authorized from its OWN principal, not A's cached decision.
     assert authorizer.principals == ["operator-a", "operator-b"]
     # Exactly one real start (A's); B never started the agent.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert ("Failed", "unauthorized") in {(f.state, f.failure) for f in publisher.frames}
 
 
@@ -394,12 +394,12 @@ async def test_concurrent_different_principals_authorize_independently(
     assert b.failure == "unauthorized"
     assert authorizer.principals == ["operator-a", "operator-b"]
     # Distinct principal-bound keys — the pair was NOT shared across principals.
-    key_a = (_PrincipalIdentity.resolved_as("operator-a"), "shared-req", "agentd-bilby")
-    key_b = (_PrincipalIdentity.resolved_as("operator-b"), "shared-req", "agentd-bilby")
+    key_a = (_PrincipalIdentity.resolved_as("operator-a"), "shared-req", "agentd-birk")
+    key_b = (_PrincipalIdentity.resolved_as("operator-b"), "shared-req", "agentd-birk")
     assert key_a in supervisor._completed  # noqa: SLF001
     assert key_b in supervisor._completed  # noqa: SLF001
     # One shared process start (A's only); B contributed no start.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     online = [f for f in publisher.frames if f.state == "Online"]
     assert len(online) == 1
 
@@ -438,8 +438,8 @@ async def test_cancelled_sole_waiter_caches_terminal_and_redelivery_does_not_rep
     # The cancelled pair's terminal was still published once and cached.
     online_first = [f for f in publisher.frames if f.state == "Online"]
     assert len(online_first) == 1
-    assert ("req-1", "agentd-bilby") == (online_first[0].request_id, online_first[0].agent_id)
-    key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-bilby")
+    assert ("req-1", "agentd-birk") == (online_first[0].request_id, online_first[0].agent_id)
+    key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-birk")
     assert key in supervisor._completed  # noqa: SLF001
 
     # A sequential redelivery returns the cached terminal — no second publish, no
@@ -447,7 +447,7 @@ async def test_cancelled_sole_waiter_caches_terminal_and_redelivery_does_not_rep
     redelivered = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert redelivered.state == "Online"
     assert redelivered is online_first[0]
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert len([f for f in publisher.frames if f.state == "Online"]) == 1
 
 
@@ -475,7 +475,7 @@ async def test_broken_bus_pre_start_failure_returns_state_publish_failed_bounded
     process is never started because the terminal is reached before any start.
     """
     kit = supervised_start_kit
-    agent_id = "agentd-bilby"
+    agent_id = "agentd-birk"
     authorizer: object | None = kit.Authorizer()
     guard = kit.Guard()
 
@@ -551,7 +551,7 @@ async def test_resolver_failure_cannot_replay_a_resolved_none_online_receipt(
 
     first = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert first.state == "Online"
-    online_key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-bilby")
+    online_key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-birk")
     assert online_key in supervisor._completed  # noqa: SLF001
 
     # The resolver now RAISES for the SAME request/agent. The distinct
@@ -563,10 +563,10 @@ async def test_resolver_failure_cannot_replay_a_resolved_none_online_receipt(
     assert second.failure == "auth_unavailable"
     assert second is not first
     # The failed redelivery cached under its OWN distinct resolution-failed key.
-    failed_key = (_PrincipalIdentity.resolution_failed(), "req-1", "agentd-bilby")
+    failed_key = (_PrincipalIdentity.resolution_failed(), "req-1", "agentd-birk")
     assert failed_key in supervisor._completed  # noqa: SLF001
     # Exactly one real start (the first Online); the resolver failure started nothing.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert len([f for f in publisher.frames if f.state == "Online"]) == 1
 
 
@@ -627,13 +627,13 @@ async def test_cancelled_single_during_blocked_resolution_then_redelivery_no_rep
     # Exactly one terminal published and cached for the cancelled pair.
     online_first = [f for f in publisher.frames if f.state == "Online"]
     assert len(online_first) == 1
-    key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-bilby")
+    key = (_PrincipalIdentity.resolved_as(None), "req-1", "agentd-birk")
     assert key in supervisor._completed  # noqa: SLF001
 
     # Redelivery returns the cached terminal — no second publish, no second start.
     redelivered = await supervisor.start_agent(kit.request(request_id="req-1"))
     assert redelivered is online_first[0]
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert len([f for f in publisher.frames if f.state == "Online"]) == 1
 
 
@@ -675,17 +675,17 @@ async def test_cancelled_bulk_during_blocked_resolution_then_redelivery_no_repub
     # Online terminal cached under the resolved-None identity.
     assert resolver.calls == 1
     online_first = {(f.request_id, f.agent_id) for f in publisher.frames if f.state == "Online"}
-    assert online_first == {("bulk-1", "agentd-bilby"), ("bulk-1", "agentd-skippy")}
+    assert online_first == {("bulk-1", "agentd-birk"), ("bulk-1", "agentd-sprocket")}
     identity = _PrincipalIdentity.resolved_as(None)
-    assert (identity, "bulk-1", "agentd-bilby") in supervisor._completed  # noqa: SLF001
-    assert (identity, "bulk-1", "agentd-skippy") in supervisor._completed  # noqa: SLF001
+    assert (identity, "bulk-1", "agentd-birk") in supervisor._completed  # noqa: SLF001
+    assert (identity, "bulk-1", "agentd-sprocket") in supervisor._completed  # noqa: SLF001
 
     # Bulk redelivery returns the cached terminals — no second terminal, one start
     # per agent total.
     redelivered = await supervisor.start_all(request)
     assert {(f.request_id, f.agent_id) for f in redelivered} == online_first
     assert sorted(agent.agent_id for agent in starter.started) == [
-        "agentd-bilby",
-        "agentd-skippy",
+        "agentd-birk",
+        "agentd-sprocket",
     ]
     assert len([f for f in publisher.frames if f.state == "Online"]) == 2

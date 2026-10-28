@@ -623,9 +623,9 @@ class AgentMemoryLane:
 
 # Agentd deploy convention (mirrors `frame_turn._short_name`): a bus id is
 # `agentd-<name>` optionally suffixed by the stack lane (`-dev`/`-prod`).
-# The per-agent env suffix is derived from that <name>, so `agentd-nagatha` and
-# `agentd-nagatha-dev` both resolve to the SAME `NAGATHA` suffix and read the
-# same operator-provisioned OPENBRAIN_*_NAGATHA vars regardless of stack lane.
+# The per-agent env suffix is derived from that <name>, so `agentd-nimbus` and
+# `agentd-nimbus-dev` both resolve to the SAME `NIMBUS` suffix and read the
+# same operator-provisioned OPENBRAIN_*_NIMBUS vars regardless of stack lane.
 _AGENT_ID_PREFIX = "agentd-"
 _AGENT_ID_SUFFIXES = ("-dev", "-prod")
 
@@ -636,8 +636,8 @@ def agent_env_suffix(agent_id: str) -> str:
     Strips the `agentd-` convention prefix and a trailing `-dev`/`-prod`
     stack lane, then normalizes the remainder to an env-var-safe token: uppercased
     with every run of non-alphanumeric characters collapsed to a single `_` and
-    leading/trailing `_` trimmed. So `agentd-nagatha` and `agentd-nagatha-dev`
-    both yield `NAGATHA`; `agentd-my.agent` yields `MY_AGENT`.
+    leading/trailing `_` trimmed. So `agentd-nimbus` and `agentd-nimbus-dev`
+    both yield `NIMBUS`; `agentd-my.agent` yields `MY_AGENT`.
 
     Args:
         agent_id: The agent's bus id.

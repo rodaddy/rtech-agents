@@ -7,8 +7,8 @@ NATS server and serves a chat edge until Ctrl-C:
   verbatim to every participant, and derives done from the typed frame graph.
 * **agentd(s)** -- ``Supervisor`` + ``FrameTurnRunner`` per agent, each owning
   ONE managed engine session. Default: one agent on the env-selected engine.
-  ``DEV_STACK_AGENTS`` boots several (the trio smoke: nagatha on the
-  Claude engine, bilby+skippy on Codex).
+  ``DEV_STACK_AGENTS`` boots several (the trio smoke: nimbus on the
+  Claude engine, birk+sprocket on Codex).
 * **Edge** -- ``DEV_STACK_EDGE=webchat`` (default) serves the FastAPI web-chat
   app exactly as before. ``DEV_STACK_EDGE=tg`` boots the Telegram edge instead:
   long-poll adapter + multi-identity sender + intake sink wired
@@ -22,7 +22,7 @@ Telegram mode env (all refs, never literal tokens; values never logged):
   RTECH_CHATD_INTAKE_*         intake hit-gate config
   RTECH_CHATD_DEBATE_PARTICIPANTS  ordered trio for the debate fanout
   DEV_STACK_AGENTS             agent_id=engine pairs, e.g.
-                               agentd-nagatha-dev=claude,agentd-bilby-dev=codex
+                               agentd-nimbus-dev=claude,agentd-birk-dev=codex
 
 Run it: ``uv run python scripts/dev_stack.py``. Web-chat mode serves
 ``http://127.0.0.1:3800``. Secret env VALUES are never logged. Ctrl-C shuts

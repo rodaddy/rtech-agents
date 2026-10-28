@@ -97,7 +97,7 @@ def _mint_dash_task(client: TestClient, *, text: str, requester: str) -> str:
         json={
             "text": text,
             "requester": requester,
-            "participants": ["agentd-skippy"],
+            "participants": ["agentd-sprocket"],
             "origin_edge": "dash-dash",
         },
     )
@@ -168,7 +168,9 @@ def test_reports_last_observed_typed_status() -> None:
         _mint_dash_task(client, text="Blocked task.", requester="dash")
         bus.emit(
             subjects.task_status("dash-1"),
-            encode_frame(StatusFrame(task_id="dash-1", agent_id="agentd-skippy", state="blocked")),
+            encode_frame(
+                StatusFrame(task_id="dash-1", agent_id="agentd-sprocket", state="blocked")
+            ),
         )
         listed = client.get(DASH_ACTIVE_URL)
 
@@ -200,7 +202,7 @@ def test_item_shape_carries_no_private_payload() -> None:
     serialized = listed.text
     assert "Private task text." not in serialized
     assert "secret-requester" not in serialized
-    assert "agentd-skippy" not in serialized
+    assert "agentd-sprocket" not in serialized
     assert "frames" not in item
     assert "participants" not in item
     assert "text" not in item
@@ -224,7 +226,7 @@ def test_endpoint_requires_bearer_when_keyed() -> None:
             json={
                 "text": "Keyed dash task.",
                 "requester": "dash",
-                "participants": ["agentd-skippy"],
+                "participants": ["agentd-sprocket"],
                 "origin_edge": "dash-dash",
             },
         )

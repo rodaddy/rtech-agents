@@ -111,7 +111,7 @@ def test_valid_callback_publishes_only_a_typed_steer_frame() -> None:
     data = sink.issue(
         action="revise",
         task_id="task-123",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -124,7 +124,7 @@ def test_valid_callback_publishes_only_a_typed_steer_frame() -> None:
     frame = decode_frame(bus.published[0][1])
     assert isinstance(frame, SteerFrame)
     assert frame.task_id == "task-123"
-    assert frame.target_agent == "agentd-bilby"
+    assert frame.target_agent == "agentd-birk"
     assert frame.interrupt is True
     assert "done" not in frame.text.lower()
     # A committed tap clears its spent keyboard on the POLLED default bot
@@ -138,7 +138,7 @@ def test_malformed_unknown_and_tampered_callbacks_ack_without_publish() -> None:
     issued = sink.issue(
         action="approve",
         task_id="task-123",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -165,7 +165,7 @@ def test_expired_mismatched_and_replayed_callbacks_fail_closed() -> None:
     expired = sink.issue(
         action="approve",
         task_id="expired-task",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -176,7 +176,7 @@ def test_expired_mismatched_and_replayed_callbacks_fail_closed() -> None:
     valid = sink.issue(
         action="stop",
         task_id="task-123",
-        target_agent="agentd-nagatha",
+        target_agent="agentd-nimbus",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -190,7 +190,7 @@ def test_expired_mismatched_and_replayed_callbacks_fail_closed() -> None:
     frame = decode_frame(bus.published[0][1])
     assert isinstance(frame, SteerFrame)
     assert frame.task_id == "task-123"
-    assert frame.target_agent == "agentd-nagatha"
+    assert frame.target_agent == "agentd-nimbus"
     assert len(sender.answers) == 5
 
 
@@ -200,7 +200,7 @@ def test_capability_is_bound_to_its_issued_actor() -> None:
     data = sink.issue(
         action="approve",
         task_id="task-123",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -218,7 +218,7 @@ def test_capability_is_bound_to_its_issued_actor() -> None:
     assert len(bus.published) == 1
     frame = decode_frame(bus.published[0][1])
     assert isinstance(frame, SteerFrame)
-    assert frame.target_agent == "agentd-bilby"
+    assert frame.target_agent == "agentd-birk"
 
 
 def test_failed_publish_rolls_back_so_the_tap_is_retryable() -> None:
@@ -230,7 +230,7 @@ def test_failed_publish_rolls_back_so_the_tap_is_retryable() -> None:
     data = sink.issue(
         action="stop",
         task_id="task-123",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -282,7 +282,7 @@ def test_publish_failure_never_logs_raw_exception_text() -> None:
     data = sink.issue(
         action="stop",
         task_id="task-123",
-        target_agent="agentd-bilby",
+        target_agent="agentd-birk",
         channel_id="-10099",
         message_id="42",
         actor="human-1",
@@ -371,7 +371,7 @@ def test_interaction_mints_actor_bound_data_after_the_ack_id_is_known() -> None:
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             asker="human-1",
         )
     )
@@ -424,7 +424,7 @@ def test_interaction_round_trip_original_requester_steers_then_markup_clears() -
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-nagatha",
+            agent_id="agentd-nimbus",
             asker="human-1",
         )
     )
@@ -447,7 +447,7 @@ def test_interaction_round_trip_original_requester_steers_then_markup_clears() -
     frame = decode_frame(bus.published[0][1])
     assert isinstance(frame, SteerFrame)
     assert frame.task_id == "task-123"
-    assert frame.target_agent == "agentd-nagatha"
+    assert frame.target_agent == "agentd-nimbus"
     assert frame.interrupt is True
     assert sender.markup_edits == [("-10099", "500", None)]
 
@@ -461,7 +461,7 @@ def test_interaction_intruder_and_wrong_message_fail_closed() -> None:
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             asker="human-1",
         )
     )
@@ -505,7 +505,7 @@ def test_interaction_declines_when_origin_has_no_asker() -> None:
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             asker=None,
         )
     )
@@ -525,7 +525,7 @@ def test_interaction_leaves_plain_ack_when_keyboard_attach_fails() -> None:
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             asker="human-1",
         )
     )
@@ -545,7 +545,7 @@ def test_interaction_skips_keyboard_when_ack_has_no_message_id() -> None:
             target=SendTarget(channel_id="-10099"),
             anchor_message_id="42",
             task_id="task-123",
-            agent_id="agentd-bilby",
+            agent_id="agentd-birk",
             asker="human-1",
         )
     )

@@ -39,7 +39,7 @@ def _intake(**overrides: object) -> IntakeConfig:
     base: dict[str, object] = {
         "enabled": True,
         "mode": IntakeMode.ALL_CHANNELS,
-        "triage_agent": "agentd-nagatha",
+        "triage_agent": "agentd-nimbus",
     }
     base.update(overrides)
     return IntakeConfig(**base)  # type: ignore[arg-type]
@@ -83,20 +83,20 @@ def test_trigger_prefix_requires_word_boundary() -> None:
 
 
 def test_name_trigger_whole_word_is_hit() -> None:
-    cfg = _intake(name_triggers=frozenset({"nagatha"}))
-    assert intake_hit(_msg(text="hey Nagatha can you help"), GateConfig(), cfg) is True
+    cfg = _intake(name_triggers=frozenset({"nimbus"}))
+    assert intake_hit(_msg(text="hey Nimbus can you help"), GateConfig(), cfg) is True
 
 
 def test_name_trigger_requires_whole_word() -> None:
-    # "nagathas" must NOT match the token "nagatha" (whole-word only).
-    cfg = _intake(name_triggers=frozenset({"nagatha"}))
-    assert intake_hit(_msg(text="the nagathas are coming"), GateConfig(), cfg) is False
+    # "nimbuss" must NOT match the token "nimbus" (whole-word only).
+    cfg = _intake(name_triggers=frozenset({"nimbus"}))
+    assert intake_hit(_msg(text="the nimbuss are coming"), GateConfig(), cfg) is False
 
 
 def test_non_hit_chatter_ignored() -> None:
     cfg = _intake(
         member_ids=frozenset({"77"}),
-        name_triggers=frozenset({"nagatha"}),
+        name_triggers=frozenset({"nimbus"}),
         trigger_prefixes=frozenset({"!ask"}),
     )
     assert intake_hit(_msg(text="just some random chatter"), GateConfig(), cfg) is False

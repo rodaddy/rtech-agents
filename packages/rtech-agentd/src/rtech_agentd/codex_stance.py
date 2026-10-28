@@ -105,7 +105,7 @@ STANCE_OUTPUT_SCHEMA: dict[str, Any] = {
 STANCE_DIRECTIVE = (
     "\n\nEnd every turn with a single JSON object matching the required output "
     "schema: `position` (your stance), `because` (why), `needs_from` (a list of "
-    "AGENT IDS you need input from — bare ids like `agentd-bilby`, NOT "
+    "AGENT IDS you need input from — bare ids like `agentd-birk`, NOT "
     "sentences; empty array if none), `verification` (the required typed evidence "
     "report), and `reply` (your human-visible message). ONLY `reply` is shown to "
     "people, so put your whole readable answer there; never put prose in the "

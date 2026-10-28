@@ -12,14 +12,14 @@ from rtech_agentd.identity import (
 
 def test_env_override_wins() -> None:
     """An explicit RTECH_AGENT_ID is used verbatim."""
-    identity = resolve_agent_id(env={"RTECH_AGENT_ID": "agentd-bilby"})
-    assert identity.agent_id == "agentd-bilby"
+    identity = resolve_agent_id(env={"RTECH_AGENT_ID": "agentd-birk"})
+    assert identity.agent_id == "agentd-birk"
 
 
 def test_env_override_is_stripped() -> None:
     """Surrounding whitespace on the env value is trimmed."""
-    identity = resolve_agent_id(env={"RTECH_AGENT_ID": "  agentd-nagatha  "})
-    assert identity.agent_id == "agentd-nagatha"
+    identity = resolve_agent_id(env={"RTECH_AGENT_ID": "  agentd-nimbus  "})
+    assert identity.agent_id == "agentd-nimbus"
 
 
 def test_default_includes_hostname() -> None:

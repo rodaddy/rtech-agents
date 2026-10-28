@@ -4,7 +4,7 @@ The rtech web-chat picker lists an agent when it observes a heartbeat on
 ``rtech.agent.*.heartbeat`` and records the envelope's ``sender`` as the agent id
 (``rtech_webchat.presence.PresenceRegistry.handle_heartbeat``). A bridged Hermes
 agent has no agentd emitting that beat, so the bridge emits one PER FRONTED FLEET
-ID — stamped with ``sender=<fleet_id>`` — so ``bilby`` (and any other fronted id)
+ID — stamped with ``sender=<fleet_id>`` — so ``birk`` (and any other fronted id)
 appears in the picker exactly like a native agentd agent.
 
 The beat is a fleet ``Envelope`` (``kind="heartbeat"``) on the rtech heartbeat

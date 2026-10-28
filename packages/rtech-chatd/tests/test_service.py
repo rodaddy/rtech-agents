@@ -113,11 +113,11 @@ def test_from_env_intake_disabled_by_default(monkeypatch: pytest.MonkeyPatch) ->
 def test_from_env_intake_enabled_carries_config(monkeypatch: pytest.MonkeyPatch) -> None:
     _set_min_env(monkeypatch)
     monkeypatch.setenv("RTECH_CHATD_INTAKE_ENABLED", "1")
-    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nagatha")
+    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nimbus")
     monkeypatch.setenv("RTECH_CHATD_INTAKE_MEMBER_IDS", "77,88")
     config = ChatdServiceConfig.from_env()
     assert config.intake.enabled is True
-    assert config.intake.triage_agent == "agentd-nagatha"
+    assert config.intake.triage_agent == "agentd-nimbus"
     assert config.intake.member_ids == frozenset({"77", "88"})
 
 
@@ -127,7 +127,7 @@ async def test_run_service_wires_normalized_persistent_debate_lanes(
     """The production composition root carries both persistent lane maps to the edge."""
 
     _set_min_env(monkeypatch)
-    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nagatha-dev=94")
+    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nimbus-dev=94")
     monkeypatch.setenv("RTECH_CHATD_DEBATE_CHAT_LANES", "+123:agentd-dash-alpha=93")
     config = ChatdServiceConfig.from_env()
     captured: list[DiscordEdge] = []
@@ -150,7 +150,7 @@ async def test_run_service_wires_normalized_persistent_debate_lanes(
 
     await run_service(config)
     assert len(captured) == 1
-    assert captured[0]._debate_lanes == {"nagatha": "94"}  # noqa: SLF001
+    assert captured[0]._debate_lanes == {"nimbus": "94"}  # noqa: SLF001
     assert captured[0]._debate_chat_lanes == {("123", "dash-alpha"): "93"}  # noqa: SLF001
 
 

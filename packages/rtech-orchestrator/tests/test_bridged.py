@@ -21,7 +21,7 @@ from rtech_orchestrator import Orchestrator, OrchestratorConfig, subjects
 from rtech_orchestrator.fleet_signals import evidence_from_envelope
 from rtech_orchestrator.transport import FrameHandler, FrameTransportError
 
-BRIDGED_ID = "bilby"
+BRIDGED_ID = "birk"
 NATIVE_ID = "agentd"
 STACK_ID = "test-stack"
 

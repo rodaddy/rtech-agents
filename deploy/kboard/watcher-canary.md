@@ -28,7 +28,7 @@ These are console/Vaultwarden actions the rootless installer does NOT and CANNOT
 do (mirrors `docs/canary-rollback-runbook.md` "Not automated").
 
 - [ ] **Create a dedicated watcher Discord application + bot.** A NEW app in the
-      Discord developer portal — distinct from Nagatha/Bilby/Skippy bots. This
+      Discord developer portal — distinct from Nimbus/Birk/Sprocket bots. This
       bot is the *edge*, not an agent.
 - [ ] **Enable the privileged Message Content intent** on that bot. chatd
       declares `intents.message_content = True` and `intents.guild_messages =
@@ -44,7 +44,7 @@ do (mirrors `docs/canary-rollback-runbook.md` "Not automated").
       creation fails and you get a wall of inline text.
 - [ ] **Invite the watcher bot to the server and the ONE fresh channel.** Create
       a fresh channel for the test. **Exclude the Hermes agent bots from it**
-      (no Nagatha/Bilby/Skippy Hermes presence) so nothing double-answers — the
+      (no Nimbus/Birk/Sprocket Hermes presence) so nothing double-answers — the
       only bot in-channel is the watcher edge; the three participants act purely
       as bus consumers (agentd), never as in-channel Discord bots.
 - [ ] **Store the watcher bot token in Vaultwarden.** Ref:
@@ -55,8 +55,8 @@ do (mirrors `docs/canary-rollback-runbook.md` "Not automated").
       any committed file. `validate_token_ref` fails closed on a literal without
       echoing it (`config.py:439-456`).
 - [ ] **Capture the fresh channel id** — it becomes `RTECH_CHATD_INBOX_CHANNEL`.
-- [ ] **Confirm the three participants have committed homes.** `agents/nagatha`,
-      `agents/bilby`, `agents/skippy` each carry `agent.yaml` (+ `SOUL.md`);
+- [ ] **Confirm the three participants have committed homes.** `agents/nimbus`,
+      `agents/birk`, `agents/sprocket` each carry `agent.yaml` (+ `SOUL.md`);
       already on `main`. Their Discord `bot_token_ref`s in agent.yaml are for
       their OWN bots and are irrelevant to this watcher-only channel test.
 
@@ -72,9 +72,9 @@ units, one shared `~/rtech-agents/.env`. Per `install.sh` reality the default
 |---|---|---|
 | `rtech-chatd.service` | the **watcher** edge: intake gate + debate fanout + TLDR/thread render-back | 1 |
 | `rtech-orchestrator.service` | derived-done coordinator; `TASK_INGRESS` fans the debate frame to each lane | 1 |
-| `rtech-agentd@agentd-nagatha` | triage participant (a debate voice) | 1 |
-| `rtech-agentd@agentd-bilby` | participant | 1 |
-| `rtech-agentd@agentd-skippy` | participant | 1 |
+| `rtech-agentd@agentd-nimbus` | triage participant (a debate voice) | 1 |
+| `rtech-agentd@agentd-birk` | participant | 1 |
+| `rtech-agentd@agentd-sprocket` | participant | 1 |
 
 So: **1 chatd (watcher) + 1 orchestrator + 3 agentd = 5 units.** `install.sh`
 enables orchestrator + the three agentd + webchat, and **copies but does not
@@ -109,46 +109,46 @@ RTECH_CHATD_BOT_TOKEN=<from Vaultwarden <your-secret-store-path>/RTECH_WATCHER_B
 RTECH_CHATD_INBOX_CHANNEL=<fresh channel id>
 RTECH_CHATD_INTAKE_ENABLED=1
 RTECH_CHATD_INTAKE_MODE=listed
-RTECH_CHATD_TRIAGE_AGENT=agentd-nagatha
+RTECH_CHATD_TRIAGE_AGENT=agentd-nimbus
 RTECH_CHATD_INTAKE_NAME_TRIGGERS=debate,trio
 RTECH_CHATD_INTAKE_TRIGGER_PREFIXES=!debate
-RTECH_CHATD_DEBATE_PARTICIPANTS=agentd-nagatha,agentd-bilby,agentd-skippy
+RTECH_CHATD_DEBATE_PARTICIPANTS=agentd-nimbus,agentd-birk,agentd-sprocket
 # RTECH_CHATD_ALLOW_BOTS=none   # default; humans-only for the test
 ```
 
 Notes derived from `rtech_chatd.config`:
 - `RTECH_CHATD_TRIAGE_AGENT` MUST be one of `RTECH_CHATD_DEBATE_PARTICIPANTS`
   (the triage agent is a voice, not a bystander) and MUST be a deployed
-  `agentd-<name>` id — a bare `nagatha` fails closed at config build.
+  `agentd-<name>` id — a bare `nimbus` fails closed at config build.
 - `RTECH_CHATD_DEBATE_PARTICIPANTS` count MUST be 2 (duo) or 3 (trio); UNSET
-  collapses to single-scope intake (Nagatha only). Order is preserved.
+  collapses to single-scope intake (Nimbus only). Order is preserved.
 - Discord ids (member/inbox) are opaque public ids, not secrets. The ONLY
   credential is the bot token, held as a ref.
 
-### 3b. Nagatha agentd (`rtech-agentd@agentd-nagatha`)
+### 3b. Nimbus agentd (`rtech-agentd@agentd-nimbus`)
 
 ```
 NATS_URL=nats://127.0.0.1:4223
 RTECH_STACK_ID=canary
-# Optional — only if you want Nagatha's in-turn wake_agent tool live:
-# RTECH_WAKE_ALLOWED_AGENTS=agentd-bilby,agentd-skippy
+# Optional — only if you want Nimbus's in-turn wake_agent tool live:
+# RTECH_WAKE_ALLOWED_AGENTS=agentd-birk,agentd-sprocket
 ```
 
-- `RTECH_AGENT_ID=agentd-nagatha` is set by the systemd instance name (`%i` in
+- `RTECH_AGENT_ID=agentd-nimbus` is set by the systemd instance name (`%i` in
   `rtech-agentd@.service`, `Environment=RTECH_AGENT_ID=%i`), NOT by `.env`.
-- Engine `kind=claude` is pinned by `agents/nagatha/agent.yaml` (manifest is
+- Engine `kind=claude` is pinned by `agents/nimbus/agent.yaml` (manifest is
   authoritative for engine kind); leave `DEV_STACK_ENGINE` UNSET for the real
   engine. Setting `RTECH_WAKE_ALLOWED_AGENTS` requires `RTECH_STACK_ID`; wake is
   Claude-engine-only, which matches.
 
-### 3c. Bilby / Skippy agentd (`rtech-agentd@agentd-bilby`, `@agentd-skippy`)
+### 3c. Birk / Sprocket agentd (`rtech-agentd@agentd-birk`, `@agentd-sprocket`)
 
 ```
 NATS_URL=nats://127.0.0.1:4223
 RTECH_STACK_ID=canary
 ```
 
-- Engine `claude` from `agents/bilby/agent.yaml` / `agents/skippy/agent.yaml`.
+- Engine `claude` from `agents/birk/agent.yaml` / `agents/sprocket/agent.yaml`.
   A **codex** engine option exists in-code (`rtech_agentd.codex_engine`) but is
   out of scope here — wake is Claude-only, and the canary uses `claude`.
 - **Leave `RTECH_WAKE_ALLOWED_AGENTS` UNSET** on these two — a woken agent must
@@ -159,7 +159,7 @@ RTECH_STACK_ID=canary
 ```
 NATS_URL=nats://127.0.0.1:4223
 RTECH_STACK_ID=canary
-RTECH_TARGET_AGENT_ID=agentd-nagatha
+RTECH_TARGET_AGENT_ID=agentd-nimbus
 ```
 
 - `RTECH_STACK_ID` and a routing target are both REQUIRED — each fails loudly at
@@ -182,7 +182,7 @@ RTECH_TARGET_AGENT_ID=agentd-nagatha
 ## 4. Bring it up
 
 ```sh
-# On the k-board host, AS bilby (never root/sudo). Assumes install.sh already ran
+# On the k-board host, AS birk (never root/sudo). Assumes install.sh already ran
 # once (units copied, tree synced). Fill ~/rtech-agents/.env from the templates:
 $EDITOR ~/rtech-agents/.env    # paste sections 3a-3d, set RTECH_STACK_ID=canary,
                                # inbox channel id, watcher token from Vaultwarden
@@ -190,7 +190,7 @@ $EDITOR ~/rtech-agents/.env    # paste sections 3a-3d, set RTECH_STACK_ID=canary
 systemctl --user daemon-reload
 # Participants + coordinator (already enabled by install.sh; restart to load env):
 systemctl --user restart rtech-orchestrator \
-  rtech-agentd@agentd-nagatha rtech-agentd@agentd-bilby rtech-agentd@agentd-skippy
+  rtech-agentd@agentd-nimbus rtech-agentd@agentd-birk rtech-agentd@agentd-sprocket
 # The watcher edge (operator opt-in — install.sh does NOT enable it):
 systemctl --user enable --now rtech-chatd.service
 ```
@@ -207,7 +207,7 @@ arbitration prompt in the operator's style):
 ```
 !debate You are three siblings arbitrating one call: should the fleet run the
 trio debate on the authed :4223 cluster or stay on :4222 for this canary?
-Nagatha open, Bilby counter, Skippy break the tie. One paragraph each, then a
+Nimbus open, Birk counter, Sprocket break the tie. One paragraph each, then a
 one-line closing verdict.
 ```
 
@@ -230,7 +230,7 @@ one-line closing verdict.
 |---|---|---|
 | **No response at all** | intake gate never fired | Is `RTECH_CHATD_INTAKE_ENABLED=1`? Did the message trip a trigger? Journal for `gates.intake_hit \| drop=...` (bot/user/channel/no-trigger) vs `gates.intake_hit \| hit` |
 | **Wall of full text, no thread** | thread creation failed | Watcher bot lacks **Create Public Threads**. Journal for `chatd.thread \| create failed` (`discord_adapter.py:335-341`) |
-| **Only Nagatha answers, no debate** | `RTECH_CHATD_DEBATE_PARTICIPANTS` unset/empty → single-scope intake | Confirm the var is set to all 3 ids and `RTECH_STACK_ID` matches the orchestrator; journal `chatd.intake_sink \| published \| subject=...` should show `TASK_INGRESS`, not a single `rtech.agent.agentd-nagatha.task` |
+| **Only Nimbus answers, no debate** | `RTECH_CHATD_DEBATE_PARTICIPANTS` unset/empty → single-scope intake | Confirm the var is set to all 3 ids and `RTECH_STACK_ID` matches the orchestrator; journal `chatd.intake_sink \| published \| subject=...` should show `TASK_INGRESS`, not a single `rtech.agent.agentd-nimbus.task` |
 | **Debate frame minted but silence from agents** | orchestrator/frames build mismatch (atomic-ship) or stack mismatch | Orchestrator journal: is it consuming ingress? Confirm every role's `RTECH_STACK_ID=canary` |
 | **Turn posts but no closing** | result-subject / derived-done not observed | Orchestrator journal for the per-task result/done |
 
@@ -238,18 +238,18 @@ one-line closing verdict.
 
 ## 6. Verification commands
 
-Read-only. Run on the k-board host as bilby.
+Read-only. Run on the k-board host as birk.
 
 ```sh
 # Per-agent deploy check (config + persona + enabled + active; publishes nothing):
-bash scripts/verify-agent-deploy.sh agentd-nagatha
-bash scripts/verify-agent-deploy.sh agentd-bilby
-bash scripts/verify-agent-deploy.sh agentd-skippy
+bash scripts/verify-agent-deploy.sh agentd-nimbus
+bash scripts/verify-agent-deploy.sh agentd-birk
+bash scripts/verify-agent-deploy.sh agentd-sprocket
 
 # Watch the whole flow live across the five units:
 journalctl --user -u rtech-chatd -u rtech-orchestrator \
-  -u rtech-agentd@agentd-nagatha -u rtech-agentd@agentd-bilby \
-  -u rtech-agentd@agentd-skippy -f
+  -u rtech-agentd@agentd-nimbus -u rtech-agentd@agentd-birk \
+  -u rtech-agentd@agentd-sprocket -f
 ```
 
 **Exact log lines to watch (source-verified):**
@@ -257,18 +257,18 @@ journalctl --user -u rtech-chatd -u rtech-orchestrator \
 | Stage | Log line | Source |
 |---|---|---|
 | Intake hit | `gates.intake_hit \| hit channel=<id> thread=<id>` | `gates.py:340` |
-| Debate mint + fanout publish | `chatd.intake_sink \| published \| subject=<TASK_INGRESS> triage=agentd-nagatha ...` | `intake_sink.py:321` |
-| (single-scope drop-back) | subject shows `rtech.agent.agentd-nagatha.task` instead of the ingress token ⇒ participants unset | `intake_sink.py:286` |
+| Debate mint + fanout publish | `chatd.intake_sink \| published \| subject=<TASK_INGRESS> triage=agentd-nimbus ...` | `intake_sink.py:321` |
+| (single-scope drop-back) | subject shows `rtech.agent.agentd-nimbus.task` instead of the ingress token ⇒ participants unset | `intake_sink.py:286` |
 | Thread render | `chatd.thread \| created \| channel=<id> thread=<id>` | `discord_adapter.py:343` |
 | agentd clean start | `agentd.config \| loaded agent.yaml`, `engine selected kind=claude`, `agentd.run \| agentd started` | `__main__.py`, canary runbook §Verification |
-| waker mode (if wake set) | `agentd.wake \| waker mode active \| agent=agentd-nagatha targets=[...]` | `__main__.py:516` |
+| waker mode (if wake set) | `agentd.wake \| waker mode active \| agent=agentd-nimbus targets=[...]` | `__main__.py:516` |
 
 Optional bus observation (needs the authed creds for `:4223`):
 
 ```sh
 # Heartbeat + lifecycle per participant (see docs/canary-rollback-runbook.md):
-nats --server nats://127.0.0.1:4223 sub 'dev.agent.agentd-nagatha.heartbeat'
-nats --server nats://127.0.0.1:4223 sub 'rtech.agent.agentd-nagatha.lifecycle'
+nats --server nats://127.0.0.1:4223 sub 'dev.agent.agentd-nimbus.heartbeat'
+nats --server nats://127.0.0.1:4223 sub 'rtech.agent.agentd-nimbus.lifecycle'
 ```
 
 ---
@@ -285,7 +285,7 @@ systemctl --user disable --now rtech-chatd.service
 # Optionally stop the participants + coordinator (leave them if the live 'dev'
 # stack shares them — the canary is isolated only by RTECH_STACK_ID=canary):
 systemctl --user stop rtech-orchestrator \
-  rtech-agentd@agentd-nagatha rtech-agentd@agentd-bilby rtech-agentd@agentd-skippy
+  rtech-agentd@agentd-nimbus rtech-agentd@agentd-birk rtech-agentd@agentd-sprocket
 
 # To fully revert env, remove the watcher/canary lines from ~/rtech-agents/.env
 # (back it up first) and restart whatever you left running. No unit files,
@@ -296,8 +296,8 @@ If a participant unit latches `failed` with `start request repeated too quickly`
 (outer StartLimit), clear it deliberately:
 
 ```sh
-systemctl --user reset-failed rtech-agentd@agentd-nagatha
-systemctl --user start rtech-agentd@agentd-nagatha
+systemctl --user reset-failed rtech-agentd@agentd-nimbus
+systemctl --user start rtech-agentd@agentd-nimbus
 ```
 
 ---
@@ -315,7 +315,7 @@ so there is nothing to expose or proxy.
 
 - [ ] **Create a dedicated watcher Telegram bot via @BotFather** (its own app,
       distinct from the agent bots). This bot long-polls and posts the edge acks.
-- [ ] **Create one per-agent bot for each debate voice** (nagatha/bilby/skippy) —
+- [ ] **Create one per-agent bot for each debate voice** (nimbus/birk/sprocket) —
       the multi-identity render posts each turn under that agent's OWN bot. Store
       each token in Vaultwarden (`<your-secret-store-path>/RTECH_TG_TOKEN_<NAME>`).
 - [ ] **Disable each bot's group privacy mode** (@BotFather → Bot Settings →
@@ -339,16 +339,16 @@ RTECH_STACK_ID=canary
 RTECH_CHATD_TOKEN_REF=env:RTECH_CHATD_BOT_TOKEN
 RTECH_CHATD_BOT_TOKEN=<from Vaultwarden <your-secret-store-path>/RTECH_TG_WATCHER_BOT_TOKEN>
 RTECH_TG_ALLOWED_GROUPS=<fresh supergroup -100… id>
-RTECH_TG_IDENTITY_MAP=agentd-nagatha=env:RTECH_TG_TOKEN_NAGATHA,agentd-bilby=env:RTECH_TG_TOKEN_BILBY,agentd-skippy=env:RTECH_TG_TOKEN_SKIPPY
-RTECH_TG_TOKEN_NAGATHA=<from Vaultwarden>
-RTECH_TG_TOKEN_BILBY=<from Vaultwarden>
-RTECH_TG_TOKEN_SKIPPY=<from Vaultwarden>
+RTECH_TG_IDENTITY_MAP=agentd-nimbus=env:RTECH_TG_TOKEN_NIMBUS,agentd-birk=env:RTECH_TG_TOKEN_BIRK,agentd-sprocket=env:RTECH_TG_TOKEN_SPROCKET
+RTECH_TG_TOKEN_NIMBUS=<from Vaultwarden>
+RTECH_TG_TOKEN_BIRK=<from Vaultwarden>
+RTECH_TG_TOKEN_SPROCKET=<from Vaultwarden>
 RTECH_CHATD_INTAKE_ENABLED=1
 RTECH_CHATD_INTAKE_MODE=listed
-RTECH_CHATD_TRIAGE_AGENT=agentd-nagatha
+RTECH_CHATD_TRIAGE_AGENT=agentd-nimbus
 RTECH_CHATD_INTAKE_NAME_TRIGGERS=debate,trio
 RTECH_CHATD_INTAKE_TRIGGER_PREFIXES=!debate
-RTECH_CHATD_DEBATE_PARTICIPANTS=agentd-nagatha,agentd-bilby,agentd-skippy
+RTECH_CHATD_DEBATE_PARTICIPANTS=agentd-nimbus,agentd-birk,agentd-sprocket
 ```
 
 Bring it up (the agentd + orchestrator env is unchanged from sections 3b–3d):
@@ -357,7 +357,7 @@ Bring it up (the agentd + orchestrator env is unchanged from sections 3b–3d):
 $EDITOR ~/rtech-agents/.env    # paste the Telegram block above
 systemctl --user daemon-reload
 systemctl --user restart rtech-orchestrator \
-  rtech-agentd@agentd-nagatha rtech-agentd@agentd-bilby rtech-agentd@agentd-skippy
+  rtech-agentd@agentd-nimbus rtech-agentd@agentd-birk rtech-agentd@agentd-sprocket
 # The Telegram watcher edge (operator opt-in — install.sh does NOT enable it).
 # If a PRIOR fail-closed start (missing/invalid env) latched the unit `failed`
 # with `start request repeated too quickly` (outer StartLimit), clear it BEFORE
@@ -382,7 +382,7 @@ per-agent forum topic (or a lazily-created thread when no lane is mapped).
 | **Empty message bodies, no trigger ever matches** | bot group-privacy mode still ON | @BotFather → Bot Settings → Group Privacy → OFF for the polling bot |
 | **Service crash-loops before ingress** | `RTECH_TG_IDENTITY_MAP` unset, partial, or unprovisioned | Confirm every participant has an `agentd-<name>=env:<ENV_VAR>` entry with a value; missing identities fail closed and never fall back to the edge bot |
 | **Bot silently blind to reactions** | `allowed_updates` missing `message_reaction` | The edge always subscribes it (`TelegramConfig` fails closed otherwise); confirm no custom `allowed_updates` override |
-| **Only Nagatha answers, no debate** | `RTECH_CHATD_DEBATE_PARTICIPANTS` unset/empty → single-scope intake | Confirm all 3 ids set and `RTECH_STACK_ID` matches the orchestrator; journal `chatd.intake_sink \| published \| subject=<TASK_INGRESS>` |
+| **Only Nimbus answers, no debate** | `RTECH_CHATD_DEBATE_PARTICIPANTS` unset/empty → single-scope intake | Confirm all 3 ids set and `RTECH_STACK_ID` matches the orchestrator; journal `chatd.intake_sink \| published \| subject=<TASK_INGRESS>` |
 | **Debate frame minted but agents silent** | orchestrator/frames build mismatch (atomic-ship) or stack mismatch | Confirm `SCHEMA_VERSION >= 6` and every role's `RTECH_STACK_ID=canary` |
 | **Turn posts but no closing** | result-subject / derived-done not observed | Orchestrator journal for the per-task result/done |
 

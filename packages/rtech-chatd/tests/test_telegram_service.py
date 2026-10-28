@@ -91,7 +91,7 @@ def test_from_env_rejects_literal_edge_token_ref(monkeypatch: pytest.MonkeyPatch
 
 def test_from_env_rejects_literal_identity_ref(monkeypatch: pytest.MonkeyPatch) -> None:
     _set_min_env(monkeypatch)
-    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nagatha=literal-identity-token")
+    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nimbus=literal-identity-token")
     with pytest.raises(ValueError) as excinfo:
         TgdServiceConfig.from_env()
     assert "literal-identity-token" not in str(excinfo.value)
@@ -115,7 +115,7 @@ def test_direct_config_rejects_literal_identity_ref() -> None:
             nats_url="nats://x:4222",
             edge_token_ref="env:RTECH_CHATD_BOT_TOKEN",
             telegram=TelegramConfig(allowed_groups=frozenset({GROUP_ID})),
-            identity_refs={"agentd-nagatha": "literal-token"},
+            identity_refs={"agentd-nimbus": "literal-token"},
         )
 
 
@@ -134,13 +134,13 @@ def test_from_env_happy_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("RTECH_CHATD_NATS_URL", "nats://127.0.0.1:4223")
     monkeypatch.setenv(
         "RTECH_TG_IDENTITY_MAP",
-        "agentd-nagatha=env:TG_NAG,agentd-bilby=env:TG_BILBY",
+        "agentd-nimbus=env:TG_NAG,agentd-birk=env:TG_BIRK",
     )
     config = TgdServiceConfig.from_env()
     assert config.stack == "canary"
     assert config.nats_url == "nats://127.0.0.1:4223"
     assert config.telegram.allowed_groups == frozenset({GROUP_ID})
-    assert config.identity_refs == {"agentd-nagatha": "env:TG_NAG", "agentd-bilby": "env:TG_BILBY"}
+    assert config.identity_refs == {"agentd-nimbus": "env:TG_NAG", "agentd-birk": "env:TG_BIRK"}
 
 
 # --- allowed_updates: current supported update kinds -------------------------
@@ -176,13 +176,13 @@ def test_assembled_adapter_carries_allowed_updates(monkeypatch: pytest.MonkeyPat
 def _build(monkeypatch: pytest.MonkeyPatch) -> TelegramEdgeComponents:
     _set_min_env(monkeypatch)
     monkeypatch.setenv("RTECH_CHATD_INTAKE_ENABLED", "1")
-    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nagatha")
+    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nimbus")
     monkeypatch.setenv(
-        "RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nagatha,agentd-bilby,agentd-skippy"
+        "RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nimbus,agentd-birk,agentd-sprocket"
     )
     monkeypatch.setenv(
         "RTECH_TG_IDENTITY_MAP",
-        "agentd-nagatha=env:TG_NAG,agentd-bilby=env:TG_BILBY,agentd-skippy=env:TG_SKIPPY",
+        "agentd-nimbus=env:TG_NAG,agentd-birk=env:TG_BIRK,agentd-sprocket=env:TG_SPROCKET",
     )
     config = TgdServiceConfig.from_env()
     return build_telegram_components(config)
@@ -317,7 +317,7 @@ def test_listed_intake_scope_covers_configured_telegram_groups(
 ) -> None:
     _set_min_env(monkeypatch)
     monkeypatch.setenv("RTECH_CHATD_INTAKE_ENABLED", "1")
-    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nagatha")
+    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nimbus")
     config = TgdServiceConfig.from_env()
     assert config.gate_config().allowed_channels == frozenset({GROUP_ID})
 
@@ -325,9 +325,9 @@ def test_listed_intake_scope_covers_configured_telegram_groups(
 def test_debate_participants_require_identity_map_entries(monkeypatch: pytest.MonkeyPatch) -> None:
     _set_min_env(monkeypatch)
     monkeypatch.setenv("RTECH_CHATD_INTAKE_ENABLED", "1")
-    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nagatha")
-    monkeypatch.setenv("RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nagatha,agentd-bilby")
-    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nagatha=env:TG_NAG")
+    monkeypatch.setenv("RTECH_CHATD_TRIAGE_AGENT", "agentd-nimbus")
+    monkeypatch.setenv("RTECH_CHATD_DEBATE_PARTICIPANTS", "agentd-nimbus,agentd-birk")
+    monkeypatch.setenv("RTECH_TG_IDENTITY_MAP", "agentd-nimbus=env:TG_NAG")
     with pytest.raises(ValueError, match="every configured RTECH_CHATD_DEBATE_PARTICIPANTS"):
         TgdServiceConfig.from_env()
 
@@ -480,7 +480,7 @@ def test_e2e_debate_tldr_keyboard_lets_the_requester_send_a_typed_steer() -> Non
         debate=True,
     )
     turn = TurnFrame(
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         task_id="deb-e2e",
         visible_text="Full reasoning lands under the identity bot.",
         stance=Stance(position="ship", because="the gate is green", needs_from=[]),
@@ -490,7 +490,7 @@ def test_e2e_debate_tldr_keyboard_lets_the_requester_send_a_typed_steer() -> Non
 
     # The debate TLDR was posted under the AGENT identity bot; the interaction then
     # posted a default-bot ack (unstamped) carrying the steer keyboard.
-    tldr_sends = [s for s in sender.sends if s[3] == "agentd-bilby"]
+    tldr_sends = [s for s in sender.sends if s[3] == "agentd-birk"]
     ack_sends = [s for s in sender.sends if s[1] == "Steer this direction:"]
     assert tldr_sends, "the agent TLDR must post under its own identity bot"
     assert ack_sends and ack_sends[0][3] is None, "the ack keyboard rides the polled default bot"
@@ -519,7 +519,7 @@ def test_e2e_debate_tldr_keyboard_lets_the_requester_send_a_typed_steer() -> Non
     steer = steers[0]
     assert isinstance(steer, SteerFrame)
     assert steer.task_id == "deb-e2e"
-    assert steer.target_agent == "agentd-bilby"
+    assert steer.target_agent == "agentd-birk"
     assert steer.interrupt is False  # approve does not interrupt
     # The tap was answered and the spent keyboard cleared on the default bot.
     assert sender.answers == ["cq-e2e"]
@@ -535,7 +535,7 @@ def test_e2e_intruder_tap_on_requester_keyboard_fails_closed() -> None:
     edge, adapter, bus = _compose_e2e_edge(sender)
     origin = ChannelOrigin(channel_id="-100777", message_id="ask-1", asker="99", debate=True)
     turn = TurnFrame(
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         task_id="deb-e2e",
         visible_text="Full reasoning.",
         stance=Stance(position="ship", because="green", needs_from=[]),
@@ -848,14 +848,14 @@ async def test_run_service_preflights_every_debate_identity_before_assembly(
         nats_url="nats://x:4222",
         edge_token_ref="env:TG_EDGE_TOKEN",
         identity_refs={
-            "agentd-nagatha": "env:TG_NAG_TOKEN",
-            "agentd-bilby": "env:TG_BILBY_TOKEN",
+            "agentd-nimbus": "env:TG_NAG_TOKEN",
+            "agentd-birk": "env:TG_BIRK_TOKEN",
         },
         telegram=TelegramConfig(allowed_groups=frozenset({GROUP_ID})),
         intake=IntakeConfig(
             enabled=True,
-            triage_agent="agentd-nagatha",
-            debate_participants=("agentd-nagatha", "agentd-bilby"),
+            triage_agent="agentd-nimbus",
+            debate_participants=("agentd-nimbus", "agentd-birk"),
         ),
     )
     assembled = False
@@ -867,10 +867,10 @@ async def test_run_service_preflights_every_debate_identity_before_assembly(
 
     monkeypatch.setenv("TG_EDGE_TOKEN", "edge-token")
     monkeypatch.setenv("TG_NAG_TOKEN", "nag-token")
-    monkeypatch.delenv("TG_BILBY_TOKEN", raising=False)
+    monkeypatch.delenv("TG_BIRK_TOKEN", raising=False)
     monkeypatch.setattr(telegram_service, "build_telegram_components", _unexpected_assembly)
     with pytest.raises(RuntimeError) as excinfo:
         await telegram_service.run_service(config)
 
-    assert "TG_BILBY_TOKEN" not in str(excinfo.value)
+    assert "TG_BIRK_TOKEN" not in str(excinfo.value)
     assert assembled is False

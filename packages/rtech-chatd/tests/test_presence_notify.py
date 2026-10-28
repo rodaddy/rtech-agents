@@ -46,8 +46,8 @@ _DASH = "https://dash.example.internal"
 
 def _frame(
     *,
-    agent_id: str = "agentd-nagatha",
-    display_name: str = "Nagatha",
+    agent_id: str = "agentd-nimbus",
+    display_name: str = "Nimbus",
     transition: str = "offline",
     transition_id: str = "edge1",
 ) -> PresenceTransitionFrame:
@@ -75,14 +75,14 @@ def test_presence_subject_matches_ratified_string() -> None:
 
 def test_dash_link_url_composes_path_from_base() -> None:
     assert (
-        dash_link_url("https://dash.example.internal/", "agentd-nagatha")
-        == "https://dash.example.internal/agents/agentd-nagatha"
+        dash_link_url("https://dash.example.internal/", "agentd-nimbus")
+        == "https://dash.example.internal/agents/agentd-nimbus"
     )
 
 
 def test_dash_link_url_none_when_blank() -> None:
-    assert dash_link_url("", "agentd-nagatha") is None
-    assert dash_link_url("   ", "agentd-nagatha") is None
+    assert dash_link_url("", "agentd-nimbus") is None
+    assert dash_link_url("   ", "agentd-nimbus") is None
 
 
 # --- validate_dash_base_url (Finding 4: config-boundary URL validation) ------
@@ -182,8 +182,8 @@ async def test_valid_dash_url_with_embedded_control_char_in_render_path() -> Non
         dash_base_url="https://dash.example.internal/",
         send_discord=_dc,
     )
-    await consumer.handle(encode_frame(_frame(agent_id="agentd-nagatha", transition="offline")))
-    assert "Dash live page: https://dash.example.internal/agents/agentd-nagatha" in dc[0]
+    await consumer.handle(encode_frame(_frame(agent_id="agentd-nimbus", transition="offline")))
+    assert "Dash live page: https://dash.example.internal/agents/agentd-nimbus" in dc[0]
     assert "@everyone" not in dc[0]
 
 
@@ -193,10 +193,10 @@ async def test_valid_dash_url_with_embedded_control_char_in_render_path() -> Non
 def test_render_offline_telegram_has_headline_time_and_markdown_link() -> None:
     body = render_notification(_frame(transition="offline"), _DASH, surface="telegram")
     assert "went offline" in body
-    assert "Nagatha" in body
+    assert "Nimbus" in body
     assert "2026-07-20 12:30:05 UTC" in body
     # Telegram gets a markdown link the sender converts to a safe anchor.
-    assert f"[View Nagatha on Dash]({_DASH}/agents/agentd-nagatha)" in body
+    assert f"[View Nimbus on Dash]({_DASH}/agents/agentd-nimbus)" in body
 
 
 def test_render_recovered_headline() -> None:
@@ -208,7 +208,7 @@ def test_render_discord_uses_bare_url_not_markdown_link() -> None:
     body = render_notification(_frame(), _DASH, surface="discord")
     # Discord does not render a [label](url) link in an ordinary message: the
     # bare URL is inlined instead.
-    assert f"Dash live page: {_DASH}/agents/agentd-nagatha" in body
+    assert f"Dash live page: {_DASH}/agents/agentd-nimbus" in body
     assert "](http" not in body
 
 
@@ -223,12 +223,12 @@ def test_render_empty_base_url_renders_no_link_but_still_notifies() -> None:
 def test_render_never_leaks_internal_agent_id_as_visible_identity() -> None:
     # The clean display name is shown; the slug appears ONLY inside the Dash URL
     # path segment, never as standalone visible identity text or a subject/payload.
-    frame = _frame(agent_id="agentd-nagatha", display_name="Nagatha")
+    frame = _frame(agent_id="agentd-nimbus", display_name="Nimbus")
     for surface in ("telegram", "discord"):
         body = render_notification(frame, _DASH, surface=surface)  # type: ignore[arg-type]
         # The slug is present ONLY as the trailing URL path segment.
-        assert body.count("agentd-nagatha") == 1
-        assert "/agents/agentd-nagatha" in body
+        assert body.count("agentd-nimbus") == 1
+        assert "/agents/agentd-nimbus" in body
         # No NATS subject and no raw-payload markers ever render.
         assert "rtech.presence.transition" not in body
         assert "frame_type" not in body
@@ -236,8 +236,8 @@ def test_render_never_leaks_internal_agent_id_as_visible_identity() -> None:
 
 def test_render_no_link_never_leaks_slug_at_all() -> None:
     # With no Dash link, the internal slug must not appear anywhere in the body.
-    body = render_notification(_frame(agent_id="agentd-nagatha"), "", surface="discord")
-    assert "agentd-nagatha" not in body
+    body = render_notification(_frame(agent_id="agentd-nimbus"), "", surface="discord")
+    assert "agentd-nimbus" not in body
 
 
 # --- real Telegram safe-HTML pipeline ---------------------------------------
@@ -253,7 +253,7 @@ def test_telegram_send_path_escapes_body_to_safe_html() -> None:
     assert len(chunks) == 1
     html = chunks[0]
     assert "<b>" in html and "</b>" in html
-    assert f'<a href="{_DASH}/agents/agentd-nagatha">' in html
+    assert f'<a href="{_DASH}/agents/agentd-nimbus">' in html
     assert "**" not in html  # markdown consumed, not literal
     assert "&lt;b&gt;" not in html  # not double-escaped
 
@@ -264,10 +264,10 @@ def test_telegram_render_escapes_html_metachars_defensively() -> None:
     # never inject a raw tag. We assert on the renderer output (an ampersand is a
     # legal safe-vocabulary-adjacent case only through escaping): a safe name renders
     # unchanged, and a would-be tag char is escaped in the body BEFORE the send path.
-    body = render_notification(_frame(display_name="Nagatha 2"), _DASH, surface="telegram")
+    body = render_notification(_frame(display_name="Nimbus 2"), _DASH, surface="telegram")
     # A normal name survives visually and produces valid safe HTML downstream.
     html = telegram_chunks(body)[0]
-    assert "Nagatha 2" in html
+    assert "Nimbus 2" in html
     assert "&lt;" not in html  # nothing to escape in a clean name
 
 
@@ -303,7 +303,7 @@ def test_dash_link_dropped_for_unsafe_slug() -> None:
     # Only a subject-safe slug may enter the URL path; an unsafe one drops the link.
     assert dash_link_url(_DASH, "../evil") is None
     assert dash_link_url(_DASH, "a b") is None
-    assert dash_link_url(_DASH, "agentd-nagatha") == f"{_DASH}/agents/agentd-nagatha"
+    assert dash_link_url(_DASH, "agentd-nimbus") == f"{_DASH}/agents/agentd-nimbus"
 
 
 # --- PresenceNotifyConsumer --------------------------------------------------
@@ -358,7 +358,7 @@ async def test_consumer_non_presence_frame_dropped() -> None:
 
     consumer = PresenceNotifyConsumer(dash_base_url=_DASH, send_discord=_send)
     lifecycle = LifecycleFrame(
-        agent_id="agentd-nagatha",
+        agent_id="agentd-nimbus",
         reason="shutdown",
         initiator="operator",
         correlation_id="abc123",
@@ -624,7 +624,7 @@ async def test_edge_discord_surface_renders_bare_url() -> None:
     target, text = adapter.sent[0]
     assert target.channel_id == "home-1"
     assert "went offline" in text
-    assert f"Dash live page: {_DASH}/agents/agentd-nagatha" in text
+    assert f"Dash live page: {_DASH}/agents/agentd-nimbus" in text
     # Retirement on close.
     await edge.close()
     assert bus.subs_by_subject[subjects.PRESENCE_TRANSITION].unsubscribed is True
@@ -648,7 +648,7 @@ async def test_edge_telegram_surface_renders_markdown_link() -> None:
     assert target.channel_id == "-1001"
     assert "back online" in text
     # Telegram markdown link (the adapter's sender converts it to safe HTML).
-    assert f"[View Nagatha on Dash]({_DASH}/agents/agentd-nagatha)" in text
+    assert f"[View Nimbus on Dash]({_DASH}/agents/agentd-nimbus)" in text
 
 
 async def test_edge_presence_malformed_bytes_contained() -> None:

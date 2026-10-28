@@ -25,9 +25,9 @@ from .channel import SendTarget
 _DEBATE_SCOPE_BY_COUNT: dict[int, Literal["duo", "trio"]] = {2: "duo", 3: "trio"}
 
 # Deployed agent ids follow the ``agentd-<name>`` convention (deploy/kboard/
-# install.sh AGENT_INSTANCES, e.g. ``agentd-bilby``). A debate participant that is
-# merely subject-safe (``nagatha``) passes ``validate_participants`` yet addresses
-# ``rtech.agent.nagatha.task`` — a subject no deployed agentd subscribes — so the
+# install.sh AGENT_INSTANCES, e.g. ``agentd-birk``). A debate participant that is
+# merely subject-safe (``nimbus``) passes ``validate_participants`` yet addresses
+# ``rtech.agent.nimbus.task`` — a subject no deployed agentd subscribes — so the
 # fanout would silently vanish. This is the SAME trap fixed for the wake allow-list
 # in ``rtech_agentd.wake_service`` (``_ALLOWED_AGENT_CONVENTION``); mirror the exact
 # regex so a mis-set debate roster fails loud at config build, not mid-debate.
@@ -265,15 +265,15 @@ class IntakeConfig:
         triage_agent: The agent id a hit is dispatched to. There is NO default:
             a hit publishes to ``rtech.agent.<triage_agent>.task``, and a
             deployed agentd subscribes under its FULL id (``RTECH_AGENT_ID`` =
-            ``agentd-nagatha``, per ``rtech_agentd.identity`` +
-            ``deploy/kboard/install.sh``). A bare-name default (``nagatha``)
+            ``agentd-nimbus``, per ``rtech_agentd.identity`` +
+            ``deploy/kboard/install.sh``). A bare-name default (``nimbus``)
             would silently publish into the void, so when intake is enabled this
             MUST be set explicitly to the deployed ``agentd-<name>`` id (mirrors
             the orchestrator's fail-loud ``resolve_target_agent_id``). The
             disabled-path placeholder below is inert and never reaches a publish.
         member_ids: Trio member Discord user/bot ids; an @mention of any is a
             hit (matched against the message's mentioned-id set).
-        name_triggers: Case-insensitive name tokens (e.g. ``nagatha``); a
+        name_triggers: Case-insensitive name tokens (e.g. ``nimbus``); a
             whole-word occurrence in the message text is a hit.
         trigger_prefixes: Literal prefixes (e.g. ``!ask``); a message whose
             stripped text starts with any (case-insensitive) is a hit.
@@ -330,10 +330,10 @@ class IntakeConfig:
         if self.enabled and _AGENTD_CONVENTION.fullmatch(self.triage_agent) is None:
             raise ValueError(
                 "RTECH_CHATD_TRIAGE_AGENT must match the full agentd-<name> "
-                "convention when intake is enabled (e.g. 'agentd-nagatha'); "
+                "convention when intake is enabled (e.g. 'agentd-nimbus'); "
                 "the value becomes rtech.agent.<id>.task and must equal the "
                 "deployed agentd's RTECH_AGENT_ID -- a blank or bare name like "
-                "'nagatha' publishes to a subject no deployed agentd subscribes to"
+                "'nimbus' publishes to a subject no deployed agentd subscribes to"
             )
         # Debate fanout (trio intake): validate the participant set fail-loud, the
         # SAME way ``triage_agent`` and the wire (``validate_participants``) do, so
@@ -353,7 +353,7 @@ class IntakeConfig:
             validate_participants(list(self.debate_participants), scope)
             # Subject-safe is necessary but not sufficient: a deployed agentd only
             # subscribes ``rtech.agent.<agentd-name>.task``, so a bare id like
-            # ``nagatha`` addresses a subject nobody listens on and the fanout
+            # ``nimbus`` addresses a subject nobody listens on and the fanout
             # silently vanishes. Enforce the ``agentd-<name>`` convention (same
             # fail-loud check as the wake allow-list) so a mis-set roster fails at
             # config build, not mid-debate. Applied whenever participants are
@@ -364,7 +364,7 @@ class IntakeConfig:
                     raise ValueError(
                         f"RTECH_CHATD_DEBATE_PARTICIPANTS id {participant!r} does not "
                         "follow the required agentd-<name> convention: every id must "
-                        r"match '^agentd-[a-z0-9][a-z0-9-]*$' (e.g. 'agentd-nagatha'); "
+                        r"match '^agentd-[a-z0-9][a-z0-9-]*$' (e.g. 'agentd-nimbus'); "
                         "a bare name addresses rtech.agent.<name>.task, a subject no "
                         "deployed agentd subscribes, so the fanout would silently vanish"
                     )
@@ -404,7 +404,7 @@ class IntakeConfig:
             RTECH_CHATD_INTAKE_MODE: ``listed`` (default) or ``all-channels``.
             RTECH_CHATD_TRIAGE_AGENT: triage agent id. REQUIRED (no default)
                 when intake is enabled; must be the deployed ``agentd-<name>``
-                id (e.g. ``agentd-nagatha``). A blank/unset value fails closed in
+                id (e.g. ``agentd-nimbus``). A blank/unset value fails closed in
                 ``__post_init__`` rather than defaulting to a bare name that
                 would publish into the void.
             RTECH_CHATD_INTAKE_MEMBER_IDS: comma-separated trio member ids.
@@ -756,7 +756,7 @@ ENV_TG_IDENTITY_MAP = "RTECH_TG_IDENTITY_MAP"
 def parse_identity_map(raw: str | None) -> dict[str, str]:
     """Parse ``RTECH_TG_IDENTITY_MAP`` into ``agent_id -> token_ref`` (refs only).
 
-    Shape: ``agentd-nagatha=env:TG_TOKEN_NAGATHA,agentd-bilby=env:TG_TOKEN_BILBY``.
+    Shape: ``agentd-nimbus=env:TG_TOKEN_NIMBUS,agentd-birk=env:TG_TOKEN_BIRK``.
     Every agent id must follow the deployed ``agentd-<name>`` convention (the
     SAME fail-loud rule as the debate roster — a bare name would silently never
     match a TurnFrame's ``agent_id`` and every send would fail as unknown), and

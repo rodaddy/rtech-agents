@@ -1416,32 +1416,32 @@ async def test_cap_closing_turn_preserves_substantive_text_after_empty_follow_up
     tmp_path: Path,
 ) -> None:
     """An empty post-cap follow-up cannot erase the last real answer."""
-    engine, runner, bus = _runner_for("bilby", tmp_path)
+    engine, runner, bus = _runner_for("birk", tmp_path)
     await runner.start()
-    task = _duo_task(["bilby", "skippy"])
-    await bus.deliver(subjects.agent_task("bilby"), task)
+    task = _duo_task(["birk", "sprocket"])
+    await bus.deliver(subjects.agent_task("birk"), task)
     turn_subj = subjects.task_turn(task.id)
 
-    substantive = "Bilby's substantive position survives exactly."
+    substantive = "Birk's substantive position survives exactly."
     for round_no in range(MAX_SIBLING_ROUNDS):
-        await bus.deliver(turn_subj, _sibling_turn("skippy", task.id, needs=["bilby"]))
+        await bus.deliver(turn_subj, _sibling_turn("sprocket", task.id, needs=["birk"]))
         await runner._on_engine_event(
             TurnDone(
                 # The final follow-up lands after the cap retires the subscription.
                 text="" if round_no == MAX_SIBLING_ROUNDS - 1 else substantive,
                 stance=Stance(
-                    position="pro-bus", because="single source of truth", needs_from=["skippy"]
+                    position="pro-bus", because="single source of truth", needs_from=["sprocket"]
                 ),
             )
         )
 
-    bilby_turns = [
-        f for f in bus.frames_on(turn_subj) if isinstance(f, TurnFrame) and f.agent_id == "bilby"
+    birk_turns = [
+        f for f in bus.frames_on(turn_subj) if isinstance(f, TurnFrame) and f.agent_id == "birk"
     ]
-    assert bilby_turns[-2].visible_text == "(no output)"
-    assert bilby_turns[-2].stance.needs_from == ["skippy"]
+    assert birk_turns[-2].visible_text == "(no output)"
+    assert birk_turns[-2].stance.needs_from == ["sprocket"]
 
-    closing = bilby_turns[-1]
+    closing = birk_turns[-1]
     assert closing.visible_text == substantive
     assert closing.stance.needs_from == []
     assert closing.stance.position == "pro-bus"
@@ -1456,33 +1456,33 @@ async def test_cap_closing_turn_emits_exactly_one_frame_preserving_text(
     Guards the invariant that preserving text did not multiply closing frames or
     leak a second terminus on a later dropped sibling.
     """
-    engine, runner, bus = _runner_for("bilby", tmp_path)
+    engine, runner, bus = _runner_for("birk", tmp_path)
     await runner.start()
-    task = _duo_task(["bilby", "skippy"])
-    await bus.deliver(subjects.agent_task("bilby"), task)
+    task = _duo_task(["birk", "sprocket"])
+    await bus.deliver(subjects.agent_task("birk"), task)
     turn_subj = subjects.task_turn(task.id)
 
-    final_text = "Bilby's closing case: bounded rounds keep the debate honest."
+    final_text = "Birk's closing case: bounded rounds keep the debate honest."
     for round_no in range(MAX_SIBLING_ROUNDS):
-        await bus.deliver(turn_subj, _sibling_turn("skippy", task.id, needs=["bilby"]))
+        await bus.deliver(turn_subj, _sibling_turn("sprocket", task.id, needs=["birk"]))
         await runner._on_engine_event(
             TurnDone(
                 text=final_text if round_no == MAX_SIBLING_ROUNDS - 1 else "earlier round",
-                stance=Stance(position="dissent", because="bounded", needs_from=["skippy"]),
+                stance=Stance(position="dissent", because="bounded", needs_from=["sprocket"]),
             )
         )
 
     # Drive extra dropped siblings on the retired lane: still exactly one closing.
     for _ in range(3):
-        await runner._on_sibling_turn(task.id, _sibling_turn("skippy", task.id, needs=["bilby"]))
+        await runner._on_sibling_turn(task.id, _sibling_turn("sprocket", task.id, needs=["birk"]))
 
-    bilby_terminal = [
+    birk_terminal = [
         f
         for f in bus.frames_on(turn_subj)
-        if isinstance(f, TurnFrame) and f.agent_id == "bilby" and not f.stance.needs_from
+        if isinstance(f, TurnFrame) and f.agent_id == "birk" and not f.stance.needs_from
     ]
-    assert len(bilby_terminal) == 1
-    assert bilby_terminal[0].visible_text == final_text
+    assert len(birk_terminal) == 1
+    assert birk_terminal[0].visible_text == final_text
 
 
 async def test_concurrent_sibling_deliveries_reserve_under_lock_do_not_overshoot(
@@ -2144,7 +2144,7 @@ async def test_cap_closing_turn_carries_task_origin(tmp_path: Path) -> None:
 
 # ---------------------------------------------------- debate-role framing (#debate)
 
-_TRIO = ["agentd-nagatha", "agentd-bilby", "agentd-iris"]
+_TRIO = ["agentd-nimbus", "agentd-birk", "agentd-iris"]
 
 
 def _debate_task(
@@ -2154,7 +2154,7 @@ def _debate_task(
     scope = {1: "single", 2: "duo", 3: "trio"}[len(parts)]
     return TaskFrame(
         id="deb-1",
-        origin_edge="chatd-intake:agentd-nagatha",
+        origin_edge="chatd-intake:agentd-nimbus",
         requester="rico",
         text=text,
         scope=scope,  # type: ignore[arg-type]
@@ -2165,19 +2165,19 @@ def _debate_task(
 
 
 def test_short_name_strips_prefix_and_stack_suffix() -> None:
-    assert _short_name("agentd-nagatha") == "nagatha"
-    assert _short_name("agentd-nagatha-dev") == "nagatha"
-    assert _short_name("agentd-bilby-prod") == "bilby"
+    assert _short_name("agentd-nimbus") == "nimbus"
+    assert _short_name("agentd-nimbus-dev") == "nimbus"
+    assert _short_name("agentd-birk-prod") == "birk"
     assert _short_name("plain") == "plain"
 
 
 def test_render_debate_task_participant_directive() -> None:
     # A non-arbiter participant is told to argue only its own position and engage
     # sibling turns, NOT summarize; its short name and the roster are named.
-    task = _debate_task(arbiter="agentd-nagatha")
-    rendered = _render_debate_task(task, "agentd-bilby")
-    assert rendered.startswith("[debate task] You are bilby, one of 3 debaters")
-    assert "nagatha, bilby, iris" in rendered
+    task = _debate_task(arbiter="agentd-nimbus")
+    rendered = _render_debate_task(task, "agentd-birk")
+    assert rendered.startswith("[debate task] You are birk, one of 3 debaters")
+    assert "nimbus, birk, iris" in rendered
     assert "Speak ONLY for yourself" in rendered
     assert "the arbiter does that" in rendered
     # The task text rides after the directive.
@@ -2187,8 +2187,8 @@ def test_render_debate_task_participant_directive() -> None:
 
 def test_render_debate_task_arbiter_directive() -> None:
     # The arbiter is told to moderate and TLDR, not argue the substance.
-    task = _debate_task(arbiter="agentd-nagatha")
-    rendered = _render_debate_task(task, "agentd-nagatha")
+    task = _debate_task(arbiter="agentd-nimbus")
+    rendered = _render_debate_task(task, "agentd-nimbus")
     assert rendered.startswith("[debate task — you are the ARBITER]")
     assert "Moderate; do not argue the substance yourself" in rendered
     assert "short TLDR ruling/summary of THEIR positions" in rendered
@@ -2198,9 +2198,9 @@ def test_render_debate_task_arbiter_directive() -> None:
 def test_render_debate_task_no_arbiter_treats_all_as_participants() -> None:
     # No arbiter set (duo with no moderator): every agent gets the participant
     # directive, never the arbiter one.
-    task = _debate_task(arbiter=None, participants=["agentd-bilby", "agentd-iris"])
-    rendered = _render_debate_task(task, "agentd-bilby")
-    assert rendered.startswith("[debate task] You are bilby, one of 2 debaters")
+    task = _debate_task(arbiter=None, participants=["agentd-birk", "agentd-iris"])
+    rendered = _render_debate_task(task, "agentd-birk")
+    assert rendered.startswith("[debate task] You are birk, one of 2 debaters")
     assert "ARBITER" not in rendered
 
 
@@ -2209,28 +2209,28 @@ def test_render_debate_task_single_scope_is_byte_identical_passthrough() -> None
     # no directive, byte-identical to today's send.
     single = _task()
     assert _render_debate_task(single, _AGENT) == single.text
-    one = _debate_task(arbiter=None, participants=["agentd-bilby"])
-    assert _render_debate_task(one, "agentd-bilby") == one.text
+    one = _debate_task(arbiter=None, participants=["agentd-birk"])
+    assert _render_debate_task(one, "agentd-birk") == one.text
 
 
 async def test_debate_task_send_carries_participant_framing(tmp_path: Path) -> None:
     # Integration: a multi-participant TaskFrame delivered to a NON-arbiter agent
     # sends the participant directive (not just frame.text) to the engine session.
-    engine, runner, bus = _make_named(tmp_path, agent_id="agentd-bilby")
+    engine, runner, bus = _make_named(tmp_path, agent_id="agentd-birk")
     await runner.start()
-    task = _debate_task(arbiter="agentd-nagatha")
-    await bus.deliver(subjects.agent_task("agentd-bilby"), task)
+    task = _debate_task(arbiter="agentd-nimbus")
+    await bus.deliver(subjects.agent_task("agentd-birk"), task)
     sent = engine.sends[-1].text
-    assert sent.startswith("[debate task] You are bilby")
+    assert sent.startswith("[debate task] You are birk")
     assert sent.endswith("\n\nsettle this")
 
 
 async def test_debate_task_send_carries_arbiter_framing(tmp_path: Path) -> None:
     # Integration: the arbiter agent receives the arbiter directive.
-    engine, runner, bus = _make_named(tmp_path, agent_id="agentd-nagatha")
+    engine, runner, bus = _make_named(tmp_path, agent_id="agentd-nimbus")
     await runner.start()
-    task = _debate_task(arbiter="agentd-nagatha")
-    await bus.deliver(subjects.agent_task("agentd-nagatha"), task)
+    task = _debate_task(arbiter="agentd-nimbus")
+    await bus.deliver(subjects.agent_task("agentd-nimbus"), task)
     sent = engine.sends[-1].text
     assert sent.startswith("[debate task — you are the ARBITER]")
 

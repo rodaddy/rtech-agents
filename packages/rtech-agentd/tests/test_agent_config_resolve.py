@@ -27,7 +27,7 @@ from rtech_agentd.engine_select import ENV_ENGINE, ENV_ENGINE_ALT, ENV_MODEL, _s
 # Repo root: this file is packages/rtech-agentd/tests/<f> -> up 3 = repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _AGENTS_ROOT = _REPO_ROOT / "agents"
-_TRIO = ("agentd-bilby", "agentd-skippy", "agentd-nagatha")
+_TRIO = ("agentd-birk", "agentd-sprocket", "agentd-nimbus")
 
 
 def _capture_logs() -> tuple[list[str], int]:
@@ -60,34 +60,34 @@ def test_resolve_found_config_is_used(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_resolve_by_slug_strips_agentd_prefix(tmp_path: Path, monkeypatch) -> None:
-    """RTECH_AGENT_ID 'agentd-skippy' resolves the slug dir agents/skippy.
+    """RTECH_AGENT_ID 'agentd-sprocket' resolves the slug dir agents/sprocket.
 
     Dirs are slug-named but the systemd instance id carries the 'agentd-' prefix;
     the exact-id dir does NOT exist, so resolution must fall through to the slug.
     """
-    _write_manifest(tmp_path / "agents" / "skippy", "agentd-skippy")
+    _write_manifest(tmp_path / "agents" / "sprocket", "agentd-sprocket")
     monkeypatch.setenv(ENV_AGENTS_ROOT, str(tmp_path / "agents"))
-    config = _resolve_agent_config("agentd-skippy")
+    config = _resolve_agent_config("agentd-sprocket")
     assert config is not None
-    assert config.agent == "agentd-skippy"
+    assert config.agent == "agentd-sprocket"
 
 
 def test_resolve_exact_id_dir_wins_over_slug(tmp_path: Path, monkeypatch) -> None:
     """When BOTH an exact-id and a slug dir exist, the exact-id dir wins."""
     root = tmp_path / "agents"
     # slug dir carries model claude-sonnet-5; exact-id dir carries a distinct home.
-    _write_manifest(root / "skippy", "agentd-skippy")
-    exact = root / "agentd-skippy"
+    _write_manifest(root / "sprocket", "agentd-sprocket")
+    exact = root / "agentd-sprocket"
     exact.mkdir(parents=True)
     (exact / "agent.yaml").write_text(
-        "agent: agentd-skippy\n"
+        "agent: agentd-sprocket\n"
         "home: /home/exact/.rtech-agents\n"
         'engine:\n  kind: claude\n  model: "claude-opus-5"\n'
         'nats:\n  url: "nats://127.0.0.1:4222"\n  env: dev\n',
         encoding="utf-8",
     )
     monkeypatch.setenv(ENV_AGENTS_ROOT, str(root))
-    config = _resolve_agent_config("agentd-skippy")
+    config = _resolve_agent_config("agentd-sprocket")
     assert config is not None
     # The exact-id dir's manifest (opus) resolved, not the slug's (sonnet).
     assert config.engine.model == "claude-opus-5"
@@ -122,7 +122,7 @@ def test_engine_env_overlays_config_kind_and_model(monkeypatch) -> None:
     monkeypatch.delenv(ENV_ENGINE, raising=False)
     monkeypatch.delenv(ENV_ENGINE_ALT, raising=False)
     monkeypatch.delenv(ENV_MODEL, raising=False)
-    cfg = load_agent_config(_AGENTS_ROOT / "bilby" / "agent.yaml")
+    cfg = load_agent_config(_AGENTS_ROOT / "birk" / "agent.yaml")
     env = _engine_env_from_config(cfg)
     # BOTH spellings are set so the manifest kind is authoritative.
     assert env[ENV_ENGINE] == cfg.engine.kind

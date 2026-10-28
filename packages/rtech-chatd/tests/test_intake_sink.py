@@ -73,7 +73,7 @@ def _intake(**overrides: object) -> IntakeConfig:
         "mode": IntakeMode.ALL_CHANNELS,
         # The deployed triage id is the full agentd-<name> (RTECH_AGENT_ID);
         # a bare name would publish to a subject no agentd subscribes to.
-        "triage_agent": "agentd-nagatha",
+        "triage_agent": "agentd-nimbus",
         "member_ids": frozenset({"77"}),
     }
     base.update(overrides)
@@ -131,8 +131,8 @@ def test_publish_subject_and_frame_correctness() -> None:
     # Subject built via the subjects module → the triage agent's task lane. The
     # triage id is the deployed agentd-<name>, so the subject is the lane that
     # agentd's RTECH_AGENT_ID actually subscribes on.
-    assert subject == subjects.agent_task("agentd-nagatha")
-    assert subject == "rtech.agent.agentd-nagatha.task"
+    assert subject == subjects.agent_task("agentd-nimbus")
+    assert subject == "rtech.agent.agentd-nimbus.task"
 
     frame = decode_frame(data)
     assert isinstance(frame, TaskFrame)
@@ -151,14 +151,14 @@ def test_publish_subject_and_frame_correctness() -> None:
     # on unstamped frames).
     assert frame.created_at is not None
     # origin_edge names the triage destination.
-    assert frame.origin_edge == "chatd-intake:agentd-nagatha"
+    assert frame.origin_edge == "chatd-intake:agentd-nimbus"
 
 
 def test_triage_agent_from_config_is_the_subject() -> None:
     bus = FakeBus()
-    sink = _sink(bus, intake=_intake(triage_agent="agentd-bilby"))
+    sink = _sink(bus, intake=_intake(triage_agent="agentd-birk"))
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
-    assert bus.published[0][0] == "rtech.agent.agentd-bilby.task"
+    assert bus.published[0][0] == "rtech.agent.agentd-birk.task"
 
 
 # --------------------------------------------------------------- debate fanout
@@ -173,7 +173,7 @@ def test_unset_debate_participants_is_byte_identical_single_scope() -> None:
     sink = _sink(bus, id_factory=lambda: "task-x")
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
     subject, data = bus.published[-1]
-    assert subject == subjects.agent_task("agentd-nagatha")
+    assert subject == subjects.agent_task("agentd-nimbus")
     frame = decode_frame(data)
     assert isinstance(frame, TaskFrame)
     assert frame.scope == "single"
@@ -190,8 +190,8 @@ def test_trio_mint_fans_via_ingress_mirroring_orchestrator() -> None:
     # orchestrator publishes to every agent_task(participant) lane). The sink does
     # NOT reinvent the fanout; it hands the orchestrator ONE multi-participant frame.
     bus = FakeBus()
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-iris")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-iris")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, id_factory=lambda: "deb-task")
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
 
@@ -205,7 +205,7 @@ def test_trio_mint_fans_via_ingress_mirroring_orchestrator() -> None:
     assert frame.participants == list(trio)  # order preserved
     # The debate mint stamps the arbiter role authority = the triage agent, and
     # it is one of the participants (TaskFrame validates that invariant).
-    assert frame.arbiter == "agentd-nagatha"
+    assert frame.arbiter == "agentd-nimbus"
     assert frame.arbiter in frame.participants
     assert frame.stack == "rtech-dev"
     assert frame.created_at is not None
@@ -216,15 +216,15 @@ def test_trio_mint_fans_via_ingress_mirroring_orchestrator() -> None:
 
 def test_duo_mint_scope_matches_participant_count() -> None:
     bus = FakeBus()
-    duo = ("agentd-nagatha", "agentd-bilby")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=duo)
+    duo = ("agentd-nimbus", "agentd-birk")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=duo)
     sink = _sink(bus, intake=cfg, id_factory=lambda: "duo-task")
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
     frame = decode_frame(bus.published[0][1])
     assert isinstance(frame, TaskFrame)
     assert frame.scope == "duo"
     assert frame.participants == list(duo)
-    assert frame.arbiter == "agentd-nagatha"
+    assert frame.arbiter == "agentd-nimbus"
 
 
 def test_debate_still_yields_to_responder() -> None:
@@ -232,8 +232,8 @@ def test_debate_still_yields_to_responder() -> None:
     # answers this message, no debate frame is minted.
     bus = FakeBus()
     cfg = _intake(
-        triage_agent="agentd-nagatha",
-        debate_participants=("agentd-nagatha", "agentd-bilby"),
+        triage_agent="agentd-nimbus",
+        debate_participants=("agentd-nimbus", "agentd-birk"),
     )
     sink = _sink(bus, intake=cfg, should_respond_fn=lambda _m, _c: True)
     asyncio.run(sink(_msg(mentions_me=True, mentioned_ids=frozenset({"77"}))))
@@ -244,8 +244,8 @@ def test_debate_deduped_by_message_id() -> None:
     # The same message id mints one debate frame within the window (redelivery).
     bus = FakeBus()
     cfg = _intake(
-        triage_agent="agentd-nagatha",
-        debate_participants=("agentd-nagatha", "agentd-bilby", "agentd-iris"),
+        triage_agent="agentd-nimbus",
+        debate_participants=("agentd-nimbus", "agentd-birk", "agentd-iris"),
     )
     sink = _sink(bus, intake=cfg)
     msg = _msg(message_id="dup-deb", mentioned_ids=frozenset({"77"}))
@@ -515,8 +515,8 @@ def test_debate_mint_posts_instant_ack_voiced_as_triage_agent() -> None:
         acks.append((target, text))
         return "ack-msg-1"
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, ack_send=ack_send)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
 
@@ -524,8 +524,8 @@ def test_debate_mint_posts_instant_ack_voiced_as_triage_agent() -> None:
     assert len(acks) == 1
     target, text = acks[0]
     assert target == SendTarget(channel_id="chan1", thread_id=None)  # plain, no reply
-    assert text.startswith("**nagatha**")
-    assert "bilby" in text and "skippy" in text
+    assert text.startswith("**nimbus**")
+    assert "birk" in text and "sprocket" in text
     assert "agentd-" not in text  # display names, not raw convention ids
 
 
@@ -553,8 +553,8 @@ def test_ack_failure_is_contained_and_publish_stands() -> None:
     async def ack_send(target: SendTarget, text: str) -> str | None:
         raise RuntimeError("ack surface exploded")
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, ack_send=ack_send)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))  # must not raise
     assert len(bus.published) == 1
@@ -567,8 +567,8 @@ def test_ack_failure_log_omits_raw_exception_message() -> None:
     async def ack_send(target: SendTarget, text: str) -> str | None:
         raise RuntimeError(f"ack rejected by {secret}")
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     try:
         bus = FakeBus()
         sink = _sink(bus, intake=cfg, ack_send=ack_send, id_factory=lambda: "task-ack")
@@ -594,8 +594,8 @@ def test_debate_ack_lands_in_origin_thread_when_ask_was_in_thread() -> None:
         acks.append((target, text))
         return None
 
-    duo = ("agentd-nagatha", "agentd-bilby")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=duo)
+    duo = ("agentd-nimbus", "agentd-birk")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=duo)
     sink = _sink(bus, intake=cfg, ack_send=ack_send)
     asyncio.run(sink(_msg(thread_id="t42", mentioned_ids=frozenset({"77"}))))
     assert acks[0][0] == SendTarget(channel_id="chan1", thread_id="t42")
@@ -611,8 +611,8 @@ def test_redelivered_debate_message_acks_only_once() -> None:
         acks.append((target, text))
         return None
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, ack_send=ack_send)
 
     async def deliver_twice() -> None:
@@ -635,8 +635,8 @@ def test_publish_failure_posts_no_ack() -> None:
         acks.append((target, text))
         return None
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, ack_send=ack_send)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))  # contained
     assert acks == []
@@ -652,8 +652,8 @@ def test_debate_mint_starts_typing_for_every_participant() -> None:
     async def typing_start(target: SendTarget) -> None:
         typing.append(target)
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, typing_start=typing_start)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
 
@@ -669,17 +669,17 @@ def test_typing_start_failure_is_contained_per_participant() -> None:
     typing: list[SendTarget] = []
 
     async def typing_start(target: SendTarget) -> None:
-        if target.as_agent == "agentd-bilby":
+        if target.as_agent == "agentd-birk":
             raise RuntimeError("typing exploded")
         typing.append(target)
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, typing_start=typing_start)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
 
     assert len(bus.published) == 1
-    assert [t.as_agent for t in typing] == ["agentd-nagatha", "agentd-skippy"]
+    assert [t.as_agent for t in typing] == ["agentd-nimbus", "agentd-sprocket"]
 
 
 def test_typing_start_failure_log_omits_raw_exception_message() -> None:
@@ -688,12 +688,12 @@ def test_typing_start_failure_log_omits_raw_exception_message() -> None:
     typing: list[SendTarget] = []
 
     async def typing_start(target: SendTarget) -> None:
-        if target.as_agent == "agentd-bilby":
+        if target.as_agent == "agentd-birk":
             raise RuntimeError(f"typing rejected with {secret}")
         typing.append(target)
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     try:
         bus = FakeBus()
         sink = _sink(
@@ -708,10 +708,10 @@ def test_typing_start_failure_log_omits_raw_exception_message() -> None:
 
     assert result is None
     assert len(bus.published) == 1
-    assert [target.as_agent for target in typing] == ["agentd-nagatha", "agentd-skippy"]
+    assert [target.as_agent for target in typing] == ["agentd-nimbus", "agentd-sprocket"]
     joined = "\n".join(captured)
     assert "typing start failed" in joined
-    assert "agent=agentd-bilby task_id=task-typing error_type=RuntimeError" in joined
+    assert "agent=agentd-birk task_id=task-typing error_type=RuntimeError" in joined
     assert secret not in joined
     assert "typing-s3cr3t" not in joined
 
@@ -741,15 +741,15 @@ def test_unvoiced_ack_is_identity_stamped_and_unprefixed() -> None:
         acks.append((target, text))
         return "ack-msg-1"
 
-    trio = ("agentd-nagatha", "agentd-bilby", "agentd-skippy")
-    cfg = _intake(triage_agent="agentd-nagatha", debate_participants=trio)
+    trio = ("agentd-nimbus", "agentd-birk", "agentd-sprocket")
+    cfg = _intake(triage_agent="agentd-nimbus", debate_participants=trio)
     sink = _sink(bus, intake=cfg, ack_send=ack_send, voiced=False)
     asyncio.run(sink(_msg(mentioned_ids=frozenset({"77"}))))
 
     assert len(acks) == 1
     target, text = acks[0]
-    assert target.as_agent == "agentd-nagatha"
+    assert target.as_agent == "agentd-nimbus"
     assert not text.startswith("**")
     assert text.startswith("On it.")
-    assert "bilby" in text and "skippy" in text
+    assert "birk" in text and "sprocket" in text
     assert "agentd-" not in text

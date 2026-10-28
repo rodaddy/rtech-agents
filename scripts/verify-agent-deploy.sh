@@ -9,7 +9,7 @@
 # canary before the next agent is migrated.
 #
 # Usage (on the host, as the target user):
-#   bash scripts/verify-agent-deploy.sh [agent-id]   # default: agentd-nagatha
+#   bash scripts/verify-agent-deploy.sh [agent-id]   # default: agentd-nimbus
 #
 # Manifest resolution MIRRORS the runtime entrypoint
 # (rtech_agentd.__main__._resolve_manifest_path) EXACTLY so the operator gate and
@@ -17,14 +17,14 @@
 #   1. <root>/agents/<agent-id>/agent.yaml — an exact-id directory (wins when
 #      both an exact-id and a slug dir exist).
 #   2. <root>/agents/<slug>/agent.yaml where <slug> strips a leading `agentd-`
-#      prefix — the committed convention (dirs are slug-named `agents/skippy`
-#      while the systemd instance id is `agentd-skippy`).
+#      prefix — the committed convention (dirs are slug-named `agents/sprocket`
+#      while the systemd instance id is `agentd-sprocket`).
 # A miss under BOTH is a FAIL (the daemon would fall back to env-only, which is
 # not a verified per-agent deploy).
 
 set -eu
 
-AGENT_ID="${1:-agentd-nagatha}"
+AGENT_ID="${1:-agentd-nimbus}"
 INSTALL_ROOT="${RTECH_AGENTS_ROOT_INSTALL:-$HOME/rtech-agents}"
 UNIT="rtech-agentd@${AGENT_ID}.service"
 rc=0
