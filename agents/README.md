@@ -14,9 +14,9 @@ add your own `agents/<slug>/` (agent.yaml plus SOUL/USER/KERNEL) per host.
 
 ## Directory naming: slug, not instance id
 
-Directories are **slug-named** (`skippy`) but the systemd instance id — and thus
+Directories are **slug-named** (`sprocket`) but the systemd instance id — and thus
 `RTECH_AGENT_ID` (from the unit's `%i`) — carries an `agentd-` prefix
-(`agentd-skippy`). The entrypoint (`rtech_agentd.__main__._resolve_manifest_path`)
+(`agentd-sprocket`). The entrypoint (`rtech_agentd.__main__._resolve_manifest_path`)
 resolves the manifest under `RTECH_AGENTS_ROOT` (default `./agents`) in this
 order, logging which one resolved:
 

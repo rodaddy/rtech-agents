@@ -25,13 +25,13 @@ from rtech_agentd.wake_tool import (
 
 from .fakes import FakeFrameBus
 
-_TRIAGE = "agentd-nagatha"
-_BILBY = "agentd-bilby"
+_TRIAGE = "agentd-nimbus"
+_BIRK = "agentd-birk"
 
 
 def _service(bus: FakeFrameBus | None = None) -> WakeService:
     return WakeService(
-        config=WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BILBY}), stack="dev"),
+        config=WakeConfig(triage_agent=_TRIAGE, allowed_agents=frozenset({_BIRK}), stack="dev"),
         bus=bus or FakeFrameBus(),
         origin_provider=lambda: None,
         id_factory=lambda: "tid-1",
@@ -63,9 +63,9 @@ def test_build_wake_server_names_the_server() -> None:
 
 
 def test_render_success_carries_task_id() -> None:
-    text = _render_outcome(WakeResult(agent_id=_BILBY, task_id="tid-9"))
+    text = _render_outcome(WakeResult(agent_id=_BIRK, task_id="tid-9"))
     assert "tid-9" in text
-    assert _BILBY in text
+    assert _BIRK in text
 
 
 def test_render_error_is_a_clear_refusal() -> None:
@@ -127,7 +127,7 @@ async def test_tool_handler_end_to_end_publishes_and_renders() -> None:
         method="tools/call",
         params=CallToolRequestParams(
             name=WAKE_TOOL_NAME,
-            arguments={"agent_id": _BILBY, "task_text": "q", "reason": "r"},
+            arguments={"agent_id": _BIRK, "task_text": "q", "reason": "r"},
         ),
     )
 

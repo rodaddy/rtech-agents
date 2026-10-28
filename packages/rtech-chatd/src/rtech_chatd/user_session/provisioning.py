@@ -36,15 +36,15 @@ from .admin import (
     promote_admins,
 )
 
-# The bot-token edge addresses the trio by fleet slug (``skippy``/``nagatha``/
-# ``bilby`` — the same slugs deploy/kboard/install.sh uses). A Telethon invite
+# The bot-token edge addresses the trio by fleet slug (``sprocket``/``nimbus``/
+# ``birk`` — the same slugs deploy/kboard/install.sh uses). A Telethon invite
 # needs a Telegram handle, which is not derivable from the slug, so this table is
 # the sole configured identity source. Caller-supplied maps and arbitrary handles
 # are intentionally not accepted at this trust boundary.
 DEFAULT_BOT_HANDLES: dict[str, str] = {
-    "skippy": "@Skippy_example_bot",
-    "nagatha": "@Nagatha_example_bot",
-    "bilby": "@Bilby_example_bot",
+    "sprocket": "@Sprocket_example_bot",
+    "nimbus": "@Nimbus_example_bot",
+    "birk": "@Birk_example_bot",
 }
 
 # An invite link is a bearer credential: anyone holding it can join. A durable,
@@ -146,7 +146,7 @@ def resolve_bot_handles(bots: list[str]) -> list[str]:
     if not bots:
         raise ValueError(
             "CRITICAL: no bots requested. ACTION REQUIRED: pass at least one bot "
-            "(e.g. --bots skippy,nagatha,bilby)."
+            "(e.g. --bots sprocket,nimbus,birk)."
         )
     configured_handles = {handle.lower(): handle for handle in DEFAULT_BOT_HANDLES.values()}
     resolved: list[str] = []

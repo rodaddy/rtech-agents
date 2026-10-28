@@ -163,16 +163,16 @@ def test_map_message_reply_flag() -> None:
 
 
 def test_map_message_username_mention_normalized_lowercase_no_at() -> None:
-    text = "hey @Nagatha take a look"
+    text = "hey @Nimbus take a look"
     msg = _message(
         chat=_supergroup_chat(),
         author=_user(2),
         text=text,
-        entities=[_mention_entity(text, "Nagatha")],
+        entities=[_mention_entity(text, "Nimbus")],
     )
     mapped = map_message(msg, self_username="mybot", self_user_id="1")
     # mention entity -> lowercase handle WITHOUT the @.
-    assert mapped.mentioned_ids == frozenset({"nagatha"})
+    assert mapped.mentioned_ids == frozenset({"nimbus"})
 
 
 def test_map_message_text_mention_uses_user_id() -> None:
@@ -489,7 +489,7 @@ def _intake_cfg(**kw: object) -> IntakeConfig:
     base: dict[str, object] = {
         "enabled": True,
         "mode": IntakeMode.ALL_CHANNELS,
-        "triage_agent": "agentd-nagatha",
+        "triage_agent": "agentd-nimbus",
     }
     base.update(kw)
     return IntakeConfig(**base)  # type: ignore[arg-type]
@@ -498,13 +498,13 @@ def _intake_cfg(**kw: object) -> IntakeConfig:
 def test_intake_hit_fires_sink_with_channel_identity() -> None:
     hits: list[InboundMessage] = []
     adapter = _adapter(
-        intake_config=_intake_cfg(member_ids=frozenset({"nagatha"})),
+        intake_config=_intake_cfg(member_ids=frozenset({"nimbus"})),
         intake_sink=hits.append,
     )
     adapter._self_username = "mybot"
     adapter._self_user_id = "1"
-    text = "@nagatha can you look at this"
-    ent = [_mention_entity(text, "nagatha")]
+    text = "@nimbus can you look at this"
+    ent = [_mention_entity(text, "nimbus")]
     msg = _message(
         chat=_supergroup_chat(),
         author=_user(2, username="human"),
@@ -522,13 +522,13 @@ def test_intake_hit_fires_sink_with_channel_identity() -> None:
 def test_intake_disabled_never_fires_sink() -> None:
     hits: list[InboundMessage] = []
     adapter = _adapter(
-        intake_config=IntakeConfig(enabled=False, member_ids=frozenset({"nagatha"})),
+        intake_config=IntakeConfig(enabled=False, member_ids=frozenset({"nimbus"})),
         intake_sink=hits.append,
     )
     adapter._self_username = "mybot"
     adapter._self_user_id = "1"
-    text = "@nagatha hey"
-    ent = [_mention_entity(text, "nagatha")]
+    text = "@nimbus hey"
+    ent = [_mention_entity(text, "nimbus")]
     msg = _message(chat=_supergroup_chat(), author=_user(2), text=text, entities=ent)
     asyncio.run(adapter._on_message(msg))
     assert hits == []
@@ -539,13 +539,13 @@ def test_intake_sink_failure_does_not_crash() -> None:
         raise RuntimeError("sink exploded")
 
     adapter = _adapter(
-        intake_config=_intake_cfg(member_ids=frozenset({"nagatha"})),
+        intake_config=_intake_cfg(member_ids=frozenset({"nimbus"})),
         intake_sink=boom,
     )
     adapter._self_username = "mybot"
     adapter._self_user_id = "1"
-    text = "@nagatha hey"
-    ent = [_mention_entity(text, "nagatha")]
+    text = "@nimbus hey"
+    ent = [_mention_entity(text, "nimbus")]
     msg = _message(chat=_supergroup_chat(), author=_user(2), text=text, entities=ent)
     # Must not raise.
     asyncio.run(adapter._on_message(msg))
@@ -559,13 +559,13 @@ def test_intake_async_sink_is_awaited() -> None:
         published.append(m)
 
     adapter = _adapter(
-        intake_config=_intake_cfg(member_ids=frozenset({"nagatha"})),
+        intake_config=_intake_cfg(member_ids=frozenset({"nimbus"})),
         intake_sink=async_sink,
     )
     adapter._self_username = "mybot"
     adapter._self_user_id = "1"
-    text = "@nagatha hey"
-    ent = [_mention_entity(text, "nagatha")]
+    text = "@nimbus hey"
+    ent = [_mention_entity(text, "nimbus")]
     msg = _message(
         chat=_supergroup_chat(), author=_user(2), text=text, entities=ent, message_id=8081
     )
@@ -578,13 +578,13 @@ def test_intake_bot_author_ignored() -> None:
     # A bot author is never an intake hit under the default AllowBots.NONE.
     hits: list[InboundMessage] = []
     adapter = _adapter(
-        intake_config=_intake_cfg(member_ids=frozenset({"nagatha"})),
+        intake_config=_intake_cfg(member_ids=frozenset({"nimbus"})),
         intake_sink=hits.append,
     )
     adapter._self_username = "mybot"
     adapter._self_user_id = "1"
-    text = "@nagatha hey"
-    ent = [_mention_entity(text, "nagatha")]
+    text = "@nimbus hey"
+    ent = [_mention_entity(text, "nimbus")]
     msg = _message(chat=_supergroup_chat(), author=_user(9, is_bot=True), text=text, entities=ent)
     asyncio.run(adapter._on_message(msg))
     assert hits == []

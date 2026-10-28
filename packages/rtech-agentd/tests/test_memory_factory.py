@@ -29,48 +29,48 @@ class _FakeMemoryClient:
 
 
 def test_agent_env_suffix_variants() -> None:
-    assert agent_env_suffix("agentd-nagatha") == "NAGATHA"
-    assert agent_env_suffix("agentd-nagatha-dev") == "NAGATHA"
-    assert agent_env_suffix("agentd-nagatha-prod") == "NAGATHA"
+    assert agent_env_suffix("agentd-nimbus") == "NIMBUS"
+    assert agent_env_suffix("agentd-nimbus-dev") == "NIMBUS"
+    assert agent_env_suffix("agentd-nimbus-prod") == "NIMBUS"
     assert agent_env_suffix("agentd-my.agent") == "MY_AGENT"
-    assert agent_env_suffix("agentd-skippy") == "SKIPPY"
+    assert agent_env_suffix("agentd-sprocket") == "SPROCKET"
 
 
 def test_resolve_per_agent_precedence() -> None:
     assert _resolve_per_agent(
-        {"OPENBRAIN_TOKEN": "g", "OPENBRAIN_TOKEN_NAGATHA": "p"},
+        {"OPENBRAIN_TOKEN": "g", "OPENBRAIN_TOKEN_NIMBUS": "p"},
         "OPENBRAIN_TOKEN",
-        "NAGATHA",
-    ) == ("p", "OPENBRAIN_TOKEN_NAGATHA")
-    assert _resolve_per_agent({"OPENBRAIN_TOKEN": "g"}, "OPENBRAIN_TOKEN", "NAGATHA") == (
+        "NIMBUS",
+    ) == ("p", "OPENBRAIN_TOKEN_NIMBUS")
+    assert _resolve_per_agent({"OPENBRAIN_TOKEN": "g"}, "OPENBRAIN_TOKEN", "NIMBUS") == (
         "g",
         "OPENBRAIN_TOKEN",
     )
-    assert _resolve_per_agent({}, "OPENBRAIN_TOKEN", "NAGATHA") == ("", None)
+    assert _resolve_per_agent({}, "OPENBRAIN_TOKEN", "NIMBUS") == ("", None)
 
 
 def test_resolve_per_agent_blank_falls_through_to_global() -> None:
     assert _resolve_per_agent(
-        {"OPENBRAIN_TOKEN": "g", "OPENBRAIN_TOKEN_NAGATHA": "  "},
+        {"OPENBRAIN_TOKEN": "g", "OPENBRAIN_TOKEN_NIMBUS": "  "},
         "OPENBRAIN_TOKEN",
-        "NAGATHA",
+        "NIMBUS",
     ) == ("g", "OPENBRAIN_TOKEN")
 
 
 def test_per_agent_token_wins_over_global() -> None:
-    env = {"OPENBRAIN_TOKEN": "global-tok", "OPENBRAIN_TOKEN_NAGATHA": "per-agent-tok"}
-    lane = build_agent_memory_lane("agentd-nagatha", env=env, client=_FakeMemoryClient())
+    env = {"OPENBRAIN_TOKEN": "global-tok", "OPENBRAIN_TOKEN_NIMBUS": "per-agent-tok"}
+    lane = build_agent_memory_lane("agentd-nimbus", env=env, client=_FakeMemoryClient())
     assert isinstance(lane, AgentMemoryLane)
 
 
 def test_per_agent_isolation_one_agent_disabled() -> None:
-    # Only NAGATHA has a token; there is NO process-global token, so BILBY,
-    # co-hosted in the same env, must get None while NAGATHA still gets a lane.
-    env = {"OPENBRAIN_TOKEN_NAGATHA": "ntok"}
-    nagatha = build_agent_memory_lane("agentd-nagatha", env=env, client=_FakeMemoryClient())
-    bilby = build_agent_memory_lane("agentd-bilby", env=env, client=_FakeMemoryClient())
-    assert isinstance(nagatha, AgentMemoryLane)
-    assert bilby is None
+    # Only NIMBUS has a token; there is NO process-global token, so BIRK,
+    # co-hosted in the same env, must get None while NIMBUS still gets a lane.
+    env = {"OPENBRAIN_TOKEN_NIMBUS": "ntok"}
+    nimbus = build_agent_memory_lane("agentd-nimbus", env=env, client=_FakeMemoryClient())
+    birk = build_agent_memory_lane("agentd-birk", env=env, client=_FakeMemoryClient())
+    assert isinstance(nimbus, AgentMemoryLane)
+    assert birk is None
 
 
 def test_missing_token_disables_recall() -> None:
@@ -101,8 +101,8 @@ def test_token_value_and_length_never_logged() -> None:
     sink_id = logger.add(captured.append, level="DEBUG", format="{message}")
     try:
         build_agent_memory_lane(
-            "agentd-nagatha",
-            env={"OPENBRAIN_TOKEN_NAGATHA": secret},
+            "agentd-nimbus",
+            env={"OPENBRAIN_TOKEN_NIMBUS": secret},
             client=_FakeMemoryClient(),
         )
     finally:

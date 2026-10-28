@@ -49,7 +49,7 @@ def _deriver(
 @pytest.mark.asyncio
 async def test_first_sighting_alive_emits_nothing() -> None:
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()
     assert emitted == []
@@ -58,7 +58,7 @@ async def test_first_sighting_alive_emits_nothing() -> None:
 @pytest.mark.asyncio
 async def test_first_sighting_dead_emits_nothing() -> None:
     registry = FakeRegistry()
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()
     assert emitted == []
@@ -67,25 +67,25 @@ async def test_first_sighting_dead_emits_nothing() -> None:
 @pytest.mark.asyncio
 async def test_offline_emitted_once_and_not_repeated() -> None:
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()  # first sighting alive, no emit
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     await deriver.evaluate()  # alive -> dead: one offline
     await deriver.evaluate()  # still dead: no repeat
     await deriver.evaluate()  # still dead: no repeat
     assert [f.transition for f in emitted] == ["offline"]
-    assert emitted[0].display_name == "Skippy"
+    assert emitted[0].display_name == "Sprocket"
     assert emitted[0].observed_at.tzinfo is UTC
 
 
 @pytest.mark.asyncio
 async def test_recovered_emitted_once_and_not_repeated() -> None:
     registry = FakeRegistry()
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()  # first sighting dead, no emit
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     await deriver.evaluate()  # dead -> alive: one recovered
     await deriver.evaluate()  # still alive: no repeat
     assert [f.transition for f in emitted] == ["recovered"]
@@ -94,24 +94,24 @@ async def test_recovered_emitted_once_and_not_repeated() -> None:
 @pytest.mark.asyncio
 async def test_alive_dead_alive_emits_offline_then_recovered_each_once() -> None:
     registry = FakeRegistry()
-    registry.set("nagatha-2", True)
+    registry.set("nimbus-2", True)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()  # first sighting alive
-    registry.set("nagatha-2", False)
+    registry.set("nimbus-2", False)
     await deriver.evaluate()  # offline
-    registry.set("nagatha-2", True)
+    registry.set("nimbus-2", True)
     await deriver.evaluate()  # recovered
     assert [f.transition for f in emitted] == ["offline", "recovered"]
-    assert all(f.display_name == "Nagatha 2" for f in emitted)
+    assert all(f.display_name == "Nimbus 2" for f in emitted)
 
 
 @pytest.mark.parametrize(
     ("slug", "expected"),
     [
-        ("skippy", "Skippy"),
-        ("nagatha-2", "Nagatha 2"),
+        ("sprocket", "Sprocket"),
+        ("nimbus-2", "Nimbus 2"),
         ("foo_bar", "Foo Bar"),
-        ("agentd-bilby", "Agentd Bilby"),
+        ("agentd-birk", "Agentd Birk"),
     ],
 )
 def test_safe_display_name(slug: str, expected: str) -> None:
@@ -125,7 +125,7 @@ async def test_publish_failure_is_contained_and_edge_retried() -> None:
     # losing it. This is the Finding-5 fix — the old commit-before-publish path lost
     # the edge on a transient bus error.
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     calls: list[str] = []
     fail = {"on": True}
 
@@ -140,7 +140,7 @@ async def test_publish_failure_is_contained_and_edge_retried() -> None:
         clock=lambda: datetime(2026, 7, 20, tzinfo=UTC),
     )
     await deriver.evaluate()  # first sighting
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     await deriver.evaluate()  # offline attempt, publish raises but is contained
     assert calls == ["offline"]  # attempted once, retained
     fail["on"] = False
@@ -156,7 +156,7 @@ async def test_offline_before_recovered_ordering_after_failure() -> None:
     # the OFFLINE edge FIRST (advancing committed to dead), then sees current=alive !=
     # dead and creates+publishes RECOVERED — operator sees offline THEN recovered.
     registry = FakeRegistry()
-    registry.set("nagatha-2", True)
+    registry.set("nimbus-2", True)
     emitted: list[str] = []
     fail = {"on": False}
 
@@ -171,11 +171,11 @@ async def test_offline_before_recovered_ordering_after_failure() -> None:
         clock=lambda: datetime(2026, 7, 20, tzinfo=UTC),
     )
     await deriver.evaluate()  # first sighting alive
-    registry.set("nagatha-2", False)
+    registry.set("nimbus-2", False)
     fail["on"] = True
     await deriver.evaluate()  # offline created but publish fails -> pending retained
     assert emitted == []
-    registry.set("nagatha-2", True)  # state recovers while offline still owed
+    registry.set("nimbus-2", True)  # state recovers while offline still owed
     fail["on"] = False
     await deriver.evaluate()  # deliver pending OFFLINE first, then RECOVERED
     assert emitted == ["offline", "recovered"]
@@ -187,7 +187,7 @@ async def test_concurrent_evaluate_serialized_by_lock() -> None:
     # the whole read->compare->publish sequence, so exactly one offline edge is
     # emitted for a single alive->dead flip even under reentrant concurrency.
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     emitted: list[str] = []
     import asyncio
 
@@ -201,7 +201,7 @@ async def test_concurrent_evaluate_serialized_by_lock() -> None:
         clock=lambda: datetime(2026, 7, 20, tzinfo=UTC),
     )
     await deriver.evaluate()  # first sighting alive
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     await asyncio.gather(deriver.evaluate(), deriver.evaluate(), deriver.evaluate())
     assert emitted == ["offline"]
 
@@ -211,19 +211,19 @@ async def test_absent_identity_without_pending_is_pruned() -> None:
     from rtech_webchat.presence_transitions import PresenceTransitionDeriver as _D  # noqa: F401
 
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     deriver, emitted = _deriver(registry)
-    await deriver.evaluate()  # track skippy (committed alive)
-    assert "skippy" in deriver._agents  # noqa: SLF001
-    registry._alive.clear()  # skippy absent from the snapshot, no pending edge
+    await deriver.evaluate()  # track sprocket (committed alive)
+    assert "sprocket" in deriver._agents  # noqa: SLF001
+    registry._alive.clear()  # sprocket absent from the snapshot, no pending edge
     await deriver.evaluate()
-    assert "skippy" not in deriver._agents  # noqa: SLF001
+    assert "sprocket" not in deriver._agents  # noqa: SLF001
 
 
 @pytest.mark.asyncio
 async def test_absent_identity_with_pending_edge_is_retained() -> None:
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     fail = {"on": False}
 
     async def _publish(frame: PresenceTransitionFrame) -> None:
@@ -236,15 +236,15 @@ async def test_absent_identity_with_pending_edge_is_retained() -> None:
         clock=lambda: datetime(2026, 7, 20, tzinfo=UTC),
     )
     await deriver.evaluate()  # first sighting alive
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     fail["on"] = True
     await deriver.evaluate()  # offline pending, publish failed -> owed
     registry._alive.clear()  # now absent BUT owes a pending edge
     await deriver.evaluate()
     # Retained because it still owes an edge (present in the snapshot is not required
     # to keep an owed edge alive).
-    assert "skippy" in deriver._agents  # noqa: SLF001
-    assert deriver._agents["skippy"].pending is not None  # noqa: SLF001
+    assert "sprocket" in deriver._agents  # noqa: SLF001
+    assert deriver._agents["sprocket"].pending is not None  # noqa: SLF001
 
 
 @pytest.mark.asyncio
@@ -315,7 +315,7 @@ async def test_pending_edge_retains_same_transition_id_across_retry() -> None:
     # on retry (same held pending_frame is re-published), so an at-least-once
     # redelivery of the SAME edge carries the SAME id.
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     seen: list[str] = []
     fail = {"on": True}
 
@@ -330,7 +330,7 @@ async def test_pending_edge_retains_same_transition_id_across_retry() -> None:
         clock=lambda: datetime(2026, 7, 20, tzinfo=UTC),
     )
     await deriver.evaluate()  # first sighting
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     await deriver.evaluate()  # offline attempt fails, pending retained
     fail["on"] = False
     await deriver.evaluate()  # retry the SAME pending edge, now succeeds
@@ -341,12 +341,12 @@ async def test_pending_edge_retains_same_transition_id_across_retry() -> None:
 @pytest.mark.asyncio
 async def test_distinct_edges_have_distinct_transition_ids() -> None:
     registry = FakeRegistry()
-    registry.set("nagatha-2", True)
+    registry.set("nimbus-2", True)
     deriver, emitted = _deriver(registry)
     await deriver.evaluate()  # first sighting alive
-    registry.set("nagatha-2", False)
+    registry.set("nimbus-2", False)
     await deriver.evaluate()  # offline
-    registry.set("nagatha-2", True)
+    registry.set("nimbus-2", True)
     await deriver.evaluate()  # recovered
     assert [f.transition for f in emitted] == ["offline", "recovered"]
     assert emitted[0].transition_id != emitted[1].transition_id
@@ -370,7 +370,7 @@ async def test_offset_datetime_normalized_and_naive_rejected() -> None:
     from datetime import timedelta, timezone
 
     registry = FakeRegistry()
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     emitted: list[PresenceTransitionFrame] = []
 
     async def _publish(frame: PresenceTransitionFrame) -> None:
@@ -383,7 +383,7 @@ async def test_offset_datetime_normalized_and_naive_rejected() -> None:
         clock=lambda: datetime(2026, 7, 20, 17, 0, 0, tzinfo=plus5),
     )
     await deriver.evaluate()  # first sighting
-    registry.set("skippy", False)
+    registry.set("sprocket", False)
     await deriver.evaluate()  # offline
     assert len(emitted) == 1
     # +05:00 17:00 == 12:00 UTC, stored honestly as the UTC instant.
@@ -398,24 +398,24 @@ async def test_invalid_first_identity_does_not_abort_later_offline_edge() -> Non
     # uncaught, abort the WHOLE evaluate tick — permanently suppressing every later
     # agent. The invalid identity must be ISOLATED (skipped, fail closed) while a
     # VALID later agent's offline edge still delivers. FakeRegistry sorts by id, and
-    # a 65-char "a..." slug sorts BEFORE "skippy", so the invalid one is processed
+    # a 65-char "a..." slug sorts BEFORE "sprocket", so the invalid one is processed
     # FIRST — proving it does not abort the still-valid later transition.
     long_id = "a" * 65  # subject-safe alphabet, but exceeds MAX_PRESENCE_AGENT_ID_LEN
     registry = FakeRegistry()
     registry.set(long_id, True)
-    registry.set("skippy", True)
+    registry.set("sprocket", True)
     deriver, emitted = _deriver(registry)
-    await deriver.evaluate()  # first sighting for both (skippy tracked; long_id skipped)
+    await deriver.evaluate()  # first sighting for both (sprocket tracked; long_id skipped)
     registry.set(long_id, False)  # invalid id flips offline (must be skipped)
-    registry.set("skippy", False)  # valid id flips offline (must still deliver)
+    registry.set("sprocket", False)  # valid id flips offline (must still deliver)
     await deriver.evaluate()
     # The valid later agent's offline edge is delivered exactly once; the tick was
     # not aborted by the invalid identity.
     assert [f.transition for f in emitted] == ["offline"]
-    assert emitted[0].display_name == "Skippy"
+    assert emitted[0].display_name == "Sprocket"
     # The invalid identity never entered tracking (no accounting corruption).
     assert long_id not in deriver._agents  # noqa: SLF001
-    assert "skippy" in deriver._agents  # noqa: SLF001
+    assert "sprocket" in deriver._agents  # noqa: SLF001
 
 
 @pytest.mark.asyncio
@@ -431,10 +431,10 @@ async def test_no_raw_agent_id_in_captured_logs_on_success_or_skip() -> None:
         long_id = "b" * 65  # invalid: over cap; skipped with a sanitized count log
         registry = FakeRegistry()
         registry.set(long_id, True)
-        registry.set("skippy", True)
+        registry.set("sprocket", True)
         deriver, emitted = _deriver(registry)
         await deriver.evaluate()
-        registry.set("skippy", False)
+        registry.set("sprocket", False)
         await deriver.evaluate()  # valid offline delivered -> info log with name only
     finally:
         logger.remove(sink_id)
@@ -442,8 +442,8 @@ async def test_no_raw_agent_id_in_captured_logs_on_success_or_skip() -> None:
     assert emitted and emitted[0].transition == "offline"
     # The raw slug never appears on ANY path (success or skip).
     assert long_id not in blob
-    assert "skippy" not in blob  # raw slug never logged; only "Skippy" display name
-    assert "Skippy" in blob  # the safe display name IS logged
+    assert "sprocket" not in blob  # raw slug never logged; only "Sprocket" display name
+    assert "Sprocket" in blob  # the safe display name IS logged
 
 
 def test_safe_display_name_strips_unsafe_chars() -> None:

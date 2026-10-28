@@ -7,7 +7,7 @@ translation loop and per-fleet-id heartbeats, and runs until SIGINT/SIGTERM.
 Configuration is read from the environment (see :mod:`config`):
 
 * ``RTECH_BRIDGE_FLEET_IDS`` -- comma-separated fleet agent ids to front
-  (required, e.g. ``bilby`` or ``bilby,skippy``).
+  (required, e.g. ``birk`` or ``birk,sprocket``).
 * ``RTECH_BRIDGE_FLEET_ENV`` -- fleet subject env prefix (default ``dev``; must
   match the gateway's ``FLEET_ENV``).
 * ``RTECH_BRIDGE_RTECH_NATS_URL`` / ``RTECH_BRIDGE_FLEET_NATS_URL`` -- the two bus

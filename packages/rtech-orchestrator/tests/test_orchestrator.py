@@ -148,12 +148,12 @@ async def test_single_task_routes_to_configured_id_not_a_literal() -> None:
     """(1b) Routing follows the CONFIGURED id, never a hardcoded ``agentd``."""
     bus = FakeFrameBus()
     orch = Orchestrator(
-        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-bilby", stack_id=STACK_ID)
+        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-birk", stack_id=STACK_ID)
     )
     await orch.start()
     task = _task()
     await bus.deliver(subjects.TASK_INGRESS, task)
-    assert (subjects.agent_task("agentd-bilby"), task) in bus.published
+    assert (subjects.agent_task("agentd-birk"), task) in bus.published
     assert (subjects.agent_task("agentd"), task) not in bus.published
 
 
@@ -275,7 +275,7 @@ async def test_shared_ingress_only_matching_stack_dispatches() -> None:
         bus=bus, config=OrchestratorConfig(single_agent_id="agentd-dev", stack_id="dev-stack")
     )
     deployed = Orchestrator(
-        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-bilby", stack_id="prod-stack")
+        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-birk", stack_id="prod-stack")
     )
     await dev.start()
     await deployed.start()
@@ -284,14 +284,14 @@ async def test_shared_ingress_only_matching_stack_dispatches() -> None:
     await bus.deliver(subjects.TASK_INGRESS, task)
 
     assert (subjects.agent_task("agentd-dev"), task) in bus.published
-    assert (subjects.agent_task("agentd-bilby"), task) not in bus.published
+    assert (subjects.agent_task("agentd-birk"), task) not in bus.published
 
 
 async def test_foreign_terminal_turn_does_not_derive_done() -> None:
     """(11) Defect B repro: a foreign agent's terminal turn never finishes the task.
 
     The orchestrator dispatched to its configured agent; a terminal turn from a
-    foreign stack's agent (``agentd-bilby``) lands on the task's turn lane
+    foreign stack's agent (``agentd-birk``) lands on the task's turn lane
     first. Done must WAIT for the dispatched participant, and the result must
     carry the participant's turn, exactly once.
     """
@@ -304,7 +304,7 @@ async def test_foreign_terminal_turn_does_not_derive_done() -> None:
     result_subject = subjects.task_result(task.id)
 
     # Foreign terminal turn arrives BEFORE the dispatched agent's turn.
-    foreign = _turn(agent_id="agentd-bilby")
+    foreign = _turn(agent_id="agentd-birk")
     await bus.deliver(subjects.task_turn(task.id), foreign)
     assert not any(p[0] == result_subject for p in bus.published)
 
@@ -323,7 +323,7 @@ async def test_duplicate_foreign_turns_never_publish_result() -> None:
     task = _task()
     await bus.deliver(subjects.TASK_INGRESS, task)
     for _ in range(3):
-        await bus.deliver(subjects.task_turn(task.id), _turn(agent_id="agentd-bilby"))
+        await bus.deliver(subjects.task_turn(task.id), _turn(agent_id="agentd-birk"))
     result_subject = subjects.task_result(task.id)
     assert not any(p[0] == result_subject for p in bus.published)
 
@@ -391,7 +391,7 @@ async def test_defect_b_repro_over_encoded_wire() -> None:
         bus=bus, config=OrchestratorConfig(single_agent_id="agentd-dev", stack_id="dev-stack")
     )
     deployed = Orchestrator(
-        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-bilby", stack_id="prod-stack")
+        bus=bus, config=OrchestratorConfig(single_agent_id="agentd-birk", stack_id="prod-stack")
     )
     await dev.start()
     await deployed.start()
@@ -401,12 +401,12 @@ async def test_defect_b_repro_over_encoded_wire() -> None:
 
     # Only the matching stack dispatched, over encoded bytes.
     assert bus.published_frames(subjects.agent_task("agentd-dev")) == [task]
-    assert bus.published_frames(subjects.agent_task("agentd-bilby")) == []
+    assert bus.published_frames(subjects.agent_task("agentd-birk")) == []
 
     result_subject = subjects.task_result(task.id)
 
     # Foreign terminal turn bytes land on the turn lane FIRST.
-    foreign = _turn(agent_id="agentd-bilby")
+    foreign = _turn(agent_id="agentd-birk")
     await bus.deliver_bytes(subjects.task_turn(task.id), encode_frame(foreign))
     assert bus.published_frames(result_subject) == []
 

@@ -4,7 +4,7 @@ The automation-tier entry point, installed as ``provision-debate-group`` (also
 ``python -m rtech_chatd.provision_group``). It drives the one command the
 acceptance criteria name:
 
-    provision-debate-group --name X --bots skippy,nagatha,bilby
+    provision-debate-group --name X --bots sprocket,nimbus,birk
 
 It loads the Telethon user session through the SAME fail-loud lifecycle the rest
 of the edge uses (:func:`rtech_chatd.user_session.admin.connected_user_client`),
@@ -21,7 +21,7 @@ so a durable link would just be a standing bearer-credential leak.
 
 Everything human — the created/reused flag, the per-bot invite/promote results,
 the post-run audit — goes to STDERR via loguru with a ``TG_PROVISION:`` prefix,
-so ``$(provision-debate-group --name X --bots skippy)`` cleanly yields the id
+so ``$(provision-debate-group --name X --bots sprocket)`` cleanly yields the id
 alone. A re-run with the same ``--name`` reuses the existing group (prints
 ``reused`` in the human line) and re-emits the same id.
 
@@ -30,9 +30,9 @@ never logged; a revoked session / rate limit fails loud with an ACTION REQUIRED
 message and a non-zero exit — the credential itself never reaches a log line.
 
 Pattern/Convention:
-    uv run provision-debate-group --name "Trio Debate" --bots skippy,nagatha,bilby
+    uv run provision-debate-group --name "Trio Debate" --bots sprocket,nimbus,birk
     uv run python -m rtech_chatd.provision_group --name "Trio Debate" \
-        --bots skippy,nagatha,bilby --env dev
+        --bots sprocket,nimbus,birk --env dev
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ from .user_session.provisioning import (
 def _parse_bots(raw: str) -> list[str]:
     """Split the ``--bots`` comma list into non-blank identifiers.
 
-    ``"skippy, nagatha ,bilby"`` → ``["skippy", "nagatha", "bilby"]``. Empty
+    ``"sprocket, nimbus ,birk"`` → ``["sprocket", "nimbus", "birk"]``. Empty
     segments (a trailing comma) are dropped; an all-blank value yields ``[]`` so
     the downstream resolver fails loud with a clear ACTION REQUIRED.
     """
@@ -135,7 +135,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--bots",
         required=True,
         help=(
-            "Comma-separated configured fleet bot slugs (skippy,nagatha,bilby) or their "
+            "Comma-separated configured fleet bot slugs (sprocket,nimbus,birk) or their "
             "configured @handles."
         ),
     )

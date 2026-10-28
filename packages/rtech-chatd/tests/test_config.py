@@ -92,10 +92,10 @@ def test_identity_map_unset_is_empty() -> None:
 def test_identity_map_parses_pairs_and_preserves_refs() -> None:
     from rtech_chatd.config import parse_identity_map
 
-    raw = "agentd-nagatha=env:TG_TOKEN_NAGATHA, agentd-bilby=env:TG_TOKEN_BILBY"
+    raw = "agentd-nimbus=env:TG_TOKEN_NIMBUS, agentd-birk=env:TG_TOKEN_BIRK"
     assert parse_identity_map(raw) == {
-        "agentd-nagatha": "env:TG_TOKEN_NAGATHA",
-        "agentd-bilby": "env:TG_TOKEN_BILBY",
+        "agentd-nimbus": "env:TG_TOKEN_NIMBUS",
+        "agentd-birk": "env:TG_TOKEN_BIRK",
     }
 
 
@@ -110,14 +110,14 @@ def test_identity_map_rejects_bare_agent_name() -> None:
     from rtech_chatd.config import parse_identity_map
 
     with pytest.raises(ValueError, match="agentd-<name> convention"):
-        parse_identity_map("nagatha=env:TG_TOKEN_NAGATHA")
+        parse_identity_map("nimbus=env:TG_TOKEN_NIMBUS")
 
 
 def test_identity_map_rejects_literal_token_without_echoing() -> None:
     from rtech_chatd.config import parse_identity_map
 
     with pytest.raises(ValueError) as excinfo:
-        parse_identity_map("agentd-nagatha=1234567:AAH-literal-token")
+        parse_identity_map("agentd-nimbus=1234567:AAH-literal-token")
     assert "1234567" not in str(excinfo.value)
 
 
@@ -125,14 +125,14 @@ def test_identity_map_rejects_duplicate_agent() -> None:
     from rtech_chatd.config import parse_identity_map
 
     with pytest.raises(ValueError, match="twice"):
-        parse_identity_map("agentd-nagatha=env:A,agentd-nagatha=env:B")
+        parse_identity_map("agentd-nimbus=env:A,agentd-nimbus=env:B")
 
 
 def test_identity_map_rejects_malformed_pair() -> None:
     from rtech_chatd.config import parse_identity_map
 
     with pytest.raises(ValueError, match="malformed"):
-        parse_identity_map("agentd-nagatha")
+        parse_identity_map("agentd-nimbus")
 
 
 # ------------------------------------------- gauntlet fix regressions
@@ -144,7 +144,7 @@ def test_identity_map_malformed_entry_withholds_both_sides() -> None:
     # A literal token pasted with no '=' must never land in the raised error;
     # entries are identified by position only.
     with pytest.raises(ValueError) as excinfo:
-        parse_identity_map("agentd-nagatha=env:A,1234567:AAH-pasted-literal")
+        parse_identity_map("agentd-nimbus=env:A,1234567:AAH-pasted-literal")
     message = str(excinfo.value)
     assert "entry #2" in message
     assert "1234567" not in message
@@ -169,8 +169,8 @@ def test_legacy_debate_lane_accepts_positive_integer_topic(
     from rtech_chatd.config import _env_lane_tuple
 
     # A forum topic id is always a positive integer; a valid entry parses through.
-    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nagatha-dev=94")
-    assert _env_lane_tuple("RTECH_CHATD_DEBATE_LANES") == (("agentd-nagatha-dev", "94"),)
+    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nimbus-dev=94")
+    assert _env_lane_tuple("RTECH_CHATD_DEBATE_LANES") == (("agentd-nimbus-dev", "94"),)
 
 
 def test_legacy_debate_lane_skips_non_integer_topic(
@@ -180,7 +180,7 @@ def test_legacy_debate_lane_skips_non_integer_topic(
 
     # Consistent with the chat-scoped twin: a non-integer topic id can never
     # route, so the entry is skipped and the agent degrades to a per-turn thread.
-    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nagatha-dev=legacy-94")
+    monkeypatch.setenv("RTECH_CHATD_DEBATE_LANES", "agentd-nimbus-dev=legacy-94")
     assert _env_lane_tuple("RTECH_CHATD_DEBATE_LANES") == ()
 
 

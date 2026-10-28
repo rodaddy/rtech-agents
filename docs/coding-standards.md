@@ -23,7 +23,7 @@ touching code.
 `main` is pass-through only — merge, pull, leave. After any merge or pull that
 lands you on main, immediately switch to a work branch. Branches describe the
 work, not the agent (`feat/walking-skeleton`, `fix/composer-slot-order`, never
-`bilby/*` or `agent/*`). All changes merge via PR.
+`birk/*` or `agent/*`). All changes merge via PR.
 
 ## Source layout
 

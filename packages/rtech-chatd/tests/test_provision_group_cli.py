@@ -17,27 +17,27 @@ from rtech_chatd.user_session.provisioning import GroupAudit, ProvisionResult
 
 
 def test_parse_args_requires_name_and_bots() -> None:
-    args = _parse_args(["--name", "Trio Debate", "--bots", "skippy,nagatha,bilby"])
+    args = _parse_args(["--name", "Trio Debate", "--bots", "sprocket,nimbus,birk"])
     assert args.name == "Trio Debate"
-    assert args.bots == "skippy,nagatha,bilby"
+    assert args.bots == "sprocket,nimbus,birk"
     assert args.env == "dev"  # default
 
 
 def test_parse_args_accepts_env_and_about() -> None:
     args = _parse_args(
-        ["--name", "X", "--bots", "skippy", "--env", "prod", "--about", "the debate"]
+        ["--name", "X", "--bots", "sprocket", "--env", "prod", "--about", "the debate"]
     )
     assert args.env == "prod"
     assert args.about == "the debate"
 
 
 def test_parse_args_opt_in_invite_link_is_explicit() -> None:
-    assert _parse_args(["--name", "X", "--bots", "skippy", "--invite-link"]).invite_link is True
+    assert _parse_args(["--name", "X", "--bots", "sprocket", "--invite-link"]).invite_link is True
 
 
 def test_parse_args_missing_name_exits() -> None:
     with pytest.raises(SystemExit):
-        _parse_args(["--bots", "skippy"])
+        _parse_args(["--bots", "sprocket"])
 
 
 def test_parse_args_missing_bots_exits() -> None:
@@ -46,11 +46,11 @@ def test_parse_args_missing_bots_exits() -> None:
 
 
 def test_parse_bots_splits_and_strips() -> None:
-    assert _parse_bots("skippy, nagatha ,bilby") == ["skippy", "nagatha", "bilby"]
+    assert _parse_bots("sprocket, nimbus ,birk") == ["sprocket", "nimbus", "birk"]
 
 
 def test_parse_bots_drops_empty_segments() -> None:
-    assert _parse_bots("skippy,,bilby,") == ["skippy", "bilby"]
+    assert _parse_bots("sprocket,,birk,") == ["sprocket", "birk"]
 
 
 def test_parse_bots_all_blank_is_empty() -> None:
@@ -69,10 +69,10 @@ def _result(
         invite_link=None,
         created=False,
         forum_enabled_now=False,
-        invited=["@skippy"],
+        invited=["@sprocket"],
         invite_privacy_blocked=privacy_blocked or [],
         invite_failed=invite_failed or {},
-        promotions=promotions or {"@skippy": "ok"},
+        promotions=promotions or {"@sprocket": "ok"},
         audit=GroupAudit(
             chat_id="-100123",
             title="Trio Debate",
@@ -86,9 +86,9 @@ def _result(
 @pytest.mark.parametrize(
     "result",
     [
-        _result(privacy_blocked=["@nagatha"]),
-        _result(invite_failed={"@nagatha": "RuntimeError"}),
-        _result(promotions={"@skippy": "ok", "@nagatha": "RuntimeError"}),
+        _result(privacy_blocked=["@nimbus"]),
+        _result(invite_failed={"@nimbus": "RuntimeError"}),
+        _result(promotions={"@sprocket": "ok", "@nimbus": "RuntimeError"}),
     ],
 )
 async def test_run_provision_exits_nonzero_but_prints_coordinates_when_incomplete(
@@ -108,7 +108,7 @@ async def test_run_provision_exits_nonzero_but_prints_coordinates_when_incomplet
     monkeypatch.setattr(provision_group, "connected_user_client", fake_connected_user_client)
     monkeypatch.setattr(provision_group, "provision_debate_group", fake_provision)
 
-    exit_code = await _run_provision("dev", "Trio Debate", ["skippy"], "")
+    exit_code = await _run_provision("dev", "Trio Debate", ["sprocket"], "")
 
     assert exit_code == 1
     assert capsys.readouterr().out == "-100123\n"
@@ -132,7 +132,7 @@ async def test_run_provision_exits_zero_when_all_bots_seated_and_promoted(
     monkeypatch.setattr(provision_group, "connected_user_client", fake_connected_user_client)
     monkeypatch.setattr(provision_group, "provision_debate_group", fake_provision)
 
-    exit_code = await _run_provision("dev", "Trio Debate", ["skippy"], "")
+    exit_code = await _run_provision("dev", "Trio Debate", ["sprocket"], "")
 
     assert exit_code == 0
     assert capsys.readouterr().out == "-100123\n"

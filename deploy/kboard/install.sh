@@ -3,11 +3,11 @@
 # host as additive, non-disruptive systemd USER services. "k-board" is the
 # author's host: an LXC container that also runs an unrelated app (k-board-api,
 # caddy, postgres). Substitute your own host and user.
-# Run ON the host AS THE TARGET USER (bilby) -- NEVER as root, NEVER via sudo.
+# Run ON the host AS THE TARGET USER (birk) -- NEVER as root, NEVER via sudo.
 # Re-runnable: every step is create-if-missing or a safe rsync/sync. Existing
 # k-board-api + caddy + postgres are NOT touched.
 #
-# Usage (on the host, as bilby):
+# Usage (on the host, as birk):
 #   sh deploy/kboard/install.sh /path/to/rtech-agents-checkout \
 #       [/path/to/fleet-bus] [/path/to/open-brain]
 #
@@ -33,7 +33,7 @@ UNIT_DIR="$HOME/.config/systemd/user"
 # resolution convention"). Default: the three trio agents. Override
 # with RTECH_AGENT_INSTANCES (space-separated) for a different set/canary subset.
 # Never a bare shared "agentd" -- that collided across two agentds.
-AGENT_INSTANCES="${RTECH_AGENT_INSTANCES:-agentd-nagatha agentd-skippy agentd-bilby}"
+AGENT_INSTANCES="${RTECH_AGENT_INSTANCES:-agentd-nimbus agentd-sprocket agentd-birk}"
 SRC="${1:-}"
 # Editable path-dep sources (frozen lock -> ../fleet-bus, ../open-brain). Default
 # to the rtech-agents checkout's siblings; override via args 2 and 3.
@@ -55,11 +55,11 @@ if [ ! -d "$SRC" ]; then
 	exit 2
 fi
 
-# Rootless mandate: refuse to run as root. This stack is bilby-owned; root would
+# Rootless mandate: refuse to run as root. This stack is birk-owned; root would
 # recreate the /opt system-unit install this redo exists to retire.
 if [ "$(id -u)" -eq 0 ]; then
 	log "ERROR: do NOT run as root. This is a rootless, user-unit install."
-	log "       run it AS the target user (bilby): sh deploy/kboard/install.sh ..."
+	log "       run it AS the target user (birk): sh deploy/kboard/install.sh ..."
 	exit 2
 fi
 

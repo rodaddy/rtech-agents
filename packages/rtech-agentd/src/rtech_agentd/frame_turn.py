@@ -252,7 +252,7 @@ def _short_name(agent_id: str) -> str:
 
     Strips the ``agentd-`` convention prefix and a ``-dev``/``-prod`` stack
     suffix, mirroring the intake edge's ack-name convention so a directive names
-    ``nagatha`` rather than ``agentd-nagatha-prod``.
+    ``nimbus`` rather than ``agentd-nimbus-prod``.
     """
     name = agent_id.removeprefix(_AGENT_ID_PREFIX)
     for suffix in _AGENT_ID_SUFFIXES:
@@ -1116,7 +1116,7 @@ class FrameTurnRunner:
         terminus publishes ONE closing ``TurnFrame`` through the normal publish
         path — same ``position``/``because`` as the latest stance,
         ``needs_from=[]`` (terminal), and honest ``visible_text`` that the
-        position stands as final because the round budget was reached. Nagatha's
+        position stands as final because the round budget was reached. Nimbus's
         arbiter (future work) supersedes this later.
 
         Guarded to fire at most once per task, only once the round budget is
@@ -1208,7 +1208,7 @@ class FrameTurnRunner:
         """Publish the cap-induced closing terminal TurnFrame.
 
         The cap forces terminality, but a full-thought debater's FINAL budgeted
-        turn is real agent content — Skippy/Bilby wrote a substantive paragraph,
+        turn is real agent content — Sprocket/Birk wrote a substantive paragraph,
         they just still ``needs_from`` a sibling. The typed stance carries the
         terminality (``needs_from=[]``); the ``visible_text`` REUSES this agent's
         latest real substantive answer (``last_visible_text``, captured in

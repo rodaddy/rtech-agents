@@ -137,7 +137,7 @@ def test_undispatched_graph_has_no_participants() -> None:
 def test_foreign_agent_turn_does_not_count() -> None:
     """(k): a terminal turn from a non-dispatched agent never counts."""
     graph = _graph("single")
-    graph.add_turn(_turn("agentd-bilby"))
+    graph.add_turn(_turn("agentd-birk"))
     assert _done(graph) is False
     graph.add_turn(_turn("a1"))
     assert _done(graph) is True

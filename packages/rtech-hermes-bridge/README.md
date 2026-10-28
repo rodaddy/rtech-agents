@@ -2,7 +2,7 @@
 
 A **content-only dumb edge** that bridges rtech-agents task frames to the
 **existing Hermes gateway agents** already running on the shared fleet NATS bus.
-Each fronted fleet agent (e.g. `bilby`) then appears in the rtech web-chat picker
+Each fronted fleet agent (e.g. `birk`) then appears in the rtech web-chat picker
 and answers in its own voice — without deploying agentd per box.
 
 The bridge translates at the boundary and carries **no control signal**: reply
@@ -12,12 +12,12 @@ the gateway's typed `fleet_core.spec.Done` on its own fleet-side subscription
 and records it as in-graph terminal evidence. Full design:
 `docs/bridged-participant-lifecycle.md` (repo root docs/).
 
-## Pinned gateway bus contract (bilby, read-only inspection)
+## Pinned gateway bus contract (birk, read-only inspection)
 
 The Hermes gateway reaches the fleet bus via the **`fleet_subscriber` NATS
 platform adapter** installed in its venv — **not** via `hermes_cli/gateway.py`
 (that file is only the systemd/CLI wrapper). Running env: `FLEET_ENV=dev`,
-`FLEET_AGENT_ID=bilby`, `FLEET_ROLE=worker`, `FLEET_NATS_URL=nats://127.0.0.1:4222`.
+`FLEET_AGENT_ID=birk`, `FLEET_ROLE=worker`, `FLEET_NATS_URL=nats://127.0.0.1:4222`.
 
 Clean source lives in the fleet-bus repo at `packages/fleet-subscriber`
 (`adapter.py` / `mapping.py` / `completion.py`) — the on-host `hermes_cli` copy is
@@ -119,7 +119,7 @@ operator keeps `FLEET_VOICE_TEE` off for a bridged agent, and the bridge stamps
 
 | Var | Default | Meaning |
 |---|---|---|
-| `RTECH_BRIDGE_FLEET_IDS` | *(required)* | Comma-separated fleet ids to front, e.g. `bilby` |
+| `RTECH_BRIDGE_FLEET_IDS` | *(required)* | Comma-separated fleet ids to front, e.g. `birk` |
 | `RTECH_BRIDGE_FLEET_ENV` | `dev` | Fleet subject env prefix (match the gateway) |
 | `RTECH_BRIDGE_RTECH_NATS_URL` | live fleet bus | Bus carrying `rtech.*` frames |
 | `RTECH_BRIDGE_FLEET_NATS_URL` | live fleet bus | Bus carrying `{env}.agent.*` envelopes |

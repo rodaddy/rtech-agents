@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 def _config(**overrides: object) -> BridgeConfig:
-    kwargs: dict[str, object] = {"fleet_ids": ("bilby",), "default_channel": "chan-1"}
+    kwargs: dict[str, object] = {"fleet_ids": ("birk",), "default_channel": "chan-1"}
     kwargs.update(overrides)
     return BridgeConfig(**kwargs)  # type: ignore[arg-type]
 
@@ -38,7 +38,7 @@ def _task(task_id: str = "task-1") -> TaskFrame:
         requester="rico",
         text="status?",
         scope="single",
-        participants=["bilby"],
+        participants=["birk"],
     )
 
 
@@ -46,7 +46,7 @@ def _status_reply(
     text: str,
     *,
     task_id: str = "task-1",
-    sender: str = "bilby",
+    sender: str = "birk",
     stance: FleetStance | None = None,
     msg_id: str = "r1",
 ) -> Envelope:
@@ -62,9 +62,7 @@ def _status_reply(
     )
 
 
-def _done(
-    *, task_id: str = "task-1", sender: str = "bilby", outcome: str = "completed"
-) -> Envelope:
+def _done(*, task_id: str = "task-1", sender: str = "birk", outcome: str = "completed") -> Envelope:
     return done_envelope(
         msg_id="d1",
         ts="2026-07-11T00:00:02+00:00",
@@ -100,16 +98,16 @@ def _frames_on(rtech_bus: FakeFleetBus, subject: str) -> list[TurnFrame | Status
 
 async def test_start_subscribes_task_lane_and_beats(fake_bus_cls: type[FakeFleetBus]) -> None:
     bridge, rtech_bus, _fleet_bus = await _started_bridge(fake_bus_cls)
-    assert rtech_bus.has_raw_sub("rtech.agent.bilby.task")
+    assert rtech_bus.has_raw_sub("rtech.agent.birk.task")
     await bridge.stop()
 
 
 async def test_inbound_task_becomes_fleet_dispatch(fake_bus_cls: type[FakeFleetBus]) -> None:
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     assert len(fleet_bus.published) == 1
     subject, envelope = fleet_bus.published[0]
-    assert subject == "dev.agent.dispatch.bilby"
+    assert subject == "dev.agent.dispatch.birk"
     assert envelope.kind == "dispatch"
     assert envelope.task_id == "task-1"
     assert envelope.payload["text"] == "status?"
@@ -121,13 +119,13 @@ async def test_inbound_task_becomes_fleet_dispatch(fake_bus_cls: type[FakeFleetB
 async def test_reply_publishes_immediate_content_turn(fake_bus_cls: type[FakeFleetBus]) -> None:
     """Each reply ships as a content turn right away plus a typed working status."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("all green"))
     turns = _frames_on(rtech_bus, "rtech.task.task-1.turn")
     assert len(turns) == 1
     frame = turns[0]
     assert isinstance(frame, TurnFrame)
-    assert frame.agent_id == "bilby"
+    assert frame.agent_id == "birk"
     assert frame.visible_text == "all green"
     assert frame.stance.position == "responded"
     status_frames = _frames_on(rtech_bus, "rtech.task.task-1.status")
@@ -135,7 +133,7 @@ async def test_reply_publishes_immediate_content_turn(fake_bus_cls: type[FakeFle
     assert [frame.state for frame in statuses] == ["working"]
     # The paired status carries the SAME authorship as the content turn, so
     # per-participant done derivation classifies it against its author.
-    assert [frame.agent_id for frame in statuses] == ["bilby"]
+    assert [frame.agent_id for frame in statuses] == ["birk"]
     await bridge.stop()
 
 
@@ -147,7 +145,7 @@ async def test_typed_completion_produces_no_frame(fake_bus_cls: type[FakeFleetBu
     shapes violated.
     """
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("all green"))
     published_before = list(rtech_bus.raw_published())
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _done())
@@ -158,7 +156,7 @@ async def test_typed_completion_produces_no_frame(fake_bus_cls: type[FakeFleetBu
 async def test_every_reply_ships_not_only_the_last(fake_bus_cls: type[FakeFleetBus]) -> None:
     """No buffering: statuses stream through as content turns in arrival order."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     stance = FleetStance(position="agree", fact_pull=True, because="looks right")
     await fleet_bus.deliver_envelope(
         "dev.agent.status.task-1", _status_reply("structural stance", stance=stance, msg_id="r1")
@@ -180,7 +178,7 @@ async def test_typed_stance_survives_wire_onto_content_turn(
 ) -> None:
     """A typed fleet stance rides through verbatim — position, because, needs_from."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     stance = FleetStance(
         position="dissent", fact_pull=False, because="numbers disagree", needs_from=("rico",)
     )
@@ -200,12 +198,12 @@ async def test_typed_stance_survives_wire_onto_content_turn(
 async def test_done_without_typed_signal_fails_closed(fake_bus_cls: type[FakeFleetBus]) -> None:
     """A hand-rolled kind=done with no typed Done signal must not end the task."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("all green"))
     fake_done = Envelope.new(
         msg_id="d1",
         ts="2026-07-11T00:00:02+00:00",
-        sender="bilby",
+        sender="birk",
         kind="done",
         task_id="task-1",
         payload={"outcome": "completed"},
@@ -220,7 +218,7 @@ async def test_done_without_typed_signal_fails_closed(fake_bus_cls: type[FakeFle
 async def test_spoofed_sender_is_dropped(fake_bus_cls: type[FakeFleetBus]) -> None:
     """An envelope from another identity on the task subject is dropped entirely."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope(
         "dev.agent.status.task-1", _status_reply("evil answer", sender="mallory")
     )
@@ -239,7 +237,7 @@ async def test_spoofed_sender_is_dropped(fake_bus_cls: type[FakeFleetBus]) -> No
 async def test_mismatched_task_id_is_dropped(fake_bus_cls: type[FakeFleetBus]) -> None:
     """An envelope whose own task_id field disagrees with the subject is dropped."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope(
         "dev.agent.status.task-1", _status_reply("wrong task", task_id="task-9")
     )
@@ -253,7 +251,7 @@ async def test_completion_without_reply_publishes_blocked(
 ) -> None:
     """Typed done with no content ever published ends loudly as blocked, no turn."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _done())
     assert _frames_on(rtech_bus, "rtech.task.task-1.turn") == []
     statuses = _frames_on(rtech_bus, "rtech.task.task-1.status")
@@ -264,8 +262,8 @@ async def test_completion_without_reply_publishes_blocked(
 async def test_dispatch_is_idempotent(fake_bus_cls: type[FakeFleetBus]) -> None:
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
     frame_bytes = encode_frame(_task())
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", frame_bytes)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", frame_bytes)
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", frame_bytes)
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", frame_bytes)
     # At-least-once delivery must not double-run the gateway.
     assert len(fleet_bus.published) == 1
     await bridge.stop()
@@ -274,10 +272,10 @@ async def test_dispatch_is_idempotent(fake_bus_cls: type[FakeFleetBus]) -> None:
 async def test_finished_task_redelivery_is_idempotent(fake_bus_cls: type[FakeFleetBus]) -> None:
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
     frame_bytes = encode_frame(_task())
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", frame_bytes)
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", frame_bytes)
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("all green"))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _done())
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", frame_bytes)
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", frame_bytes)
     assert len(fleet_bus.published) == 1
     assert len(_frames_on(rtech_bus, "rtech.task.task-1.turn")) == 1
     await bridge.stop()
@@ -287,11 +285,11 @@ async def test_subscribe_failure_aborts_dispatch(fake_bus_cls: type[FakeFleetBus
     """No reply consumer means NO dispatch publish — the answer must never be lost."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
     fleet_bus.fail_subscribe = True
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     assert fleet_bus.published == []
     # The claim is rolled back: once subscribing works, redelivery dispatches.
     fleet_bus.fail_subscribe = False
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     assert len(fleet_bus.published) == 1
     assert fleet_bus.has_env_sub("dev.agent.status.task-1")
     await bridge.stop()
@@ -302,11 +300,11 @@ async def test_publish_failure_rolls_back_and_unsubscribes(
 ) -> None:
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
     fleet_bus.fail_publish = True
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     assert fleet_bus.published == []
     assert all(sub.unsubscribed for sub in fleet_bus.subscriptions)
     fleet_bus.fail_publish = False
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     assert len(fleet_bus.published) == 1
     await bridge.stop()
 
@@ -314,8 +312,8 @@ async def test_publish_failure_rolls_back_and_unsubscribes(
 async def test_concurrent_tasks_same_agent_serialize(fake_bus_cls: type[FakeFleetBus]) -> None:
     """The gateway holds ONE channel->task correlation; overlap must not cross-route."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-1")))
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-2")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-1")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-2")))
     # Only the first dispatches; the second waits for the typed completion.
     assert [env.task_id for _, env in fleet_bus.published] == ["task-1"]
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("answer one"))
@@ -337,9 +335,9 @@ async def test_concurrent_tasks_same_agent_serialize(fake_bus_cls: type[FakeFlee
 async def test_queue_overflow_sheds_loudly(fake_bus_cls: type[FakeFleetBus]) -> None:
     """Admission past max_queue_depth sheds with a typed blocked status (H6)."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls, _config(max_queue_depth=1))
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-1")))
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-2")))
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-3")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-1")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-2")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-3")))
     # task-1 active, task-2 queued, task-3 shed.
     assert [env.task_id for _, env in fleet_bus.published] == ["task-1"]
     statuses = _frames_on(rtech_bus, "rtech.task.task-3.status")
@@ -356,7 +354,7 @@ async def test_completed_task_unsubscribes_and_drops_state(
 ) -> None:
     """No permanent subscriptions or map entries after a task finishes."""
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _status_reply("all green"))
     await fleet_bus.deliver_envelope("dev.agent.status.task-1", _done())
     assert all(sub.unsubscribed for sub in fleet_bus.subscriptions)
@@ -369,7 +367,7 @@ async def test_completed_task_unsubscribes_and_drops_state(
 async def test_finalize_claim_is_exactly_once(fake_bus_cls: type[FakeFleetBus]) -> None:
     """Completion racing the sweeper: only one side wins the atomic claim."""
     bridge, rtech_bus, _fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task()))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task()))
     first = await bridge._claim_finalize("task-1")  # noqa: SLF001 — race seam under test
     second = await bridge._claim_finalize("task-1")  # noqa: SLF001
     assert first is not None
@@ -384,8 +382,8 @@ async def test_expired_task_is_swept_blocked_and_queue_advances(
     bridge, rtech_bus, fleet_bus = await _started_bridge(
         fake_bus_cls, _config(task_timeout_seconds=0.01)
     )
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-1")))
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(_task("task-2")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-1")))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(_task("task-2")))
     assert [env.task_id for _, env in fleet_bus.published] == ["task-1"]
     await asyncio.sleep(0.02)
     await bridge._sweep_expired()  # noqa: SLF001 — deterministic sweep under test
@@ -401,7 +399,7 @@ async def test_expired_task_is_swept_blocked_and_queue_advances(
 
 async def test_undecodable_task_frame_is_dropped(fake_bus_cls: type[FakeFleetBus]) -> None:
     bridge, rtech_bus, fleet_bus = await _started_bridge(fake_bus_cls)
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", b"not a frame")
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", b"not a frame")
     assert fleet_bus.published == []
     await bridge.stop()
 
@@ -415,6 +413,6 @@ async def test_non_task_frame_on_task_lane_ignored(fake_bus_cls: type[FakeFleetB
         stance=Stance(position="p", because="b", needs_from=[]),
         refs=[],
     )
-    await rtech_bus.deliver_raw("rtech.agent.bilby.task", encode_frame(turn))
+    await rtech_bus.deliver_raw("rtech.agent.birk.task", encode_frame(turn))
     assert fleet_bus.published == []
     await bridge.stop()

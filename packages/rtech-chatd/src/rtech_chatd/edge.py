@@ -229,7 +229,7 @@ def _lane_key(agent_id: str) -> str:
     """Normalize an agent id to its persistent-lane registry key.
 
     Strips the ``agentd-`` convention prefix and recognized deployment suffixes
-    (``-dev`` and ``-prod``) so ``agentd-nagatha`` and ``agentd-nagatha-dev`` both
+    (``-dev`` and ``-prod``) so ``agentd-nimbus`` and ``agentd-nimbus-dev`` both
     key the same lane. Internal hyphens remain identity-bearing: ``agentd-dash-alpha``
     and ``agentd-dash-beta`` must never collide.
     """

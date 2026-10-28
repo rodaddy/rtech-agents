@@ -31,7 +31,7 @@ async def test_liveness_probe_reports_online_without_starting(
     assert result.state == "Online"
     assert result.failure is None
     assert starter.started == []
-    assert liveness.probed == [KnownAgent("agentd-bilby", "rtech-agentd@agentd-bilby")]
+    assert liveness.probed == [KnownAgent("agentd-birk", "rtech-agentd@agentd-birk")]
     # The already-online receipt is published at the source.
     assert publisher.frames == [result]
 
@@ -51,7 +51,7 @@ async def test_liveness_down_falls_through_to_a_real_confirmed_start(
     result = await supervisor.start_agent(kit.request())
 
     assert result.state == "Online"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert [frame.state for frame in publisher.frames] == ["Starting", "Online"]
 
 
@@ -80,7 +80,7 @@ async def test_missing_probe_never_publishes_online_after_start(
     assert result.state == "Failed"
     assert result.failure == "liveness_unconfirmed"
     # The action ran, but no false Online was published.
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert [frame.state for frame in publisher.frames] == ["Starting", "Failed"]
     assert "Online" not in {f.state for f in publisher.frames}
     # No pending-online ownership without a CONFIRMED start.
@@ -110,7 +110,7 @@ async def test_false_post_start_liveness_never_publishes_online(
 
     assert result.state == "Failed"
     assert result.failure == "liveness_unconfirmed"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert [frame.state for frame in publisher.frames] == ["Starting", "Failed"]
     assert supervisor._pending_online == set()  # noqa: SLF001
 
@@ -137,7 +137,7 @@ async def test_failing_post_start_liveness_probe_never_publishes_online(
 
     assert result.state == "Failed"
     assert result.failure == "liveness_unconfirmed"
-    assert [agent.agent_id for agent in starter.started] == ["agentd-bilby"]
+    assert [agent.agent_id for agent in starter.started] == ["agentd-birk"]
     assert "Online" not in {f.state for f in publisher.frames}
     assert supervisor._pending_online == set()  # noqa: SLF001
 
@@ -186,4 +186,4 @@ async def test_already_online_receipt_is_published_by_the_wire_handler(
     await supervisor._on_frame(kit.request())  # noqa: SLF001
 
     assert [frame.state for frame in publisher.frames] == ["Online"]
-    assert publisher.subjects == [subjects.agent_supervised_state("agentd-bilby")]
+    assert publisher.subjects == [subjects.agent_supervised_state("agentd-birk")]

@@ -1,6 +1,6 @@
 """Mint + publish a wake TaskFrame toward an allow-listed teammate.
 
-The triage agent (Nagatha) handles an intake :class:`~rtech_frames.TaskFrame` and
+The triage agent (Nimbus) handles an intake :class:`~rtech_frames.TaskFrame` and
 can either just ANSWER (the existing TurnFrame reply path — nothing new) or WAKE a
 teammate. Waking means minting a FRESH ``TaskFrame`` on the teammate's task
 subject that CARRIES the original :class:`~rtech_frames.ChannelOrigin`, and
@@ -22,7 +22,7 @@ in-process SDK MCP wake tool (:mod:`rtech_agentd.wake_tool`), exactly as the
   at all (the caller does not construct this service, so the tool never appears).
   A wake for a non-allowed id returns a typed error and NEVER publishes.
 * **Loop safety.** The allow-list env being set IS the opt-in that this agent is a
-  waker (only Nagatha's deploy sets it), which bounds wake-chaining: a woken agent
+  waker (only Nimbus's deploy sets it), which bounds wake-chaining: a woken agent
   is not itself a waker. Additionally, a wake targeting THIS agent is refused.
 * **Minted frame correctness.** Fresh ``id`` + ``created_at`` (so the wake frame
   passes the fail-closed horizon), ``stack`` from config, ``origin`` copied
@@ -51,7 +51,7 @@ from .frame_turn import FrameBus
 
 # Comma-separated list of ``agentd-<name>`` ids THIS agent may wake. NO default:
 # unset/empty means the wake capability is never exposed (see WakeConfig.from_env).
-# Only the triage (waker) deploy — Nagatha — sets it; that opt-in is itself the
+# Only the triage (waker) deploy — Nimbus — sets it; that opt-in is itself the
 # loop-safety bound (a woken agent has no allow-list, so cannot wake-chain).
 ENV_WAKE_ALLOWED_AGENTS = "RTECH_WAKE_ALLOWED_AGENTS"
 
@@ -63,9 +63,9 @@ _WAKE_SCOPE: Literal["single"] = "single"
 _WAKE_ORIGIN_EDGE_PREFIX = "wake"
 
 # Deployed agent ids follow the ``agentd-<name>`` convention (deploy/kboard/
-# install.sh AGENT_INSTANCES, e.g. ``agentd-bilby``). An allow-list entry that is
-# merely subject-safe (``bilby``) would pass ``validate_participants`` yet target
-# ``rtech.agent.bilby.task`` — a subject no deployed agentd subscribes — so the
+# install.sh AGENT_INSTANCES, e.g. ``agentd-birk``). An allow-list entry that is
+# merely subject-safe (``birk``) would pass ``validate_participants`` yet target
+# ``rtech.agent.birk.task`` — a subject no deployed agentd subscribes — so the
 # wake would silently vanish. This convention regex fails such an id CLOSED at
 # config build (a loud startup error) alongside the wire-safety check.
 _ALLOWED_AGENT_CONVENTION = re.compile(r"^agentd-[a-z0-9][a-z0-9-]*$")
@@ -130,14 +130,14 @@ class WakeConfig:
                 ) from exc
             # Subject-safe is necessary but not sufficient: a deployed agentd only
             # subscribes ``rtech.agent.<agentd-name>.task`` (deploy convention), so
-            # an id like ``bilby`` would target a subject nobody listens on. Enforce
+            # an id like ``birk`` would target a subject nobody listens on. Enforce
             # the ``agentd-<name>`` convention so a mis-set allow-list fails loud at
             # build, not as a silently-vanished wake mid-turn.
             if _ALLOWED_AGENT_CONVENTION.match(candidate) is None:
                 raise ValueError(
                     f"wake allow-list id {candidate!r} does not follow the required "
                     f"{ENV_WAKE_ALLOWED_AGENTS} convention: every id must match "
-                    r"'^agentd-[a-z0-9][a-z0-9-]*$' (e.g. 'agentd-bilby')"
+                    r"'^agentd-[a-z0-9][a-z0-9-]*$' (e.g. 'agentd-birk')"
                 )
 
     @classmethod

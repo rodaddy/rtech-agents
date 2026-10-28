@@ -17,8 +17,8 @@ from rtech_frames.codec import FrameDecodeError
 
 def _frame() -> PresenceTransitionFrame:
     return PresenceTransitionFrame(
-        agent_id="nagatha-2",
-        display_name="Nagatha 2",
+        agent_id="nimbus-2",
+        display_name="Nimbus 2",
         transition="offline",
         observed_at=datetime(2026, 7, 20, 12, 0, 0, tzinfo=UTC),
         transition_id="abc123def456",
@@ -36,8 +36,8 @@ def test_round_trips_through_encode_decode() -> None:
 
 def test_recovered_transition_round_trips() -> None:
     frame = PresenceTransitionFrame(
-        agent_id="skippy",
-        display_name="Skippy",
+        agent_id="sprocket",
+        display_name="Sprocket",
         transition="recovered",
         observed_at=datetime(2026, 7, 20, 13, 30, 0, tzinfo=UTC),
         transition_id="recover1",
@@ -60,8 +60,8 @@ def test_unknown_frame_type_raises_frame_decode_error() -> None:
 def test_extra_field_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             transition_id="edge1",
@@ -72,8 +72,8 @@ def test_extra_field_rejected() -> None:
 def test_missing_required_field_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             # observed_at missing
         )  # type: ignore[call-arg]
@@ -82,8 +82,8 @@ def test_missing_required_field_rejected() -> None:
 def test_invalid_transition_literal_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="degraded",  # type: ignore[arg-type]
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             transition_id="edge1",
@@ -93,7 +93,7 @@ def test_invalid_transition_literal_rejected() -> None:
 def test_blank_display_name_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
+            agent_id="sprocket",
             display_name="",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
@@ -120,7 +120,7 @@ def test_unsafe_or_overcap_agent_id_rejected(agent_id: str) -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
             agent_id=agent_id,
-            display_name="Skippy",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             transition_id="edge1",
@@ -130,8 +130,8 @@ def test_unsafe_or_overcap_agent_id_rejected(agent_id: str) -> None:
 @pytest.mark.parametrize(
     ("agent_id", "valid"),
     [
-        ("skippy", True),
-        ("nagatha-2", True),
+        ("sprocket", True),
+        ("nimbus-2", True),
         ("foo_bar", True),
         ("a" * 64, True),  # exactly at the cap
         ("a" * 65, False),  # over the cap: subject-safe but rejected (Finding 1)
@@ -163,15 +163,15 @@ def test_is_valid_presence_agent_id_matches_frame_constraints(agent_id: str, val
         "a/b",  # slash
         "a\\b",  # backslash
         "a\x00b",  # control char
-        " Skippy",  # leading whitespace
-        "Skippy ",  # trailing whitespace
+        " Sprocket",  # leading whitespace
+        "Sprocket ",  # trailing whitespace
         "x" * 65,  # over the 64-char cap
     ],
 )
 def test_unsafe_or_overcap_display_name_rejected(display_name: str) -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
+            agent_id="sprocket",
             display_name=display_name,
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
@@ -179,10 +179,10 @@ def test_unsafe_or_overcap_display_name_rejected(display_name: str) -> None:
         )
 
 
-@pytest.mark.parametrize("display_name", ["Nagatha 2", "Foo.Bar", "Skippy", "foo_bar"])
+@pytest.mark.parametrize("display_name", ["Nimbus 2", "Foo.Bar", "Sprocket", "foo_bar"])
 def test_normal_display_names_accepted(display_name: str) -> None:
     frame = PresenceTransitionFrame(
-        agent_id="skippy",
+        agent_id="sprocket",
         display_name=display_name,
         transition="offline",
         observed_at=datetime(2026, 7, 20, tzinfo=UTC),
@@ -194,8 +194,8 @@ def test_normal_display_names_accepted(display_name: str) -> None:
 def test_boundary_survives_encode_decode() -> None:
     # A constructed frame with a safe agent_id + safe display_name round-trips.
     frame = PresenceTransitionFrame(
-        agent_id="agentd-nagatha",
-        display_name="Nagatha 2",
+        agent_id="agentd-nimbus",
+        display_name="Nimbus 2",
         transition="recovered",
         observed_at=datetime(2026, 7, 20, 12, 0, 0, tzinfo=UTC),
         transition_id="boundary1",
@@ -208,7 +208,7 @@ def test_boundary_survives_encode_decode() -> None:
 def test_decode_rejects_malicious_agent_id_bytes() -> None:
     # A crafted wire payload with a subject-unsafe agent_id fails closed at decode.
     good = encode_frame(_frame())
-    hostile = good.replace(b'"nagatha-2"', b'"../etc/passwd"')
+    hostile = good.replace(b'"nimbus-2"', b'"../etc/passwd"')
     with pytest.raises(FrameDecodeError):
         decode_frame(hostile)
 
@@ -219,8 +219,8 @@ def test_decode_rejects_malicious_agent_id_bytes() -> None:
 def test_offset_observed_at_normalized_to_utc() -> None:
     plus5 = timezone(timedelta(hours=5))
     frame = PresenceTransitionFrame(
-        agent_id="skippy",
-        display_name="Skippy",
+        agent_id="sprocket",
+        display_name="Sprocket",
         transition="offline",
         observed_at=datetime(2026, 7, 20, 17, 0, 0, tzinfo=plus5),
         transition_id="edge1",
@@ -233,8 +233,8 @@ def test_offset_observed_at_normalized_to_utc() -> None:
 def test_naive_observed_at_rejected_at_construction() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, 12, 0, 0),  # naive
             transition_id="edge1",
@@ -309,8 +309,8 @@ def test_transition_id_round_trips_through_encode_decode() -> None:
 def test_missing_transition_id_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             # transition_id missing
@@ -320,8 +320,8 @@ def test_missing_transition_id_rejected() -> None:
 def test_blank_transition_id_rejected() -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             transition_id="",
@@ -343,8 +343,8 @@ def test_blank_transition_id_rejected() -> None:
 def test_unsafe_or_overcap_transition_id_rejected(transition_id: str) -> None:
     with pytest.raises(ValidationError):
         PresenceTransitionFrame(
-            agent_id="skippy",
-            display_name="Skippy",
+            agent_id="sprocket",
+            display_name="Sprocket",
             transition="offline",
             observed_at=datetime(2026, 7, 20, tzinfo=UTC),
             transition_id=transition_id,
@@ -354,8 +354,8 @@ def test_unsafe_or_overcap_transition_id_rejected(transition_id: str) -> None:
 def test_uuid_hex_transition_id_accepted() -> None:
     # The deriver mints uuid4().hex (32 hex chars); it must be a valid transition_id.
     frame = PresenceTransitionFrame(
-        agent_id="skippy",
-        display_name="Skippy",
+        agent_id="sprocket",
+        display_name="Sprocket",
         transition="offline",
         observed_at=datetime(2026, 7, 20, tzinfo=UTC),
         transition_id="0f9c2b7a4e1d4a6b8c3e5f7a9b1d2c3e",

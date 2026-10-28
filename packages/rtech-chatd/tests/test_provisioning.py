@@ -213,15 +213,15 @@ class _FakeClient:
 
 
 def test_resolve_bot_handles_maps_slugs() -> None:
-    assert resolve_bot_handles(["skippy", "nagatha", "bilby"]) == [
-        DEFAULT_BOT_HANDLES["skippy"],
-        DEFAULT_BOT_HANDLES["nagatha"],
-        DEFAULT_BOT_HANDLES["bilby"],
+    assert resolve_bot_handles(["sprocket", "nimbus", "birk"]) == [
+        DEFAULT_BOT_HANDLES["sprocket"],
+        DEFAULT_BOT_HANDLES["nimbus"],
+        DEFAULT_BOT_HANDLES["birk"],
     ]
 
 
 def test_resolve_bot_handles_accepts_only_configured_handle() -> None:
-    assert resolve_bot_handles(["@skippy_example_bot"]) == [DEFAULT_BOT_HANDLES["skippy"]]
+    assert resolve_bot_handles(["@sprocket_example_bot"]) == [DEFAULT_BOT_HANDLES["sprocket"]]
 
 
 def test_resolve_bot_handles_rejects_caller_supplied_handle() -> None:
@@ -235,9 +235,9 @@ def test_resolve_bot_handles_rejects_caller_supplied_id() -> None:
 
 
 def test_resolve_bot_handles_dedups_preserving_order() -> None:
-    assert resolve_bot_handles(["skippy", "skippy", "bilby"]) == [
-        DEFAULT_BOT_HANDLES["skippy"],
-        DEFAULT_BOT_HANDLES["bilby"],
+    assert resolve_bot_handles(["sprocket", "sprocket", "birk"]) == [
+        DEFAULT_BOT_HANDLES["sprocket"],
+        DEFAULT_BOT_HANDLES["birk"],
     ]
 
 
@@ -278,16 +278,16 @@ async def test_find_supergroup_ignores_non_creator_and_broadcast_and_mismatch() 
 
 async def test_invite_members_privacy_block_is_truthful_and_never_mints_link() -> None:
     entity = _channel(9, megagroup=True)
-    client = _FakeClient(entity=entity, privacy_fail={"@Nagatha_example_bot"})
+    client = _FakeClient(entity=entity, privacy_fail={"@Nimbus_example_bot"})
     outcome = await invite_members(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Skippy_example_bot", "@Nagatha_example_bot"],
+        ["@Sprocket_example_bot", "@Nimbus_example_bot"],
     )
-    assert outcome.added == ["@Skippy_example_bot"]
-    assert outcome.privacy_blocked == ["@Nagatha_example_bot"]
-    assert "@Nagatha_example_bot" in outcome.failed
-    assert "cannot join via an invite link" in outcome.failed["@Nagatha_example_bot"]
+    assert outcome.added == ["@Sprocket_example_bot"]
+    assert outcome.privacy_blocked == ["@Nimbus_example_bot"]
+    assert "@Nimbus_example_bot" in outcome.failed
+    assert "cannot join via an invite link" in outcome.failed["@Nimbus_example_bot"]
     assert client.exported == 0
 
 
@@ -296,7 +296,7 @@ async def test_invite_members_no_privacy_no_link() -> None:
     outcome = await invite_members(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Skippy_example_bot"],
+        ["@Sprocket_example_bot"],
     )
     assert outcome.privacy_blocked == []
     assert outcome.failed == {}
@@ -309,20 +309,20 @@ async def test_invite_members_refuses_unconfigured_handle_before_inviting() -> N
         await invite_members(
             client,  # type: ignore[arg-type]
             "-1009",
-            ["@Skippy_example_bot", "@ghost_bot"],
+            ["@Sprocket_example_bot", "@ghost_bot"],
         )
     assert client.invited == []
 
 
 async def test_invite_members_refuses_configured_identity_that_is_not_a_bot() -> None:
-    client = _FakeClient(entity=_channel(9), non_bot_handles={DEFAULT_BOT_HANDLES["skippy"]})
+    client = _FakeClient(entity=_channel(9), non_bot_handles={DEFAULT_BOT_HANDLES["sprocket"]})
     outcome = await invite_members(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Skippy_example_bot"],
+        ["@Sprocket_example_bot"],
     )
     assert outcome.added == []
-    assert outcome.failed == {"@Skippy_example_bot": "ValueError"}
+    assert outcome.failed == {"@Sprocket_example_bot": "ValueError"}
     assert client.invited == []
 
 
@@ -334,9 +334,9 @@ async def test_promote_members_grants_manage_topics_least_privilege() -> None:
     results = await promote_members(
         client,  # type: ignore[arg-type]
         "-1009",
-        ["@Skippy_example_bot"],
+        ["@Sprocket_example_bot"],
     )
-    assert results == {"@Skippy_example_bot": "ok"}
+    assert results == {"@Sprocket_example_bot": "ok"}
     _uid, rights = client.promoted[0]
     assert rights.manage_topics is True
     assert rights.add_admins is False  # least privilege
@@ -346,9 +346,9 @@ async def test_promote_members_grants_manage_topics_least_privilege() -> None:
 
 
 async def test_promote_members_refuses_configured_identity_that_is_not_a_bot() -> None:
-    client = _FakeClient(entity=_channel(9), non_bot_handles={DEFAULT_BOT_HANDLES["skippy"]})
+    client = _FakeClient(entity=_channel(9), non_bot_handles={DEFAULT_BOT_HANDLES["sprocket"]})
     with pytest.raises(ValueError, match="did not resolve to a Telegram bot"):
-        await promote_members(client, "-1009", ["@Skippy_example_bot"])  # type: ignore[arg-type]
+        await promote_members(client, "-1009", ["@Sprocket_example_bot"])  # type: ignore[arg-type]
     assert client.promoted == []
 
 
@@ -365,12 +365,12 @@ async def test_promote_admins_does_not_log_exception_text() -> None:
         results = await promote_admins_primitive(
             _SensitiveFailureClient(entity=_channel(9)),  # type: ignore[arg-type]
             "-1009",
-            ["@Skippy_example_bot"],
+            ["@Sprocket_example_bot"],
         )
     finally:
         logger.remove(sink_id)
 
-    assert results == {"@Skippy_example_bot": "RuntimeError"}
+    assert results == {"@Sprocket_example_bot": "RuntimeError"}
     rendered = "".join(messages)
     assert "RuntimeError" in rendered
     assert "do-not-log" not in rendered
@@ -433,7 +433,7 @@ async def test_auth_revoked_raises_provisioning_error() -> None:
         raise_on={"InviteToChannelRequest": AuthKeyUnregisteredError(request=None)},
     )
     with pytest.raises(ProvisioningError) as exc:
-        await invite_members(client, "-1009", ["@Skippy_example_bot"])  # type: ignore[arg-type]
+        await invite_members(client, "-1009", ["@Sprocket_example_bot"])  # type: ignore[arg-type]
     assert exc.value.kind == "auth_revoked"
     # Credential-free remediation.
     assert "re-mint" in str(exc.value)
@@ -446,7 +446,7 @@ async def test_flood_wait_surfaces_retry_after() -> None:
         raise_on={"InviteToChannelRequest": flood},
     )
     with pytest.raises(ProvisioningError) as exc:
-        await invite_members(client, "-1009", ["@Skippy_example_bot"])  # type: ignore[arg-type]
+        await invite_members(client, "-1009", ["@Sprocket_example_bot"])  # type: ignore[arg-type]
     assert exc.value.kind == "flood_wait"
     assert exc.value.retry_after_s == 42
 
@@ -457,7 +457,7 @@ async def test_peer_flood_aborts_loud() -> None:
         raise_on={"InviteToChannelRequest": PeerFloodError(request=None)},
     )
     with pytest.raises(ProvisioningError) as exc:
-        await invite_members(client, "-1009", ["@Skippy_example_bot"])  # type: ignore[arg-type]
+        await invite_members(client, "-1009", ["@Sprocket_example_bot"])  # type: ignore[arg-type]
     assert exc.value.kind == "peer_flood"
 
 
@@ -477,7 +477,7 @@ async def test_promote_members_classifies_fatal_errors_distinctly(
         raise_on={"EditAdminRequest": rpc_error},
     )
     with pytest.raises(ProvisioningError) as exc:
-        await promote_members(client, "-1009", ["@Skippy_example_bot"])  # type: ignore[arg-type]
+        await promote_members(client, "-1009", ["@Sprocket_example_bot"])  # type: ignore[arg-type]
     assert exc.value.kind == expected_kind
 
 
@@ -496,7 +496,7 @@ async def test_provision_creates_when_absent() -> None:
     result = await provision_debate_group(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        ["skippy", "nagatha", "bilby"],
+        ["sprocket", "nimbus", "birk"],
     )
     assert result.created is True
     assert result.chat_id == "-1000000424242"
@@ -518,7 +518,7 @@ async def test_provision_reuses_when_present_idempotent() -> None:
     result = await provision_debate_group(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        ["skippy", "nagatha", "bilby"],
+        ["sprocket", "nimbus", "birk"],
     )
     assert result.created is False  # REUSED, not recreated
     assert result.chat_id == "-1000000424242"
@@ -534,16 +534,16 @@ async def test_provision_privacy_bot_stays_unpromoted_without_link() -> None:
         dialogs=[_FakeDialog("Trio Debate", existing)],
         entity=existing,
         admins=[existing],
-        privacy_fail={DEFAULT_BOT_HANDLES["nagatha"]},
+        privacy_fail={DEFAULT_BOT_HANDLES["nimbus"]},
     )
     result = await provision_debate_group(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        ["skippy", "nagatha", "bilby"],
+        ["sprocket", "nimbus", "birk"],
     )
-    assert DEFAULT_BOT_HANDLES["nagatha"] in result.invite_privacy_blocked
+    assert DEFAULT_BOT_HANDLES["nimbus"] in result.invite_privacy_blocked
     assert result.invite_link is None
-    assert DEFAULT_BOT_HANDLES["nagatha"] not in result.promotions
+    assert DEFAULT_BOT_HANDLES["nimbus"] not in result.promotions
     assert client.exported == 0
 
 
@@ -555,7 +555,7 @@ async def test_provision_mints_a_bounded_link_only_when_explicitly_requested() -
     result = await provision_debate_group(
         client,  # type: ignore[arg-type]
         "Trio Debate",
-        ["skippy"],
+        ["sprocket"],
         mint_invite_link=True,
     )
     assert result.invite_link == "https://t.me/+FAKEINVITE"
@@ -573,6 +573,6 @@ async def test_provision_revoked_session_fails_loud() -> None:
         await provision_debate_group(
             client,  # type: ignore[arg-type]
             "Trio Debate",
-            ["skippy"],
+            ["sprocket"],
         )
     assert exc.value.kind == "auth_revoked"

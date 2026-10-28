@@ -171,7 +171,7 @@ class _NeverAliveLiveness:
         return False
 
 
-def _request(agent_id: str = "agentd-bilby", request_id: str = "req-1") -> StartAgentFrame:
+def _request(agent_id: str = "agentd-birk", request_id: str = "req-1") -> StartAgentFrame:
     return StartAgentFrame(request_id=request_id, agent_id=agent_id, requester_id="operator-1")
 
 
@@ -193,8 +193,8 @@ def _supervisor(
     return (
         ExternalStartSupervisor(
             known_agents=(
-                KnownAgent(agent_id="agentd-bilby", service_ref="rtech-agentd@agentd-bilby"),
-                KnownAgent(agent_id="agentd-skippy", service_ref="rtech-agentd@agentd-skippy"),
+                KnownAgent(agent_id="agentd-birk", service_ref="rtech-agentd@agentd-birk"),
+                KnownAgent(agent_id="agentd-sprocket", service_ref="rtech-agentd@agentd-sprocket"),
             ),
             starter=actual_starter,
             bus=actual_publisher,

@@ -45,16 +45,16 @@ def test_create_group_parses_title_and_members() -> None:
             "--title",
             "Trio Debate",
             "--member",
-            "@Bilby_example_bot",
+            "@Birk_example_bot",
             "--member",
-            "@Skippy_example_bot",
+            "@Sprocket_example_bot",
             "--env",
             "dev",
         ]
     )
     assert args.command == "create-group"
     assert args.title == "Trio Debate"
-    assert args.members == ["@Bilby_example_bot", "@Skippy_example_bot"]
+    assert args.members == ["@Birk_example_bot", "@Sprocket_example_bot"]
 
 
 def test_create_group_requires_title() -> None:
@@ -74,14 +74,14 @@ def test_promote_admins_parses_chat_and_members() -> None:
             "--chat",
             "-1001111111111",
             "--member",
-            "@Bilby_example_bot",
+            "@Birk_example_bot",
             "--member",
             "5000000001",
         ]
     )
     assert args.command == "promote-admins"
     assert args.chat == "-1001111111111"
-    assert args.members == ["@Bilby_example_bot", "5000000001"]
+    assert args.members == ["@Birk_example_bot", "5000000001"]
 
 
 def test_promote_admins_requires_member() -> None:

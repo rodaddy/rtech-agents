@@ -18,7 +18,7 @@ goes to STDERR via loguru with a ``TG_ADMIN:`` prefix; the new group id (and the
 Pattern/Convention:
     uv run python -m rtech_chatd.tg_admin list --env dev
     uv run python -m rtech_chatd.tg_admin create-group --env dev \
-        --title "Trio Debate" --member @Bilby_example_bot --member @Skippy_example_bot
+        --title "Trio Debate" --member @Birk_example_bot --member @Sprocket_example_bot
 """
 
 from __future__ import annotations

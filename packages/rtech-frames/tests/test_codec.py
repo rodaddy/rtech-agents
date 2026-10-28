@@ -167,7 +167,7 @@ def test_task_origin_round_trips_and_legacy_wire_decodes() -> None:
     # New wire (intake): the channel origin rides the frame.
     stamped = TaskFrame(
         id="intake-1",
-        origin_edge="chatd-intake:nagatha",
+        origin_edge="chatd-intake:nimbus",
         requester="asker42",
         text="what is the deploy status",
         scope="single",
@@ -225,7 +225,7 @@ def test_origin_debate_default_false_omits_key_for_legacy_decoder() -> None:
 
     single = TaskFrame(
         id="task-1",
-        origin_edge="chatd-intake:nagatha",
+        origin_edge="chatd-intake:nimbus",
         requester="asker",
         text="q",
         scope="single",
@@ -238,7 +238,7 @@ def test_origin_debate_default_false_omits_key_for_legacy_decoder() -> None:
 
     debate = TaskFrame(
         id="task-2",
-        origin_edge="chatd-intake:nagatha",
+        origin_edge="chatd-intake:nimbus",
         requester="asker",
         text="q",
         scope="trio",
@@ -306,7 +306,7 @@ def test_origin_none_omits_key_so_old_forbidding_decoder_accepts() -> None:
     # And a frame WITH origin still emits the key and round-trips.
     stamped = TaskFrame(
         id="task-2",
-        origin_edge="chatd-intake:nagatha",
+        origin_edge="chatd-intake:nimbus",
         requester="asker",
         text="q",
         scope="single",
@@ -323,29 +323,29 @@ def test_arbiter_round_trips_and_must_be_a_participant() -> None:
     """The debate arbiter rides the wire and validates as one of participants."""
     frame = TaskFrame(
         id="deb-1",
-        origin_edge="chatd-intake:nagatha",
+        origin_edge="chatd-intake:nimbus",
         requester="asker",
         text="debate this",
         scope="trio",
-        participants=["agentd-nagatha", "agentd-bilby", "agentd-iris"],
-        arbiter="agentd-nagatha",
+        participants=["agentd-nimbus", "agentd-birk", "agentd-iris"],
+        arbiter="agentd-nimbus",
     )
     payload = json.loads(encode_frame(frame).decode("utf-8"))
-    assert payload["arbiter"] == "agentd-nagatha"
+    assert payload["arbiter"] == "agentd-nimbus"
     decoded = decode_frame(encode_frame(frame))
     assert isinstance(decoded, TaskFrame)
     assert decoded == frame
-    assert decoded.arbiter == "agentd-nagatha"
+    assert decoded.arbiter == "agentd-nimbus"
 
     # A non-participant arbiter is a mint bug and fails closed at validation.
     with pytest.raises(ValueError, match="arbiter .* must be one of participants"):
         TaskFrame(
             id="deb-2",
-            origin_edge="chatd-intake:nagatha",
+            origin_edge="chatd-intake:nimbus",
             requester="asker",
             text="debate this",
             scope="trio",
-            participants=["agentd-nagatha", "agentd-bilby", "agentd-iris"],
+            participants=["agentd-nimbus", "agentd-birk", "agentd-iris"],
             arbiter="agentd-stranger",
         )
 
@@ -417,7 +417,7 @@ def test_arbiter_none_omits_key_so_old_forbidding_decoder_accepts() -> None:
 def test_turn_origin_round_trips_and_legacy_wire_decodes() -> None:
     # New wire (reply render): the channel origin rides the reply turn.
     stamped = TurnFrame(
-        agent_id="nagatha",
+        agent_id="nimbus",
         task_id="intake-1",
         visible_text="the deploy is green",
         stance=Stance(position="answered", because="I checked the pipeline."),
@@ -491,7 +491,7 @@ def test_turn_origin_none_omits_key_so_old_forbidding_decoder_accepts() -> None:
 
     # And a turn WITH origin still emits the key and round-trips.
     stamped = TurnFrame(
-        agent_id="nagatha",
+        agent_id="nimbus",
         task_id="task-2",
         visible_text="done",
         stance=Stance(position="answered", because="checked"),
@@ -523,7 +523,7 @@ def test_turn_verification_round_trips_and_legacy_wire_decodes() -> None:
         methods=["open_brain_recall"],
     )
     stamped = TurnFrame(
-        agent_id="nagatha",
+        agent_id="nimbus",
         task_id="intake-1",
         visible_text="the deploy is green",
         stance=Stance(position="answered", because="I checked the pipeline."),
@@ -659,7 +659,7 @@ def test_steer_interrupt_defaults_false_and_round_trips() -> None:
 def test_lifecycle_frame_round_trips_with_wire_type() -> None:
     """LifecycleFrame carries reason/initiator/correlation_id on the wire."""
     frame = LifecycleFrame(
-        agent_id="agentd-bilby",
+        agent_id="agentd-birk",
         reason="shutdown",
         initiator="signal:SIGTERM",
         correlation_id="corr-1",

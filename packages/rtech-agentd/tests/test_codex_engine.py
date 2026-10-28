@@ -211,13 +211,13 @@ def test_engine_docs_agree_on_authoritative_codex_cli_version() -> None:
 async def test_start_handshake_and_ref_capture() -> None:
     fake = _fake()
     engine = CodexEngine(_cfg(), transport=fake)
-    await engine.start("you are bilby", ToolsPolicy())
+    await engine.start("you are birk", ToolsPolicy())
     assert fake.started is True
     # thread/start was called with the system prompt + stance directive.
     methods = [m for m, _ in fake.requests]
     assert methods == ["thread/start"]
     _, params = fake.requests[0]
-    assert params["baseInstructions"].startswith("you are bilby")
+    assert params["baseInstructions"].startswith("you are birk")
     assert "output schema" in params["baseInstructions"].lower()
     health = await engine.health()
     assert health.session_ref == "thread-1"
@@ -770,7 +770,7 @@ async def test_turn_completed_maps_to_turn_done_with_typed_stance() -> None:
         {
             "position": "agree",
             "because": "the plan is sound",
-            "needs_from": ["nagatha"],
+            "needs_from": ["nimbus"],
             "verification": {
                 "status": "grounded",
                 "claim_kind": "factual",
@@ -808,7 +808,7 @@ async def test_turn_completed_maps_to_turn_done_with_typed_stance() -> None:
     assert event.session_ref == "thread-1"
     assert event.stance.position == "agree"
     assert event.stance.because == "the plan is sound"
-    assert event.stance.needs_from == ["nagatha"]
+    assert event.stance.needs_from == ["nimbus"]
     assert event.verification.status == "grounded"
     assert event.verification.sources[0].source_id == "OB1"
     # Active turn is cleared after completion.

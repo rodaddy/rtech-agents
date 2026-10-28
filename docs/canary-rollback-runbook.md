@@ -1,6 +1,6 @@
 # Canary + rollback runbook — per-agent agentd deploy
 
-Staged migration of the trio (Bilby, Skippy, Nagatha) onto source-owned
+Staged migration of the trio (Birk, Sprocket, Nimbus) onto source-owned
 per-agent homes (slug-named `agents/<slug>/agent.yaml` + `SOUL.md`) and the
 rootless `rtech-agentd@<id>` systemd user units. This runbook covers the
 canary-first rollout, per-agent verification, rollback, and the steps that are
@@ -8,9 +8,9 @@ explicitly **not** automated.
 
 ## Manifest resolution convention (slug vs instance id)
 
-Manifest **directories are slug-named** (`agents/skippy`, `agents/bilby`,
-`agents/nagatha`) while the systemd **instance id carries an `agentd-` prefix**
-(`RTECH_AGENT_ID=agentd-skippy`, from the unit's `%i`). The entrypoint resolves
+Manifest **directories are slug-named** (`agents/sprocket`, `agents/birk`,
+`agents/nimbus`) while the systemd **instance id carries an `agentd-` prefix**
+(`RTECH_AGENT_ID=agentd-sprocket`, from the unit's `%i`). The entrypoint resolves
 the manifest in this order (first hit wins, and it logs which one resolved):
 
 1. `<RTECH_AGENTS_ROOT>/<id>/agent.yaml` — an exact-id directory, if present.
@@ -26,22 +26,22 @@ user** — never root, never sudo. The install is additive and idempotent
 
 ## Migration order — canary first
 
-Nagatha is the **canary**: the first agent migrated, verified in isolation before
-any other agent is enabled (fleet decision). Only after Nagatha passes
-verification do Skippy and then Bilby follow.
+Nimbus is the **canary**: the first agent migrated, verified in isolation before
+any other agent is enabled (fleet decision). Only after Nimbus passes
+verification do Sprocket and then Birk follow.
 
 `deploy/kboard/install.sh` enables `RTECH_AGENT_INSTANCES` (default
-`agentd-nagatha agentd-skippy agentd-bilby`). To stage the canary alone, override
+`agentd-nimbus agentd-sprocket agentd-birk`). To stage the canary alone, override
 the set for the first run:
 
 ```sh
-RTECH_AGENT_INSTANCES=agentd-nagatha sh deploy/kboard/install.sh /path/to/rtech-agents-checkout
+RTECH_AGENT_INSTANCES=agentd-nimbus sh deploy/kboard/install.sh /path/to/rtech-agents-checkout
 ```
 
-Verify Nagatha (below). Once green, enable the rest:
+Verify Nimbus (below). Once green, enable the rest:
 
 ```sh
-RTECH_AGENT_INSTANCES="agentd-skippy agentd-bilby" sh deploy/kboard/install.sh /path/to/rtech-agents-checkout
+RTECH_AGENT_INSTANCES="agentd-sprocket agentd-birk" sh deploy/kboard/install.sh /path/to/rtech-agents-checkout
 ```
 
 Each id **must** map to a committed slug-named `agents/<slug>/agent.yaml` (see
@@ -67,8 +67,8 @@ systemd restarts (RestartSec=5) → after 5 such starts in 5 minutes the outer
 StartLimit latches the unit failed. Clearing it is a deliberate operator action:
 
 ```sh
-systemctl --user reset-failed rtech-agentd@agentd-nagatha
-systemctl --user start rtech-agentd@agentd-nagatha
+systemctl --user reset-failed rtech-agentd@agentd-nimbus
+systemctl --user start rtech-agentd@agentd-nimbus
 ```
 
 A unit stuck in `failed` with `start request repeated too quickly` in the
@@ -81,7 +81,7 @@ Run the read-only checker after enabling an instance. It starts/stops nothing an
 publishes nothing; it exits non-zero if any check fails, so it gates the canary:
 
 ```sh
-bash scripts/verify-agent-deploy.sh agentd-nagatha
+bash scripts/verify-agent-deploy.sh agentd-nimbus
 ```
 
 It confirms: (1) the manifest + `SOUL.md` resolve under the install root using
@@ -94,7 +94,7 @@ exact commands:
 1. **systemd status** — unit is loaded, enabled, active (running):
 
    ```sh
-   systemctl --user status rtech-agentd@agentd-nagatha
+   systemctl --user status rtech-agentd@agentd-nimbus
    ```
 
    Expect `Active: active (running)` and, in the log, `agentd.config | loaded
@@ -107,7 +107,7 @@ exact commands:
    `<env>.agent.<id>.heartbeat`). Observe it on the fleet bus:
 
    ```sh
-   nats --server nats://127.0.0.1:4222 sub 'dev.agent.agentd-nagatha.heartbeat'
+   nats --server nats://127.0.0.1:4222 sub 'dev.agent.agentd-nimbus.heartbeat'
    ```
 
    Expect a fresh `StatusFrame` every ~30s (the `HEARTBEAT_INTERVAL_S` default).
@@ -117,7 +117,7 @@ exact commands:
    `rtech.agent.<id>.lifecycle`) at start/shutdown/recovery:
 
    ```sh
-   nats --server nats://127.0.0.1:4222 sub 'rtech.agent.agentd-nagatha.lifecycle'
+   nats --server nats://127.0.0.1:4222 sub 'rtech.agent.agentd-nimbus.lifecycle'
    ```
 
    A restart of the unit MUST produce a matching lifecycle event — that is the
@@ -130,7 +130,7 @@ exact commands:
    takes the env-only fallback and honors `DEV_STACK_ENGINE=scripted`:
 
    ```sh
-   RTECH_AGENT_ID=agentd-nagatha RTECH_AGENTS_ROOT=$(mktemp -d) \
+   RTECH_AGENT_ID=agentd-nimbus RTECH_AGENTS_ROOT=$(mktemp -d) \
      DEV_STACK_ENGINE=scripted uv run --frozen python -m rtech_agentd
    ```
 
@@ -149,7 +149,7 @@ existing k-board-api / caddy / postgres services.
 1. **Stop and disable the unit** (leaves the source tree + config in place):
 
    ```sh
-   systemctl --user disable --now rtech-agentd@agentd-nagatha
+   systemctl --user disable --now rtech-agentd@agentd-nimbus
    ```
 
 2. **Re-enable Hermes intake** for that agent. agentd taking a task and Hermes
@@ -162,7 +162,7 @@ existing k-board-api / caddy / postgres services.
 3. Confirm the unit is gone and the agent is served by Hermes again:
 
    ```sh
-   systemctl --user is-active rtech-agentd@agentd-nagatha   # -> inactive
+   systemctl --user is-active rtech-agentd@agentd-nimbus   # -> inactive
    ```
 
 ## Not automated (do these by hand)

@@ -36,7 +36,7 @@ Hermes loop would inherit the exact machinery the product exists to replace.
 
 ## Consequences
 
-- The Hermes tooling repo **keeps owning the incumbent fleet** (Bilby/Skippy/Nagatha on
+- The Hermes tooling repo **keeps owning the incumbent fleet** (Birk/Sprocket/Nimbus on
   Hermes) until a separate, later migration decision. That migration happens
   only after the fresh test agent proves the new stack.
 - The spec/plan lives in the Hermes tooling repo beside the audit; the product

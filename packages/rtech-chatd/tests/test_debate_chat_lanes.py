@@ -36,15 +36,15 @@ RTECH_CHAT = "-1002222222222"
 THIRD_CHAT = "-1003333333333"
 
 LIVE_CHAT_LANES: tuple[tuple[str, str, str], ...] = (
-    (TRIO_CHAT, "skippy", "93"),
-    (TRIO_CHAT, "nagatha", "94"),
-    (TRIO_CHAT, "bilby", "95"),
-    (RTECH_CHAT, "skippy", "5"),
-    (RTECH_CHAT, "nagatha", "6"),
-    (RTECH_CHAT, "bilby", "7"),
-    (THIRD_CHAT, "skippy", "15"),
-    (THIRD_CHAT, "nagatha", "16"),
-    (THIRD_CHAT, "bilby", "17"),
+    (TRIO_CHAT, "sprocket", "93"),
+    (TRIO_CHAT, "nimbus", "94"),
+    (TRIO_CHAT, "birk", "95"),
+    (RTECH_CHAT, "sprocket", "5"),
+    (RTECH_CHAT, "nimbus", "6"),
+    (RTECH_CHAT, "birk", "7"),
+    (THIRD_CHAT, "sprocket", "15"),
+    (THIRD_CHAT, "nimbus", "16"),
+    (THIRD_CHAT, "birk", "17"),
 )
 
 
@@ -114,26 +114,26 @@ def test_env_parses_live_chat_lane_mappings(monkeypatch: pytest.MonkeyPatch) -> 
 def test_env_canonicalizes_signed_chat_ids(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(
         "RTECH_CHATD_DEBATE_CHAT_LANES",
-        "+123:skippy=93,-0100:nagatha=94",
+        "+123:sprocket=93,-0100:nimbus=94",
     )
     cfg = IntakeConfig.from_env()
-    assert cfg.debate_chat_lanes == (("123", "skippy", "93"), ("-100", "nagatha", "94"))
+    assert cfg.debate_chat_lanes == (("123", "sprocket", "93"), ("-100", "nimbus", "94"))
 
 
 def test_chat_lane_normalizer_keys_on_chat_and_agent() -> None:
     lanes = debate_chat_lanes_from_triples(LIVE_CHAT_LANES)
-    assert lanes[(TRIO_CHAT, "skippy")] == "93"
-    assert lanes[(RTECH_CHAT, "skippy")] == "5"
-    assert lanes[(THIRD_CHAT, "skippy")] == "15"
+    assert lanes[(TRIO_CHAT, "sprocket")] == "93"
+    assert lanes[(RTECH_CHAT, "sprocket")] == "5"
+    assert lanes[(THIRD_CHAT, "sprocket")] == "15"
     # Same agent, three chats, three distinct topic ids.
-    assert len({lanes[(chat, "skippy")] for chat in (TRIO_CHAT, RTECH_CHAT, THIRD_CHAT)}) == 3
+    assert len({lanes[(chat, "sprocket")] for chat in (TRIO_CHAT, RTECH_CHAT, THIRD_CHAT)}) == 3
 
 
 def test_chat_lane_normalizer_normalizes_agentd_convention_ids() -> None:
     # The agent name is normalized exactly like the legacy map (agentd- prefix +
     # host suffix stripped), so a lane keyed by bare name matches an agentd id.
-    lanes = debate_chat_lanes_from_triples(((TRIO_CHAT, "agentd-nagatha-dev", "94"),))
-    assert lanes == {(TRIO_CHAT, "nagatha"): "94"}
+    lanes = debate_chat_lanes_from_triples(((TRIO_CHAT, "agentd-nimbus-dev", "94"),))
+    assert lanes == {(TRIO_CHAT, "nimbus"): "94"}
 
 
 def test_chat_lane_normalizer_preserves_hyphenated_identities_and_rejects_collisions() -> None:
@@ -141,7 +141,7 @@ def test_chat_lane_normalizer_preserves_hyphenated_identities_and_rejects_collis
         ((TRIO_CHAT, "agentd-dash-alpha", "93"), (TRIO_CHAT, "agentd-dash-beta", "94"))
     )
     assert lanes == {(TRIO_CHAT, "dash-alpha"): "93", (TRIO_CHAT, "dash-beta"): "94"}
-    assert debate_lanes_from_pairs((("agentd-nagatha-dev", "95"),)) == {"nagatha": "95"}
+    assert debate_lanes_from_pairs((("agentd-nimbus-dev", "95"),)) == {"nimbus": "95"}
     with pytest.raises(ValueError, match="normalizes multiple source keys"):
         debate_lanes_from_pairs((("agentd-dash-alpha-dev", "93"), ("dash-alpha-prod", "94")))
     with pytest.raises(ValueError, match="normalizes multiple source keys"):
@@ -160,9 +160,9 @@ def test_invalid_chat_lane_entries_warn_safely_and_are_skipped(
     monkeypatch.setenv(
         "RTECH_CHATD_DEBATE_CHAT_LANES",
         (
-            f"sensitive-garbage,{TRIO_CHAT}:skippy,{TRIO_CHAT}:=93,:nagatha=94,"
-            f"not-a-chat:skippy=93,0:skippy=93,{TRIO_CHAT}:nagatha=not-a-topic,"
-            f"{TRIO_CHAT}:bilby=0,{TRIO_CHAT}:bilby=-1,{RTECH_CHAT}:bilby=7"
+            f"sensitive-garbage,{TRIO_CHAT}:sprocket,{TRIO_CHAT}:=93,:nimbus=94,"
+            f"not-a-chat:sprocket=93,0:sprocket=93,{TRIO_CHAT}:nimbus=not-a-topic,"
+            f"{TRIO_CHAT}:birk=0,{TRIO_CHAT}:birk=-1,{RTECH_CHAT}:birk=7"
         ),
     )
     try:
@@ -170,7 +170,7 @@ def test_invalid_chat_lane_entries_warn_safely_and_are_skipped(
     finally:
         logger.remove(sink_id)
 
-    assert cfg.debate_chat_lanes == ((RTECH_CHAT, "bilby", "7"),)
+    assert cfg.debate_chat_lanes == ((RTECH_CHAT, "birk", "7"),)
     assert len(captured) == 9
     assert all("skipping invalid chat-scoped debate lane entry" in message for message in captured)
     assert all("index=" in message and "reason=" in message for message in captured)
@@ -185,26 +185,26 @@ def test_invalid_chat_lane_entries_warn_safely_and_are_skipped(
 def test_exact_chat_agent_selected_for_all_three_groups() -> None:
     edge = _edge(debate_chat_lanes=debate_chat_lanes_from_triples(LIVE_CHAT_LANES))
     # Trio group topics.
-    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-skippy") == "93"
-    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nagatha") == "94"
-    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-bilby") == "95"
+    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-sprocket") == "93"
+    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nimbus") == "94"
+    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-birk") == "95"
     # rTech Group topics.
-    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-skippy") == "5"
-    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-nagatha") == "6"
-    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-bilby") == "7"
+    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-sprocket") == "5"
+    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-nimbus") == "6"
+    assert _thread_for(edge, chat_id=RTECH_CHAT, agent_id="agentd-birk") == "7"
     # Third group topics.
-    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-skippy") == "15"
-    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-nagatha") == "16"
-    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-bilby") == "17"
+    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-sprocket") == "15"
+    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-nimbus") == "16"
+    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-birk") == "17"
 
 
 def test_same_agent_different_topic_by_chat() -> None:
     edge = _edge(debate_chat_lanes=debate_chat_lanes_from_triples(LIVE_CHAT_LANES))
-    skippy = {
-        chat: _thread_for(edge, chat_id=chat, agent_id="agentd-skippy")
+    sprocket = {
+        chat: _thread_for(edge, chat_id=chat, agent_id="agentd-sprocket")
         for chat in (TRIO_CHAT, RTECH_CHAT, THIRD_CHAT)
     }
-    assert skippy == {TRIO_CHAT: "93", RTECH_CHAT: "5", THIRD_CHAT: "15"}
+    assert sprocket == {TRIO_CHAT: "93", RTECH_CHAT: "5", THIRD_CHAT: "15"}
 
 
 def test_legacy_agent_only_lane_unchanged_as_fallback() -> None:
@@ -213,11 +213,11 @@ def test_legacy_agent_only_lane_unchanged_as_fallback() -> None:
     # the prior persistent-lane behavior), and no per-turn thread is minted.
     adapter = _FakeAdapter()
     edge = _edge(
-        debate_lanes=debate_lanes_from_pairs((("nagatha", "legacy-topic"),)),
+        debate_lanes=debate_lanes_from_pairs((("nimbus", "legacy-topic"),)),
         adapter=adapter,
     )
-    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nagatha") == "legacy-topic"
-    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-nagatha") == "legacy-topic"
+    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nimbus") == "legacy-topic"
+    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-nimbus") == "legacy-topic"
     assert adapter.thread_calls == []  # lane pre-exists; nothing created
 
 
@@ -225,13 +225,13 @@ def test_chat_lane_wins_over_legacy_lane() -> None:
     # An exact chat+agent lane is selected FIRST, even when a legacy agent-only
     # lane also exists for the same agent.
     edge = _edge(
-        debate_lanes=debate_lanes_from_pairs((("skippy", "legacy-topic"),)),
-        debate_chat_lanes=debate_chat_lanes_from_triples(((TRIO_CHAT, "skippy", "93"),)),
+        debate_lanes=debate_lanes_from_pairs((("sprocket", "legacy-topic"),)),
+        debate_chat_lanes=debate_chat_lanes_from_triples(((TRIO_CHAT, "sprocket", "93"),)),
     )
     # In the listed chat: the chat-scoped lane wins.
-    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-skippy") == "93"
+    assert _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-sprocket") == "93"
     # In an UNLISTED chat: falls back to the legacy agent-only lane.
-    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-skippy") == "legacy-topic"
+    assert _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-sprocket") == "legacy-topic"
 
 
 def test_unlisted_chat_agent_falls_through_to_per_turn_thread() -> None:
@@ -240,19 +240,19 @@ def test_unlisted_chat_agent_falls_through_to_per_turn_thread() -> None:
     # never dropped.
     adapter = _FakeAdapter()
     edge = _edge(
-        debate_chat_lanes=debate_chat_lanes_from_triples(((TRIO_CHAT, "skippy", "93"),)),
+        debate_chat_lanes=debate_chat_lanes_from_triples(((TRIO_CHAT, "sprocket", "93"),)),
         adapter=adapter,
     )
-    # bilby is unlisted in both maps for this chat -> per-turn create fires.
-    thread = _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-bilby")
+    # birk is unlisted in both maps for this chat -> per-turn create fires.
+    thread = _thread_for(edge, chat_id=THIRD_CHAT, agent_id="agentd-birk")
     assert thread == f"per-turn-{THIRD_CHAT}-anchor-1"
-    assert adapter.thread_calls == [(THIRD_CHAT, "anchor-1", "bilby — full thought")]
+    assert adapter.thread_calls == [(THIRD_CHAT, "anchor-1", "birk — full thought")]
 
 
 def test_no_lanes_configured_is_pure_per_turn_behavior() -> None:
     # A deploy with neither map is byte-identical to the pre-lane per-turn path.
     adapter = _FakeAdapter()
     edge = _edge(adapter=adapter)
-    thread = _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nagatha")
+    thread = _thread_for(edge, chat_id=TRIO_CHAT, agent_id="agentd-nimbus")
     assert thread == f"per-turn-{TRIO_CHAT}-anchor-1"
-    assert adapter.thread_calls == [(TRIO_CHAT, "anchor-1", "nagatha — full thought")]
+    assert adapter.thread_calls == [(TRIO_CHAT, "anchor-1", "nimbus — full thought")]

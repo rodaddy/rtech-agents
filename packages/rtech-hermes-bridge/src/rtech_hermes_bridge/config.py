@@ -43,7 +43,7 @@ class BridgeConfig:
     """Hold Hermes-bridge runtime settings.
 
     Attributes:
-        fleet_ids: The fleet agent ids this bridge fronts (e.g. ``["bilby"]``).
+        fleet_ids: The fleet agent ids this bridge fronts (e.g. ``["birk"]``).
             One bridge process can front several ids; each gets its own
             ``rtech.agent.<id>.task`` subscription and its own heartbeat.
         rtech_nats_url: The bus carrying ``rtech.*`` typed frames.
@@ -127,7 +127,7 @@ class BridgeConfig:
         if not fleet_ids:
             raise ValueError(
                 f"{ENV_FLEET_IDS} must name at least one fleet agent id "
-                "(comma-separated, e.g. 'bilby' or 'bilby,skippy')"
+                "(comma-separated, e.g. 'birk' or 'birk,sprocket')"
             )
         raw_interval = os.getenv(ENV_HEARTBEAT_INTERVAL)
         heartbeat_interval = (

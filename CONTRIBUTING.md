@@ -1,6 +1,6 @@
-# Project: rtech-agents
+# Contributing to rtech-agents
 
-Instructions for coding agents (and humans) working in this repo.
+Ground rules for anyone, human or coding agent, changing this repo.
 
 rtech-agents is a NATS-native managed-agent runtime. Each agent is a managed,
 long-running, inline-steerable Claude/Codex session supervised by a per-agent
@@ -71,11 +71,10 @@ entry/exit/failure/fallback/guard-trigger; 750-line hard file cap.
   content. Log sanitized summaries only.
 - Fail closed on missing auth or guard config.
 
-## Root instruction files: AGENTS.md is canonical
+## Git hooks
 
-`AGENTS.md` is the only root instruction file. The `.githooks/pre-commit` hook
-blocks commits while a `CLAUDE.md` exists. Run `bash scripts/install-hooks.sh`
-once after clone to activate the checked-in hooks (sets the checkout-local
+Run `bash scripts/install-hooks.sh` once after clone to activate the checked-in
+pre-commit hook (it blocks commits on `main` and sets the checkout-local
 `core.hooksPath`).
 
 ## Commits

@@ -1,7 +1,7 @@
 # Deploy: rtech-agents on the k-board LXC (single host)
 
 > "k-board" is the author's deploy host: an LXC container that already runs an
-> unrelated app (`k-board-api`, `caddy`, `postgres`). `bilby` is the user that
+> unrelated app (`k-board-api`, `caddy`, `postgres`). `birk` is the user that
 > owns the install there. This runbook is a worked example for that one host;
 > substitute your own host, user and secret-store paths.
 
@@ -11,13 +11,13 @@ services on the EXISTING k-board LXC. That box already runs `k-board-api` +
 `caddy` + `postgres`; this deploy must not touch them.
 
 **Rootless mandate (global run-as rule).** Everything here runs AS
-`bilby` — zero root, zero sudo. The tree is bilby-owned at `~bilby/rtech-agents`,
+`birk` — zero root, zero sudo. The tree is birk-owned at `~birk/rtech-agents`,
 units are systemd **user** units under `~/.config/systemd/user/`, and
 `install.sh` refuses to run as root. The one step that may need admin privilege
 (`loginctl enable-linger`) is detected and REPORTED, never escalated.
 
 These are repo artifacts. Nothing here mutates the host until an operator runs
-`install.sh` ON the box AS bilby.
+`install.sh` ON the box AS birk.
 
 ## What gets installed
 
@@ -31,14 +31,14 @@ These are repo artifacts. Nothing here mutates the host until an operator runs
 
 - Install root: `~/rtech-agents` (source tree, synced by `install.sh`).
 - Env file: `~/rtech-agents/.env` (from `.env.example`, secrets from Vaultwarden).
-- Ownership: bilby-owned; no service user is created, nothing runs as root.
+- Ownership: birk-owned; no service user is created, nothing runs as root.
 - Unit dir: `~/.config/systemd/user/`; controlled via `systemctl --user`.
 - All units: `uv run --frozen`, `Restart=on-failure`, `After=network-online.target`,
   `WantedBy=default.target`.
 
 ### Clean engine env
 
-`bilby`'s `~/.cc-env` exports stale 4-6-era `ANTHROPIC_*` pins that route the SDK
+`birk`'s `~/.cc-env` exports stale 4-6-era `ANTHROPIC_*` pins that route the SDK
 engine through a LiteLLM proxy — the root cause of the real-engine failure. Every
 unit's `ExecStart` is wrapped in `env -u` to strip these before launch:
 
@@ -71,10 +71,10 @@ before starting `rtech-webchat.service`. The edge MUST bind the LAN address
 > rootless stack up on `RTECH_WEBCHAT_PORT=3801` to prove it side-by-side, then
 > switch back to `3800` after the old install is decommissioned.
 
-## Install (rootless, as bilby)
+## Install (rootless, as birk)
 
 ```sh
-# On the k-board LXC, AS bilby (NOT root, NOT sudo), with a checked-out
+# On the k-board LXC, AS birk (NOT root, NOT sudo), with a checked-out
 # rtech-agents tree at $SRC. The frozen lock pins two EDITABLE path deps
 # (fleet-bus, open-brain) as siblings of the install root, so their source
 # checkouts must be stageable. By default install.sh looks for them next to
@@ -89,7 +89,7 @@ tree to `~/rtech-agents` (excluding `.git`, `.venv`, caches, and any existing
 (the frozen `uv.lock` resolves them relative to the install root — a
 runbook gap fixed here), runs `uv sync --frozen`, seeds `.env` from `.env.example` only if
 absent, installs the three **user** units, and `systemctl --user enable --now`s
-them. The agentd unit is started as `rtech-agentd@agentd-bilby` — the instance
+them. The agentd unit is started as `rtech-agentd@agentd-birk` — the instance
 name becomes `RTECH_AGENT_ID`, a UNIQUE id on the shared fleet bus (never a bare
 shared `agentd`, which collided across two agentds).
 
@@ -98,21 +98,21 @@ shared `agentd`, which collided across two agentds).
 User units only survive logout and start at boot when **lingering** is enabled:
 
 ```sh
-loginctl show-user bilby -p Linger    # install.sh reports this for you
+loginctl show-user birk -p Linger    # install.sh reports this for you
 ```
 
-Enabling it — `loginctl enable-linger bilby` — needs admin privilege and is
+Enabling it — `loginctl enable-linger birk` — needs admin privilege and is
 therefore OUT of scope for the rootless installer. If linger is off, `install.sh`
 still starts the units now but WARNS that they will not persist. An admin (or a
-NOPASSWD entry) must run `loginctl enable-linger bilby` **once**. Nothing
+NOPASSWD entry) must run `loginctl enable-linger birk` **once**. Nothing
 in this deploy escalates on its own.
 
 ### Agent identity
 
-- `RTECH_AGENT_ID=agentd-bilby` — this agentd's unique bus id. Absent an explicit
+- `RTECH_AGENT_ID=agentd-birk` — this agentd's unique bus id. Absent an explicit
   value the standalone runner defaults to `agentd-<hostname>`, never bare
   `agentd`.
-- `RTECH_TARGET_AGENT_ID=agentd-bilby` — the orchestrator's single-scope routing
+- `RTECH_TARGET_AGENT_ID=agentd-birk` — the orchestrator's single-scope routing
   target. Must equal `RTECH_AGENT_ID` for the single-agent POC. If it (and the
   back-compat `RTECH_SINGLE_AGENT_ID`, and any registry) is unset, the
   orchestrator **fails loudly at startup** rather than routing to a shared literal.
@@ -135,10 +135,10 @@ Vaultwarden at install time.
 Claude engine** is the deployed default. It uses subscription auth, NOT an API
 key:
 
-1. Log in ONCE as bilby so the `claude` CLI carries subscription auth:
+1. Log in ONCE as birk so the `claude` CLI carries subscription auth:
 
    ```sh
-   claude   # opens browser login; do this once on the box, as bilby
+   claude   # opens browser login; do this once on the box, as birk
    ```
 
    The Agent SDK spawns this authenticated CLI. The units scrub `ANTHROPIC_*`
@@ -150,7 +150,7 @@ For an offline bus-wiring smoke test WITHOUT a real model, set
 `DEV_STACK_ENGINE=scripted` in `~/rtech-agents/.env` and restart agentd:
 
 ```sh
-systemctl --user restart rtech-agentd@agentd-bilby.service
+systemctl --user restart rtech-agentd@agentd-birk.service
 ```
 
 If the `claude` CLI is missing or unauthenticated, agentd fails closed with an
@@ -159,26 +159,26 @@ actionable message.
 ## Verify
 
 ```sh
-systemctl --user status rtech-orchestrator rtech-agentd@agentd-bilby rtech-webchat
-journalctl --user -u rtech-orchestrator -u rtech-agentd@agentd-bilby -u rtech-webchat -f
+systemctl --user status rtech-orchestrator rtech-agentd@agentd-birk rtech-webchat
+journalctl --user -u rtech-orchestrator -u rtech-agentd@agentd-birk -u rtech-webchat -f
 # Edge reachable on the LAN address only:
 curl -s http://127.0.0.1:3800/api/tasks      # (3801 during cutover)
 
 # Prove the ANTHROPIC_* scrub took effect in the running agentd:
 #   the main PID's environ must contain NO ANTHROPIC_ entries.
-tr '\0' '\n' < /proc/$(systemctl --user show -p MainPID --value rtech-agentd@agentd-bilby)/environ \
+tr '\0' '\n' < /proc/$(systemctl --user show -p MainPID --value rtech-agentd@agentd-birk)/environ \
   | grep ANTHROPIC_ || echo "clean: no ANTHROPIC_* in agentd env"
 ```
 
 ## Rollback (rootless stack)
 
 Fully reverses THIS rootless install; leaves `k-board-api` / `caddy` / `postgres`
-untouched. All as bilby, no sudo:
+untouched. All as birk, no sudo:
 
 ```sh
 # 1. stop + disable our user units (leave existing services alone)
 systemctl --user disable --now rtech-webchat.service
-systemctl --user disable --now rtech-agentd@agentd-bilby.service
+systemctl --user disable --now rtech-agentd@agentd-birk.service
 systemctl --user disable --now rtech-orchestrator.service
 
 # 2. remove the unit files and reload
@@ -204,7 +204,7 @@ or a NOPASSWD path; the rootless worker does not run them:
 # --- run as root (or via an explicit NOPASSWD entry) ---
 # 1. stop + disable the old SYSTEM units
 systemctl disable --now rtech-webchat.service
-systemctl disable --now rtech-agentd@agentd-bilby.service
+systemctl disable --now rtech-agentd@agentd-birk.service
 systemctl disable --now rtech-orchestrator.service
 
 # 2. remove the old system unit files and reload
@@ -389,7 +389,7 @@ systemctl --user daemon-reload
 
 ## Wake (triage) capability
 
-A triage agentd (Nagatha) can **wake** an allow-listed teammate — mint a fresh
+A triage agentd (Nimbus) can **wake** an allow-listed teammate — mint a fresh
 `TaskFrame` on the teammate's task subject, carrying the original
 `ChannelOrigin`. Enable it by setting `RTECH_WAKE_ALLOWED_AGENTS` (a comma list of
 `agentd-<name>` ids) plus `RTECH_STACK_ID` in `~/rtech-agents/.env`, then restart

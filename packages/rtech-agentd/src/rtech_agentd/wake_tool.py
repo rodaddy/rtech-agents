@@ -7,7 +7,7 @@ engine reader), ``wake_agent`` is ACTIVE — its handler calls the injected
 :class:`~rtech_agentd.wake_service.WakeService`, which mints + publishes a fresh
 :class:`~rtech_frames.TaskFrame` toward an allow-listed teammate and returns the
 minted ``task_id``. That id is handed straight back as the tool result so the
-triage model (Nagatha) can reference it in her visible reply.
+triage model (Nimbus) can reference it in her visible reply.
 
 This module owns:
 
@@ -43,7 +43,7 @@ WAKE_DIRECTIVE = (
     "\n\n---\n"
     "You are the triage agent. When a question is better answered by a teammate, "
     "call the `wake_agent` tool to dispatch it to them:\n"
-    "- agent_id: the teammate's agent id (e.g. 'agentd-bilby', 'agentd-skippy'). "
+    "- agent_id: the teammate's agent id (e.g. 'agentd-birk', 'agentd-sprocket'). "
     "Only ids you are configured to wake are permitted; others are refused.\n"
     "- task_text: the exact question/task the teammate should answer.\n"
     "- reason: one short clause on why this teammate is the right one.\n"

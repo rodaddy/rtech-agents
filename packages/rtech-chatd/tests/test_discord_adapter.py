@@ -381,7 +381,7 @@ def _intake_cfg(**kw: object) -> IntakeConfig:
     base: dict[str, object] = {
         "enabled": True,
         "mode": IntakeMode.ALL_CHANNELS,
-        "triage_agent": "agentd-nagatha",
+        "triage_agent": "agentd-nimbus",
     }
     base.update(kw)
     return IntakeConfig(**base)  # type: ignore[arg-type]
