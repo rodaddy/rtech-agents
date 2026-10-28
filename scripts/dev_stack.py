@@ -92,7 +92,8 @@ DEFAULT_EDGE_TOKEN_REF = "env:RTECH_CHATD_BOT_TOKEN"
 # A per-host dev id so the local stack never collides with a deployed agentd on
 # the shared fleet bus. The orchestrator target is set to the SAME id
 # below, so the dev stack is self-contained: it answers only its own tasks.
-HOSTNAME = socket.gethostname().split(".", 1)[0] or "unknown"
+# Lowercased: BusConfig.agent_id must be a canonical token, and macOS hostnames carry capitals.
+HOSTNAME = socket.gethostname().split(".", 1)[0].lower() or "unknown"
 AGENT_ID = f"agentd-{HOSTNAME}-dev"
 # A per-host stack id so the orchestrator's ingress guard only
 # consumes tasks stamped by THIS stack's edge — never a deployed edge's.

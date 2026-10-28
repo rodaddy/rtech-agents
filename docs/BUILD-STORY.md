@@ -4,7 +4,7 @@ Sources for this page: the private development repository's full history
 (205 commits, 138 of them non-merge, 197 of them in July 2026), its commit
 messages and PR merge bodies, the decision records and contracts in `docs/`,
 the plan of record written on 2026-07-10, and the test suite. This public
-repository holds a 2026-10-13 export, so its own `git log` is three commits.
+repository holds a 2026-10-13 export, so its own `git log` starts at that export.
 
 ## The problem and the first version (2026-07-07)
 
@@ -92,7 +92,7 @@ regressions of the project's rules (for example, prose completion tokens),
 and the pre-commit hook blocks commits on `main`.
 
 Quality gates on every change: `ruff check`, `ruff format --check`,
-`mypy --strict` and `pytest`. The export has 121 test files; the suite runs
+`mypy --strict` and `pytest`. The export has 111 test modules; the suite runs
 1,786 tests with 7 skips (live smokes and private-config tests) in about 12
 seconds with no network. Live behaviour is checked separately: an
 end-to-end evidence script against a real NATS bus, a Discord canary and an
