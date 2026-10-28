@@ -115,14 +115,14 @@ uv run pytest -q
 
 The directory names must stay `rtech-agents`, `fleet-bus` and `open-brain`.
 The unit suite needs no network; on a fresh checkout expect 7 skips (three
-tests that need a private `secrets/` tree and four live smokes gated by
-environment variables).
+tests that need private deployment config, three live smokes gated by
+environment variables, and one that needs a reachable NATS server).
 
 Local stack (orchestrator, one agent, web-chat edge) against a NATS server you
 run yourself:
 
 ```bash
-FLEET_ENV=dev FLEET_NATS_URL=nats://127.0.0.1:4222 DEV_STACK_ENGINE=scripted \
+NATS_URL=nats://127.0.0.1:4222 DEV_STACK_ENGINE=scripted \
   uv run python scripts/dev_stack.py
 # then open http://127.0.0.1:3800
 ```
